@@ -19,6 +19,7 @@
   --sand:#f3d798; --grass:#c4dd9c; --cliff:#b98a4e;
   --panel:#fbfdfd; --panel-2:#eef6f8; --line:#d4e3e8;
   --coral:#ff6f59; --coral-ink:#c8412d;
+  --lic:#e11d2e;
   --shadow:0 10px 30px rgba(12,48,64,.18);
   --mq:0px;
   --f-display:"Huninn","Noto Sans TC",system-ui,sans-serif;
@@ -32,6 +33,7 @@
     --sand:#b89a62; --grass:#7d9b5c; --cliff:#6e5230;
     --panel:#11242e; --panel-2:#183340; --line:#264552;
     --coral:#ff8470; --coral-ink:#ffb3a5;
+    --lic:#ff4d5a;
     --shadow:0 10px 30px rgba(0,0,0,.45);
   }
 }
@@ -61,6 +63,9 @@ a{color:inherit}
 .seg{display:flex;background:var(--panel);border-radius:999px;padding:4px;box-shadow:var(--shadow);margin:0 auto}
 .seg button{border:0;background:transparent;padding:6px 16px;border-radius:999px;cursor:pointer;font-weight:500;font-size:14px;color:var(--ink-dim)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.lic-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--lic);box-shadow:0 0 0 2px rgba(225,29,46,.2);margin-right:7px;vertical-align:middle;position:relative;top:-2px;flex:none}
+.lic-dot.sm{width:7px;height:7px;margin-right:4px;top:-1px;box-shadow:none}
+.legend{display:flex;align-items:center;background:var(--panel);border-radius:999px;padding:8px 14px;box-shadow:var(--shadow);font-size:13px;font-weight:500;white-space:nowrap}
 .top-link{background:var(--panel);border-radius:999px;padding:8px 14px;box-shadow:var(--shadow);font-size:13px;text-decoration:none;font-weight:500}
 
 /* ---------- 地圖 ---------- */
@@ -95,8 +100,11 @@ a{color:inherit}
 .card{background:var(--panel);border-radius:16px;box-shadow:var(--shadow)}
 .eyebrow{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase}
 
-.title-card{position:absolute;left:16px;top:70px;z-index:20;padding:16px 18px;max-width:330px}
-.title-card h1{font-family:var(--f-display);font-weight:400;font-size:27px;line-height:1.3;margin:6px 0 8px;letter-spacing:.02em}
+.title-card{position:absolute;left:16px;top:70px;z-index:20;padding:12px 16px;max-width:290px}
+.tc-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tc-toggle{border:0;background:var(--panel-2);border-radius:999px;padding:2px 10px;font-size:12px;cursor:pointer;color:var(--ink-dim)}
+.title-card.mini>:not(.tc-head){display:none}
+.title-card h1{font-family:var(--f-display);font-weight:400;font-size:22px;line-height:1.3;margin:4px 0 4px;letter-spacing:.02em}
 .title-card p{margin:0;font-size:13px;color:var(--ink-dim)}
 .title-card .stats{display:flex;gap:14px;margin-top:10px;font-size:12.5px}
 .title-card .stats b{font-family:var(--f-mono);font-size:15px;color:var(--ink)}
@@ -138,7 +146,7 @@ body.view-time .pop{bottom:208px}
 .d-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px;margin:0 0 14px;padding:12px;background:var(--panel-2);border-radius:12px}
 .d-grid dt{color:var(--ink-faint);white-space:nowrap}
 .d-grid dd{margin:0}
-.lic{font-size:12.5px;background:rgba(255,111,89,.12);color:var(--coral-ink);padding:8px 12px;border-radius:10px;margin:0 0 14px}
+.lic{font-size:12.5px;background:rgba(225,29,46,.1);color:var(--lic);padding:8px 12px;border-radius:10px;margin:0 0 14px}
 .go{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:var(--ink);color:var(--panel);font-weight:700;padding:12px;border-radius:12px;margin-bottom:16px}
 .go:hover{background:var(--coral);color:#fff}
 .rel-h{font-size:12px;color:var(--ink-faint);margin:0 0 6px}
@@ -241,7 +249,11 @@ footer{background:var(--panel);padding:30px 16px 40px}
 }
 @media (max-width:520px){
   .topbar{gap:6px;padding:10px 10px}
-  .seg button{padding:6px 11px;font-size:13px}
+  .seg button{padding:6px 10px;font-size:13px;white-space:nowrap}
+  .brand{padding:6px 12px;white-space:nowrap}
+  .brand b{font-size:19px}
+  .legend{padding:7px 10px;font-size:12px}
+  .legend .lic-dot{margin-right:4px}
   .top-link{display:none}
 }
 @media (prefers-reduced-motion: reduce){
@@ -265,16 +277,16 @@ footer{background:var(--panel);padding:30px 16px 40px}
       <button type="button" data-view="list" aria-pressed="false">清單</button>
       <button type="button" data-view="time" aria-pressed="false">時間軸</button>
     </nav>
+    <span class="legend" title="名稱前有紅點的工具，需要輸入課程序號才能使用"><i class="lic-dot"></i>需序號</span>
     <a class="top-link" href="manual.html">使用說明</a>
   </header>
 
   <svg id="map" class="pan" role="application" aria-label="創業島地圖：每棟建築是一個線上工具"></svg>
 
-  <section class="card title-card" aria-label="關於創業島">
-    <div class="eyebrow">Startup Island Map</div>
+  <section class="card title-card" id="titleCard" aria-label="關於創業島">
+    <div class="tc-head"><span class="eyebrow">Startup Island Map</span><button type="button" class="tc-toggle" id="tcToggle" aria-expanded="true">收合</button></div>
     <h1>從一個點子出發，<br>走完整座島</h1>
-    <p>點一棟建築，看它在創業路上做什麼，再一鍵打開真的工具。</p>
-    <div class="stats"><span><b id="stZones">8</b> 街區</span><span><b id="stTools">0</b> 工具</span><span><b id="stLinks">0</b> 接力線</span></div>
+    <div class="stats"><span><b id="stZones">8</b> 街區</span><span><b id="stTools">0</b> 工具</span><span><b id="stLinks">0</b> 接力線</span><span><i class="lic-dot"></i><b id="stLic">0</b> 需序號</span></div>
     <div class="clock"><span>島上時間</span><b id="clockNow">--:--</b><span id="clockNote"></span></div>
     <div class="clock"><span>你已探索</span><b id="seenCount">0</b><span>棟建築</span></div>
   </section>
@@ -545,7 +557,7 @@ var STORY = [
 ];
 
 /* ================= 創業島：主程式 ================= */
-var KEY_SEEN = 'startupIslandSeen', KEY_LOG = 'startupIslandLog', KEY_STORY = 'startupIslandStoryDone', KEY_PREF = 'startupIslandPrefs';
+var KEY_TITLE_MINI = 'startupIslandTitleMini', KEY_SEEN = 'startupIslandSeen', KEY_LOG = 'startupIslandLog', KEY_STORY = 'startupIslandStoryDone', KEY_PREF = 'startupIslandPrefs';
 var NS = 'http://www.w3.org/2000/svg';
 var HW = 36, HH = 18;                     // 等角格子半寬、半高
 var SLOTS = [[0,0],[1,0],[0,1],[1,1],[2,0],[0,2],[2,1],[1,2]];
@@ -694,11 +706,12 @@ function buildMap(){
   TOOLS.forEach(function(t){
     var top = iso(t.gx, t.gy);
     var w = 0; for (var i = 0; i < t.short.length; i++) w += t.short.charCodeAt(i) > 255 ? 12.5 : 7.2;
-    w += 16;
+    w += t.lic ? 28 : 16;
     var g = el('g', {class:'tag', transform:'translate('+top[0]+','+(top[1] - t.h - 30)+')'}, L.tags);
     el('rect', {x:-w/2, y:-11, width:w, height:20, rx:10, 'stroke-width':1}, g);
-    el('rect', {x:-w/2 + 6, y:-3, width:4, height:4, rx:2, fill:zoneById[t.zone].color, stroke:'none', class:'zdot'}, g);
-    var tx = el('text', {x:3, y:4, 'text-anchor':'middle'}, g); tx.textContent = t.short;
+    if (t.lic) el('circle', {cx:-w/2 + 12, cy:-1, r:4.5, fill:'var(--lic)', stroke:'none'}, g);
+    var tx = el('text', {x:t.lic ? 6 : 0, y:4, 'text-anchor':'middle'}, g); tx.textContent = t.short;
+    if (t.lic) el('title', {}, g).textContent = '需序號';
     t.tagG = g; t.tagBox = {x:top[0] - w/2, y:top[1] - t.h - 41, w:w, h:20};
   });
   // 名稱標籤避讓：由前往後放，撞到已放好的就往上疊
@@ -724,6 +737,7 @@ function buildMap(){
     el('ellipse', {cx:w0*.35, cy:-w0*.18, rx:w0*.5, ry:w0*.3, fill:'#fff', opacity:.75}, cg);
     cg._seed = c;
   }
+  svg.insertBefore(L.clouds, L.links);   // 雲在建築之上、接力線與標籤之下，不擋字
   drawLinks();
 }
 
@@ -852,16 +866,15 @@ function setVB(){ svg.setAttribute('viewBox', vb.x.toFixed(1)+' '+vb.y.toFixed(1
 function islandBox(){
   var xs = [], ys = [];
   for (var a = 0; a < Math.PI*2; a += .2){ var p = iso(7.2 + Math.cos(a)*10, 7.4 + Math.sin(a)*10); xs.push(p[0]); ys.push(p[1]); }
-  return {x:Math.min.apply(null, xs), y:Math.min.apply(null, ys) - 90, w:Math.max.apply(null, xs) - Math.min.apply(null, xs), h:Math.max.apply(null, ys) - Math.min.apply(null, ys) + 110};
+  return {x:Math.min.apply(null, xs), y:Math.min.apply(null, ys) - 40, w:Math.max.apply(null, xs) - Math.min.apply(null, xs), h:Math.max.apply(null, ys) - Math.min.apply(null, ys) + 50};
 }
 function padBox(b){
   // 預留頂部列、底部工具列、時間軸的空間
-  var r = svg.getBoundingClientRect(), topPx = 70, botPx = state.view === 'time' ? 230 : 80;
-  var leftPx = r.width > 820 && state.view === 'map' ? 360 : 0;
+  var r = svg.getBoundingClientRect(), topPx = 60, botPx = state.view === 'time' ? 215 : 66, leftPx = 0;
   var st = $('story');
   if (r.width <= 820 && !st.hidden) botPx = Math.max(botPx, r.bottom - st.getBoundingClientRect().top + 10);
   var usableH = Math.max(120, r.height - topPx - botPx), usableW = Math.max(200, r.width - leftPx);
-  var s = Math.min(usableW / b.w, usableH / b.h) * .96;
+  var s = Math.min(usableW / b.w, usableH / b.h);
   var w = r.width / s, h = r.height / s;
   return {x:b.x + b.w/2 - w/2 - (leftPx / 2) / s, y:b.y + b.h/2 - h/2 - ((topPx - botPx) / 2) / s, w:w, h:h};
 }
@@ -951,7 +964,7 @@ function hoverTip(e){
   showTip(toolById[g.getAttribute('data-id')], e.clientX, e.clientY - 12);
 }
 function showTip(t, x, y){
-  var tip = $('tip'); tip.textContent = t.name + (t.lic ? '　需序號' : '');
+  var tip = $('tip'); tip.innerHTML = (t.lic ? '<i class="lic-dot"></i>' : '') + t.name + (t.lic ? '（需序號）' : '');
   tip.style.left = Math.min(window.innerWidth - tip.offsetWidth - 8, Math.max(8, x - tip.offsetWidth/2)) + 'px';
   tip.style.top = Math.max(8, y - 34) + 'px';
   tip.classList.add('show');
@@ -1033,8 +1046,8 @@ function renderList(){
   ZONES.forEach(function(z, i){
     html += '<section class="zone-sec"><h2><span style="color:' + z.color + '">■</span>' + z.name + '<small>' + z.en + '</small></h2><p>' + z.desc + '</p><div class="cards">';
     z.tools.forEach(function(t){
-      html += '<button type="button" class="tcard" data-id="' + t.id + '" style="border-top-color:' + z.color + '"><b>' + t.name + '</b><span>' + t.role + '</span><em>' +
-        (state.seen[t.id] ? '<span class="seen">已探索</span>　' : '') + (t.lic ? '需序號　' : '') + t.input + ' → ' + t.output + '</em></button>';
+      html += '<button type="button" class="tcard" data-id="' + t.id + '" style="border-top-color:' + z.color + '"><b>' + (t.lic ? '<i class="lic-dot" aria-label="需序號"></i>' : '') + t.name + '</b><span>' + t.role + '</span><em>' +
+        (state.seen[t.id] ? '<span class="seen">已探索</span>　' : '') + t.input + ' → ' + t.output + '</em></button>';
     });
     html += '</div></section>';
   });
@@ -1055,12 +1068,12 @@ function openTool(id){
   var rels = relsOf(id).map(function(Lk){
     var seq = Lk.chain || Lk.star, others = seq.filter(function(x){ return x !== id; });
     return '<button type="button" class="rel-item" data-rel="' + Lk.id + '" data-go="' + others[0] + '"><b>' + Lk.name + '</b><small>' +
-      seq.map(function(x){ return x === id ? '【' + toolById[x].short + '】' : toolById[x].short; }).join(Lk.star ? '・' : ' → ') + '</small><small>' + Lk.desc + '</small></button>';
+      seq.map(function(x){ var n = (toolById[x].lic ? '<i class="lic-dot sm"></i>' : '') + toolById[x].short; return x === id ? '【' + n + '】' : n; }).join(Lk.star ? '・' : ' → ') + '</small><small>' + Lk.desc + '</small></button>';
   }).join('');
   $('dEyebrow').textContent = z.en;
   $('dBody').innerHTML =
     '<span class="zone-chip" style="background:' + z.color + '">' + z.name + '</span>' +
-    '<h2 class="d-name">' + t.name + '</h2>' +
+    '<h2 class="d-name">' + (t.lic ? '<i class="lic-dot" aria-label="需序號"></i>' : '') + t.name + '</h2>' +
     '<p class="d-role">' + t.role + '</p>' +
     '<dl class="d-grid"><dt>帶進來</dt><dd>' + t.input + '</dd><dt>帶出去</dt><dd>' + t.output + '</dd>' +
     '<dt>一天中</dt><dd>' + fmtHour(h[0]) + '–' + fmtHour(h[1]) + '</dd><dt>創業旅程</dt><dd>' + (m[0] === 0 && m[1] === 24 ? '從頭到尾都用得到' : '第 ' + m[0] + '–' + m[1] + ' 個月') + '</dd></dl>' +
@@ -1168,6 +1181,15 @@ $('tbPlay').addEventListener('click', function(){
   setPlaying(!state.playing);
 });
 $('tbRange').addEventListener('input', function(){ setPlaying(false); setT(parseFloat(this.value)); });
+function setTitleMini(on){
+  $('titleCard').classList.toggle('mini', on);
+  $('tcToggle').textContent = on ? '展開' : '收合';
+  $('tcToggle').setAttribute('aria-expanded', String(!on));
+}
+$('tcToggle').addEventListener('click', function(){
+  var on = !$('titleCard').classList.contains('mini'); setTitleMini(on); lsSet(KEY_TITLE_MINI, on);
+});
+setTitleMini(lsGet(KEY_TITLE_MINI, false));
 $('brandLink').addEventListener('click', function(e){ e.preventDefault(); setView('map'); birdview(); });
 
 /* ---------- 引導故事 ---------- */
@@ -1194,6 +1216,7 @@ $('sSkip').addEventListener('click', function(){ endStory(); setView('map'); bir
 /* ---------- 啟動 ---------- */
 $('stTools').textContent = TOOLS.length;
 $('stLinks').textContent = LINKS.length;
+$('stLic').textContent = TOOLS.filter(function(t){ return t.lic; }).length;
 buildMap();
 buildBoats();
 renderRelList();
