@@ -56,3 +56,9 @@
 - 轉播：Cloudflare Worker <https://startup-island-presence.content-workflow.workers.dev>（`/` 回 ok；`/ws` 對非白名單 Origin 回 403、`m255525.github.io` 回 101）。
 - 已用兩個瀏覽器分頁對正式網址驗證：互相看見、換名字同步、走動同步、人數 2。
 - 程式牆：從 `LOCAL_APPS` 移除、改加 `REPO_META`（github-dashboard 同步補一行）。
+
+## manual.html 的創業者實用資訊（2026-10-23 使用者要求「操作手冊放更多創業者的資訊」）
+頂部目錄（錨點）＋ PART 1 島上怎麼玩／PART 2 創業者實用資訊／PART 3 其他。PART 2：創業路線圖七階段（每階段紅字問題＋待辦＋島上工具連結，需序號的加紅點）、開業手續清單、政府資源（鳳凰貸款／就業保險失業者創業貸款／SBIR／產業人才投資方案）、一定要懂的數字（公式＋早午餐店算例）、新手常見的坑、一週練習、官方網站。
+- **貸款內容來源是 `政府補助認證產生器/loan-eligibility-checker` 的 `RULES` 對照表**（115.8.1 起適用的修正版要點／辦法），SBIR 階段長度取自 `sbir-skill`；法規異動時兩邊一起改。不寫未查證的數字（利息補貼、補助比例、電話都刻意沒寫，請讀者看官方網站）。
+- 官方網站連結 2026-10-23 用 curl 驗證可開；`findbiz.nat.gov.tw` 對程式請求回 403，所以改連 `gcis.nat.gov.tw`。
+- 手機版（≤560px）表格改成上下堆疊、公式可換行，避免橫向溢出。

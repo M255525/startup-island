@@ -33,6 +33,25 @@ ul,ol{padding-left:22px;margin:6px 0}
 a{color:inherit}
 .back{display:inline-block;margin-top:14px;background:#fff;color:#14303d;text-decoration:none;font-weight:700;padding:8px 16px;border-radius:999px}
 .tbl{overflow-x:auto}
+.toc{display:flex;flex-wrap:wrap;gap:6px 8px;margin:0}
+.toc a{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13.5px;text-decoration:none}
+.toc a:hover{border-color:var(--coral)}
+.part{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;color:var(--faint);margin:26px 0 8px}
+.stage{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+.stage h3{margin:0 0 4px;font-size:16px}
+.stage h3 small{font-weight:400;color:var(--faint);font-size:12.5px;margin-left:6px}
+.stage .q{margin:0 0 6px;color:var(--coral-ink);font-weight:700;font-size:14px}
+.stage ul{margin:4px 0 6px}
+.stage .tools{font-size:13.5px;color:var(--dim)}
+.check li{list-style:none;margin:6px 0;padding-left:4px}
+.check li::before{content:"□";margin-right:8px;color:var(--faint)}
+.formula{font-family:"JetBrains Mono",monospace;font-size:13px;background:var(--bg);border-radius:8px;padding:2px 8px;white-space:nowrap}
+.ex{background:var(--bg);border-left:4px solid var(--coral);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:14px}
+.note-sm{font-size:12.5px;color:var(--faint)}
+td a,li a,.stage a{color:var(--sea);font-weight:700}
+@media (prefers-color-scheme: dark){td a,li a,.stage a{color:#8fd3e8}}
+@media (max-width:560px){.tbl table,.tbl tbody,.tbl tr,.tbl th,.tbl td{display:block;width:auto}.tbl th{padding:10px 4px 2px;border-bottom:0;white-space:normal}.tbl td{padding:2px 4px 10px}.formula{white-space:normal;display:inline-block}section{padding:16px 16px}}
+
 .ld{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e11d2e;margin-right:4px;vertical-align:middle;position:relative;top:-1px}
 </style>
 </head>
@@ -40,18 +59,24 @@ a{color:inherit}
 <header><div class="wrap">
   <div class="eyebrow">STARTUP ISLAND · GUIDE</div>
   <h1>創業島使用說明</h1>
-  <p>一張把 41 個線上創業工具串起來的探索地圖。</p>
+  <p>一張把 41 個線上創業工具串起來的探索地圖，加上一份給創業者的實用資訊。</p>
   <a class="back" href="index.html">回到創業島</a>
 </div></header>
 <main class="wrap">
+<nav class="toc" aria-label="本頁目錄" style="margin-top:4px">
+  <a href="#about">這是什麼</a><a href="#views">三種看法</a><a href="#toolbar">工具列</a><a href="#places">九個地點</a>
+  <a href="#roadmap">創業路線圖</a><a href="#paperwork">開業手續</a><a href="#funding">政府資源</a><a href="#numbers">一定要懂的數字</a>
+  <a href="#pitfalls">常見的坑</a><a href="#week">一週練習</a><a href="#links">官方網站</a><a href="#faq">常見問題</a>
+</nav>
+<div class="part">PART 1 · 島上怎麼玩</div>
 
-<section>
+<section id="about">
   <h2>這是什麼</h2>
   <p>創業島把課程用到的 41 個線上工具，依性質放在島上的公園、山丘、學校、商辦區、碼頭等九個地點。每一棟建築就是一個真的工具，點了可以看到它在創業過程中負責什麼、需要準備什麼、會產出什麼，再按「前往工具」在新分頁打開。</p>
   <p>本頁只是導覽地圖，不提供任何試算或生成功能，實際操作都在各工具自己的網站完成。</p>
 </section>
 
-<section>
+<section id="views">
   <h2>三種看法</h2>
   <div class="tbl"><table>
     <tr><th>地圖</th><td>整座島的等角地圖。左上角的說明卡可以按「收合」，讓整座島露出來。滑鼠滾輪或雙指縮放，按住拖曳移動。島上的天色跟你電腦的時間同步，晚上會亮窗的建築，是那個時段常用的工具。</td></tr>
@@ -60,7 +85,7 @@ a{color:inherit}
   </table></div>
 </section>
 
-<section>
+<section id="toolbar">
   <h2>工具列</h2>
   <div class="tbl"><table>
     <tr><th>標籤</th><td>顯示或隱藏建築上方的工具名稱。名稱前有<i class="ld"></i>紅點的，需要序號才能使用。</td></tr>
@@ -73,7 +98,7 @@ a{color:inherit}
   </table></div>
 </section>
 
-<section>
+<section id="places">
   <h2>九個地點</h2>
   <p>島上有河、有山、有公園，工具依性質放在合適的地點。名稱前有 <i class="ld"></i>紅點的工具，需要輸入課程序號才能使用（共 19 個）。</p>
   <div class="tbl"><table>
@@ -90,7 +115,130 @@ a{color:inherit}
   <p>另外還有創業河（過河要走橋）、河畔綠地與觀景小山。</p>
 </section>
 
-<section>
+<div class="part">PART 2 · 創業者實用資訊</div>
+
+<section id="roadmap">
+  <h2>創業路線圖：七個階段</h2>
+  <p>每個人的速度不一樣，月份只是參考。重點是每個階段都要先回答紅字的問題，再進到下一步。名稱前有 <i class="ld"></i>紅點的工具需要課程序號。</p>
+  <div class="stage"><h3>1　想清楚點子<small>第 0–1 個月</small></h3><p class="q">你要解決誰的什麼問題？</p><ul><li>列出 10 個點子，用同一套標準打分數，挑出 1～2 個。</li><li>找 5～10 位可能付錢的人聊聊。親友說「不錯啊」不算數，要問他們現在怎麼解決這個問題、花多少錢。</li><li>寫下一句話：「我幫＿＿＿解決＿＿＿，因為＿＿＿。」</li></ul><div class="tools">島上可以用：<i class="ld"></i><a href="https://m255525.github.io/business-idea-generator/" target="_blank" rel="noopener">商業創意產生器</a>、<a href="https://m255525.github.io/mandala-thinking/" target="_blank" rel="noopener">曼陀羅思考法</a>、<a href="https://m255525.github.io/scamper-thinking-generator/" target="_blank" rel="noopener">SCAMPER</a>、<a href="https://m255525.github.io/six-thinking-hats-generator/" target="_blank" rel="noopener">六頂思考帽</a></div></div>
+  <div class="stage"><h3>2　寫下商業模式<small>第 1–3 個月</small></h3><p class="q">誰付錢？為什麼付？你怎麼找到他們？</p><ul><li>把顧客、價值主張、通路、收入來源寫進商業模式圖。</li><li>找 3～5 個競爭對手，比價格、品質、服務、地點。</li><li>列出自己的優勢、劣勢、機會、威脅，先決定「不做什麼」。</li></ul><div class="tools">島上可以用：<a href="https://m255525.github.io/business-model-canvas-generator/" target="_blank" rel="noopener">商業模式圖</a>、<a href="https://m255525.github.io/where-what-how-strategy-studio/" target="_blank" rel="noopener">商業策略工作室</a>、<i class="ld"></i><a href="https://m255525.github.io/new-product-strategy-studio/" target="_blank" rel="noopener">新品開發策略</a>、<a href="https://m255525.github.io/swot-game/" target="_blank" rel="noopener">SWOT 卡牌</a>、<a href="https://m255525.github.io/mentors-panel/" target="_blank" rel="noopener">AI 人物顧問團</a></div></div>
+  <div class="stage"><h3>3　把數字算清楚<small>第 3–5 個月</small></h3><p class="q">一個月要賣多少才不虧？錢要準備多少才撐得到賺錢？</p><ul><li>列開辦費清單：裝潢、設備、押金、第一批進貨、登記與規費。</li><li>列每月固定成本：租金、薪資、水電、系統月費、貸款利息。</li><li>算出損益兩平點，再預留數個月的週轉金（開店初期通常不會一開始就達標）。</li></ul><div class="tools">島上可以用：<a href="https://m255525.github.io/restaurant-feasibility-calculator/" target="_blank" rel="noopener">餐飲店經營評估</a>、<a href="https://m255525.github.io/restaurant-menu-mix-calculator/" target="_blank" rel="noopener">菜單組合收支</a>、<a href="https://m255525.github.io/tourism-hotel-feasibility-calculator/" target="_blank" rel="noopener">觀光飯店評估</a>、<i class="ld"></i><a href="https://m255525.github.io/amazon-cost-calculator/" target="_blank" rel="noopener">Amazon 成本</a>、<i class="ld"></i><a href="https://m255525.github.io/amazon-listing-mix-calculator/" target="_blank" rel="noopener">商品組合收支</a></div></div>
+  <div class="stage"><h3>4　準備資金<small>第 3–6 個月</small></h3><p class="q">自己出多少？要不要貸款或申請補助？</p><ul><li>先算自有資金能撐多久，再決定貸款金額，不要借到剛好用完。</li><li>確認自己符合哪一種創業貸款（見下方「政府資源」）。</li><li>把第 3 階段的試算結果整理成營運計畫，貸款申請書會用到。</li></ul><div class="tools">島上可以用：<a href="https://m255525.github.io/loan-eligibility-checker/" target="_blank" rel="noopener">創業貸款資格核對</a>、<a href="https://m255525.github.io/phoenix-loan-generator/" target="_blank" rel="noopener">鳳凰貸款申請書產生器</a></div></div>
+  <div class="stage"><h3>5　辦好開業手續<small>第 4–6 個月</small></h3><p class="q">用什麼身分做生意？要辦哪些登記？</p><ul><li>決定組織型態，完成登記與稅籍登記（見下方「開業手續清單」）。</li><li>開事業用的銀行帳戶，公司的錢和自己的錢分開。</li><li>確認營業場所和行業的特別規定（例如餐飲業要做食品業者登錄）。</li></ul><div class="tools">這一步沒有對應的島上工具，請直接洽各主管機關。</div></div>
+  <div class="stage"><h3>6　讓人看見你<small>第 6–12 個月</small></h3><p class="q">顧客在哪裡？他們為什麼要選你？</p><ul><li>寫好品牌介紹，排出全年行銷檔期。</li><li>固定發文，發文前先檢查一次。</li><li>要做電商：先查關鍵字，再寫標題和商品說明，最後才投廣告。</li></ul><div class="tools">島上可以用：<a href="https://m255525.github.io/coffee-ig-planner/" target="_blank" rel="noopener">社群內容規劃</a>、<a href="https://m255525.github.io/annual-marketing-calendar/" target="_blank" rel="noopener">行銷行事曆</a>、<a href="https://m255525.github.io/SocialPost/" target="_blank" rel="noopener">社群貼文產生器</a>、<a href="https://m255525.github.io/social-post-grader/" target="_blank" rel="noopener">社群貼文健診</a>、<i class="ld"></i><a href="https://m255525.github.io/product-keyword-cloud/" target="_blank" rel="noopener">關鍵字文字雲</a>、<i class="ld"></i><a href="https://m255525.github.io/product-title-generator/" target="_blank" rel="noopener">商品標題</a>、<i class="ld"></i><a href="https://m255525.github.io/amazon-ppc-advisor/" target="_blank" rel="noopener">PPC 廣告</a></div></div>
+  <div class="stage"><h3>7　穩定營運、慢慢長大<small>第 12–24 個月</small></h3><p class="q">哪些顧客會回來？哪些事情可以交給系統？</p><ul><li>每週看一次數字：營業額、毛利、現金、回購率。</li><li>把顧客分群，照顧熟客；認真回覆每一則評論和客訴。</li><li>重複的工作交給流程或工具，再替員工安排訓練。</li></ul><div class="tools">島上可以用：<i class="ld"></i><a href="https://m255525.github.io/private-domain-rfm-studio/" target="_blank" rel="noopener">RFM 顧客分群</a>、<i class="ld"></i><a href="https://m255525.github.io/amazon-review-reply-generator/" target="_blank" rel="noopener">客評回覆</a>、<i class="ld"></i><a href="https://m255525.github.io/IPA_Kano/" target="_blank" rel="noopener">滿意度分析</a>、<a href="https://m255525.github.io/company-digital-transformation-analyzer/" target="_blank" rel="noopener">企業數位轉型分析</a>、<i class="ld"></i><a href="https://content-workflow-studio-cf.content-workflow.workers.dev/" target="_blank" rel="noopener">內容工作流工作室</a></div></div>
+</section>
+
+<section id="paperwork">
+  <h2>開業手續清單</h2>
+  <ul class="check">
+    <li><b>決定組織型態</b>：獨資、合夥辦「商業登記」（向所在縣市政府）；有限公司、股份有限公司辦「公司登記」。每月營業額不大的小規模商業，依《商業登記法》可能免辦商業登記，但仍要辦稅籍登記。</li>
+    <li><b>先查名稱能不能用</b>：到「商工行政服務入口」查詢與預查名稱。</li>
+    <li><b>稅籍登記</b>：向國稅局辦理，取得統一編號。國稅局會依規模決定要開統一發票，或由國稅局查定課稅。</li>
+    <li><b>事業銀行帳戶</b>：公私帳分開，記帳和申請貸款都會輕鬆很多。</li>
+    <li><b>請人之前</b>：依規定替員工辦理勞保、就業保險、健保與勞工退休金提繳；人數與行業不同，規定會有差異，請先向勞保局確認。</li>
+    <li><b>營業場所</b>：租約簽下去之前，先確認土地使用分區、建築物用途與消防安全規定。</li>
+    <li><b>行業特別規定</b>：例如餐飲業與食品販售要到衛福部食藥署「食品業者登錄」平台登錄；其他行業請查主管機關。</li>
+  </ul>
+  <p class="note-sm">以上是常見項目整理，實際要辦哪些、怎麼辦，以主管機關最新公告為準。</p>
+</section>
+
+<section id="funding">
+  <h2>政府資源</h2>
+  <div class="tbl"><table>
+    <tr><th>微型創業鳳凰貸款<br><span class="note-sm">勞動部</span></th><td>
+      <ul>
+        <li>對象：女性、45～65 歲中高齡者，或設籍離島者（三者符合其一，年齡細節以要點為準）。</li>
+        <li>事業：已完成登記、設立未滿 5 年、員工（不含負責人）未滿 5 人，申請人要是登記的負責人並實際經營。</li>
+        <li>前置：接受創業諮詢輔導，且 3 年內上過至少 18 小時創業課程。</li>
+        <li>額度：小規模商業最高 50 萬元；公司、商業、有限合夥等最高 200 萬元。</li>
+        <li>島上工具：<a href="https://m255525.github.io/loan-eligibility-checker/" target="_blank" rel="noopener">先核對資格</a> → <a href="https://m255525.github.io/phoenix-loan-generator/" target="_blank" rel="noopener">再填申請書</a></li>
+      </ul></td></tr>
+    <tr><th>就業保險失業者創業貸款<br><span class="note-sm">勞動部</span></th><td>
+      <ul>
+        <li>對象：具就業保險被保險人身分、失業後想創業的人；事業登記前 14 天內不能有投保紀錄，也不能擔任其他事業負責人。</li>
+        <li>前置與額度：和鳳凰貸款相同（諮詢輔導＋18 小時課程；50 萬／200 萬）。</li>
+        <li>同一個事業不能同時拿鳳凰貸款與這個方案（還有失業中高齡者及高齡者創業貸款），要擇一。</li>
+      </ul></td></tr>
+    <tr><th>SBIR 小型企業創新研發計畫<br><span class="note-sm">經濟部中小及新創企業署</span></th><td>
+      <ul>
+        <li>補助小型企業做技術或服務創新。第一階段做概念驗證，最長 6 個月；第二階段擴大到量產或規模化，最長 12 個月。</li>
+        <li>各縣市另有「地方型 SBIR」，適合在地的中小企業。</li>
+      </ul></td></tr>
+    <tr><th>產業人才投資方案<br><span class="note-sm">勞動部勞動力發展署</span></th><td>
+      <ul>
+        <li>補助在職勞工參加訓練課程。公司或訓練單位可以開課申請，替團隊培養能力。</li>
+        <li>島上工具：<a href="https://m255525.github.io/industry-talent-generator/" target="_blank" rel="noopener">產業人才投資方案開課申請書產生器</a></li>
+      </ul></td></tr>
+  </table></div>
+  <p class="note-sm">貸款內容依《微型創業鳳凰貸款要點》與《就業保險失業者創業協助辦法》（皆自民國 115 年 8 月 1 日起適用的修正版）整理。申請前請以官方最新公告為準，額度與利息補貼等細節可洽微型創業鳳凰網。</p>
+</section>
+
+<section id="numbers">
+  <h2>一定要懂的數字</h2>
+  <div class="tbl"><table>
+    <tr><th>毛利率</th><td><span class="formula">（售價 − 進貨或材料成本）÷ 售價</span><br>賣一份賺幾成。毛利率太低，賣再多也付不起房租。</td></tr>
+    <tr><th>固定成本</th><td>不管賣多少都要付的錢：房租、正職薪水、保險、系統月費、貸款利息。</td></tr>
+    <tr><th>變動成本</th><td>賣越多花越多的錢：食材、包材、平台抽成、運費、刷卡手續費。</td></tr>
+    <tr><th>損益兩平點</th><td><span class="formula">每月固定成本 ÷（客單價 − 每單變動成本）</span><br>一個月至少要做到幾筆生意才不虧錢。</td></tr>
+    <tr><th>回本期</th><td><span class="formula">開辦費 ÷ 每月淨利</span><br>多久能把一開始投入的錢賺回來。</td></tr>
+    <tr><th>現金流</th><td>帳上有賺錢，不代表戶頭有錢。進貨、押金、月結帳款都會讓現金比利潤晚到。</td></tr>
+    <tr><th>週轉金</th><td>開店初期營收還沒穩定時，用來付固定成本的錢。很多人倒在這裡，不是倒在點子。</td></tr>
+    <tr><th>坪效</th><td><span class="formula">月營業額 ÷ 店面坪數</span><br>同樣的租金，每一坪幫你賺多少。</td></tr>
+    <tr><th>客單價／回購率</th><td>每位顧客平均花多少；多少比例的顧客會再回來。拉高回購通常比一直找新客便宜。</td></tr>
+    <tr><th>ACoS</th><td><span class="formula">廣告花費 ÷ 廣告帶來的銷售額</span><br>電商廣告的效率。ACoS 比毛利率還高，代表廣告越賣越虧。</td></tr>
+    <tr><th>RFM</th><td>用最近一次購買（R）、購買頻率（F）、消費金額（M）把顧客分群，找出最值得照顧的熟客。</td></tr>
+  </table></div>
+  <div class="ex"><b>算一次看看：一家早午餐店</b><br>
+    每月固定成本 15 萬元，客單價 150 元，每份食材與包材 60 元。<br>
+    損益兩平點 ＝ 150,000 ÷（150 − 60）≈ 1,667 份／月，以 30 天營業計算，每天約 56 位客人。<br>
+    開辦費 120 萬元，穩定後每月淨利 4 萬元，回本期 ＝ 120 ÷ 4 ＝ 30 個月。<br>
+    想再算細一點，用島上的 <a href="https://m255525.github.io/restaurant-feasibility-calculator/" target="_blank" rel="noopener">餐飲店經營評估試算工具</a>。</div>
+</section>
+
+<section id="pitfalls">
+  <h2>新手常見的坑</h2>
+  <ol>
+    <li><b>只算利潤，沒算現金</b>：月底有賺，卻付不出下個月的房租。</li>
+    <li><b>低估開辦費和週轉金</b>：裝潢、設備常常超支，營收又比預期慢。</li>
+    <li><b>只問親友意見</b>：親友會說好話，真正會付錢的陌生人才準。</li>
+    <li><b>定價只看對手</b>：先算自己的成本和毛利，再看市場能接受多少。</li>
+    <li><b>公私帳不分</b>：不知道店到底有沒有賺錢，申請貸款也拿不出像樣的資料。</li>
+    <li><b>一開始就砸大錢</b>：先用小規模驗證，有人買單再加碼裝潢或廣告。</li>
+    <li><b>忽略法規</b>：登記、勞健保、場地與行業規定沒弄好，被罰的錢可能比省下的多。</li>
+    <li><b>不看數字</b>：每週固定看營業額、毛利、現金和回購率，問題才會提早被發現。</li>
+  </ol>
+</section>
+
+<section id="week">
+  <h2>用創業島跑一次：一週練習</h2>
+  <p>還沒有明確點子也沒關係，挑一個你有興趣的行業，照下面走一遍，就能得到一份粗略的創業計畫。</p>
+  <div class="tbl"><table>
+    <tr><th>第 1 天</th><td>在點子公園產生 10 個點子，用六頂思考帽挑出最想做的一個。（<i class="ld"></i><a href="https://m255525.github.io/business-idea-generator/" target="_blank" rel="noopener">商業創意</a>、<a href="https://m255525.github.io/six-thinking-hats-generator/" target="_blank" rel="noopener">六頂思考帽</a>）</td></tr>
+    <tr><th>第 2 天</th><td>爬上策略山丘，把點子寫成商業模式圖，再請 AI 顧問團挑毛病。（<a href="https://m255525.github.io/business-model-canvas-generator/" target="_blank" rel="noopener">商業模式圖</a>、<a href="https://m255525.github.io/mentors-panel/" target="_blank" rel="noopener">AI 人物顧問團</a>）</td></tr>
+    <tr><th>第 3 天</th><td>到試算商辦區算開辦費、固定成本與損益兩平點。（<a href="https://m255525.github.io/restaurant-feasibility-calculator/" target="_blank" rel="noopener">餐飲店評估</a> 或 <i class="ld"></i><a href="https://m255525.github.io/amazon-cost-calculator/" target="_blank" rel="noopener">Amazon 成本</a>）</td></tr>
+    <tr><th>第 4 天</th><td>到資金廣場核對貸款資格，看看缺什麼條件。（<a href="https://m255525.github.io/loan-eligibility-checker/" target="_blank" rel="noopener">貸款資格核對</a>）</td></tr>
+    <tr><th>第 5 天</th><td>逛品牌商店街，排出前三個月的行銷檔期，寫第一篇貼文並健診。（<a href="https://m255525.github.io/annual-marketing-calendar/" target="_blank" rel="noopener">行銷行事曆</a>、<a href="https://m255525.github.io/social-post-grader/" target="_blank" rel="noopener">貼文健診</a>）</td></tr>
+    <tr><th>第 6 天</th><td>如果要做電商，到河口碼頭寫好關鍵字、標題和五點說明。（<i class="ld"></i><a href="https://m255525.github.io/product-title-generator/" target="_blank" rel="noopener">商品標題</a>、<i class="ld"></i><a href="https://m255525.github.io/amazon-listing-generator/" target="_blank" rel="noopener">五點說明</a>）</td></tr>
+    <tr><th>第 7 天</th><td>回到指揮塔，把這一週的產出串成固定流程，打開「足跡」看看自己走過哪些地方。（<i class="ld"></i><a href="https://content-workflow-studio-cf.content-workflow.workers.dev/" target="_blank" rel="noopener">內容工作流工作室</a>）</td></tr>
+  </table></div>
+</section>
+
+<section id="links">
+  <h2>官方網站</h2>
+  <ul>
+    <li><a href="https://beboss.wda.gov.tw/" target="_blank" rel="noopener">微型創業鳳凰網</a>：創業貸款、免費諮詢輔導、創業課程。</li>
+    <li><a href="https://www.wda.gov.tw/" target="_blank" rel="noopener">勞動部勞動力發展署</a>：就業與職業訓練相關方案。</li>
+    <li><a href="https://www.sme.gov.tw/" target="_blank" rel="noopener">經濟部中小及新創企業署</a>：中小企業與新創輔導資源。</li>
+    <li><a href="https://www.sbir.org.tw/" target="_blank" rel="noopener">SBIR 小型企業創新研發計畫</a>：計畫說明與申請。</li>
+    <li><a href="https://gcis.nat.gov.tw/" target="_blank" rel="noopener">商工行政服務入口</a>：公司與商業登記、名稱預查。</li>
+    <li><a href="https://www.etax.nat.gov.tw/" target="_blank" rel="noopener">財政部稅務入口網</a>：稅籍登記、營業稅與發票。</li>
+    <li><a href="https://fadenbook.fda.gov.tw/" target="_blank" rel="noopener">食品業者登錄平台</a>：餐飲與食品業者登錄。</li>
+  </ul>
+</section>
+
+<div class="part">PART 3 · 其他</div>
+<section id="faq">
   <h2>常見問題</h2>
   <ol>
     <li><b>為什麼打開工具後要我輸入序號？</b><br>名稱前有<i class="ld"></i>紅點的工具有課程授權，請向授課講師索取；內容工作流工作室還需要登入。</li>
