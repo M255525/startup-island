@@ -3,3 +3,5 @@ build/
 dist/
 *.bak
 .playwright-mcp/
+.wrangler/
+node_modules/

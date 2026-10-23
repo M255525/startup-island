@@ -40,4 +40,12 @@
 - **位置全部寫在 `POS`（格子座標）**，外型 `STYLE`（依場地）／`SPECIAL`（個別工具）→ `SHAPE`（足跡半寬 s、牆高 h、屋頂 roof）；`t.top = elev + h + roof` 給標籤、接力線、旗子用。新增工具要在 `POS` 給座標並確認不壓到河（`riverDist`）與其他場地。
 - **地形**：`C=[9,9]` 島中心、`islandR(a)` 約 12.4 格；`RIVER` 控制點→ `catmull` 取樣 `RIVER_S`；道路＝各場地中心到指揮塔的二次曲線，過河段（`riverDist<.7`）自動畫木橋並記到 `BRIDGE_S`；`HILLS`（策略山丘、觀景小山）一層層畫台地，`groundAt()` 給高度；`GREENS` 河畔綠地；`WATERS` 池塘與噴水池；樹 150 棵以內，避開河、路、建築、場地（公園內允許）。
 - **訪客角色**：`startupIslandAvatar` 存 `{name, shirt, hair}`，名字＝形容詞＋角色＋暱稱隨機組合，可「換名字」。走路：0.5 格一格的可走網格（海、河（橋除外）、建築足跡、水景不可走）→ A*（8 方向、不切牆角）→ 視線拉直 → 每秒 2.1 格移動，腿手擺動、上下晃、左右翻面，高度跟地形；每幀依 `gx+gy` 把角色插到建築／樹之間做前後遮擋。滑鼠移動（非觸控）每 140ms 重新規劃一次；點空地走過去；點建築走到門口；工具列「人物跟隨」可關。走進新場地會寫進足跡。
-- 吉祥物「小創」仍在（沿道路以外直線走，純裝飾）。
+- 吉祥物「小創」已於同日依使用者要求移除。
+
+## 多人同島（presence）
+使用者要求「有其他人也在這個島，都可以看到」。
+- **後端**：`presence-worker/`（Cloudflare Worker＋Durable Object `Island`，WebSocket Hibernation API，單一房間 `idFromName('main')`）。只轉播 `{id, name, shirt, hair, gx, gy}`，**不寫任何儲存**，離線即消失。驗證：Origin 白名單（`m255525.github.io`、localhost／127.0.0.1、`null`＝file://）、名字去控制字元截 24 字、顏色 `#rrggbb`、座標夾在 -5..25、每連線每秒最多 15 則、單房最多 200 人；同 id 重連會踢掉舊連線。
+- **協定**：client→`hello`/`move`（移動中每 180ms，位移 >0.03 格才送）/`look`（換名字）/`ping`（25s）；server→`snapshot`/`join`/`move`/`look`/`leave`。
+- **前端**：`PRESENCE_URL` 預設 `wss://startup-island-presence.content-workflow.workers.dev/ws`；網址加 `?presence=ws://127.0.0.1:8787/ws` 可改連本機。id 每次載入頁面隨機產生（不用 sessionStorage，複製分頁會撞號互踢）。其他訪客用同一個 `makeAvatar()` 畫，收到位置後以走路速度（落後 >1.5 格時加倍、>8 格直接就位）走過去，`placeDepth()` 處理前後遮擋；自己的名牌加「（你）」。斷線指數退避重連（1.5s→30s），連不上就只剩自己，其他功能不受影響。
+- **本機測試**：這台 `wrangler dev` 在沙箱內會 `spawn UNKNOWN`（workerd 被擋），改用 Python 模擬轉播站（同協定，`websockets` 套件裝在暫存目錄）開兩個分頁驗證：互相看見、即時走動、換名字同步、關分頁另一邊顯示「離開了島」。Worker 本身需部署後再驗證。
+- **部署**（需使用者同意）：`cd presence-worker && npx wrangler deploy`（會在帳號 `content-workflow` 子網域建立 `startup-island-presence`）。`.gitignore` 已排除 `.wrangler/`、`node_modules/`。

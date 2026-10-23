@@ -1,0 +1,11 @@
+name = "startup-island-presence"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+[[durable_objects.bindings]]
+name = "ISLAND"
+class_name = "Island"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Island"]

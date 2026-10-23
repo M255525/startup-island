@@ -295,6 +295,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <div class="stats"><span><b id="stZones">9</b> 地點</span><span><b id="stTools">0</b> 工具</span><span><b id="stLinks">0</b> 接力線</span><span><i class="lic-dot"></i><b id="stLic">0</b> 需序號</span></div>
     <div class="clock"><span>島上時間</span><b id="clockNow">--:--</b><span id="clockNote"></span></div>
     <div class="clock"><span>你已探索</span><b id="seenCount">0</b><span>棟建築</span></div>
+    <div class="clock"><span>島上現在</span><b id="onlineN">1</b><span>人（其他訪客也看得到你走動）</span></div>
     <div class="clock"><span>你是</span><b id="meName" class="me-name"></b><button type="button" class="tc-toggle" id="reroll">換名字</button></div>
   </section>
 
@@ -366,7 +367,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
         <li>本頁是工具導覽地圖，本身不提供創業試算、文件產生或任何內容生成功能；點「前往工具」會在新分頁開啟各自獨立的網站。</li>
         <li>各工具的功能、計算結果與正確性，以該工具自己的說明與警語為準。標示「需序號」的工具須另外取得課程序號或登入。</li>
         <li>接力線與時間軸是課程整理的建議使用順序，工具之間沒有自動傳資料。</li>
-        <li>探索足跡只存在你這台裝置的瀏覽器，不會上傳。</li>
+        <li>探索足跡只存在你這台裝置的瀏覽器，不會上傳。為了讓同時在島上的人互相看見，系統只會即時交換你的隨機角色名字、衣服顏色與位置，不會記錄或保存。</li>
         <li>僅供教學、課程及個人使用，禁止未經授權公開發布、販售或商業化使用。</li>
       </ul>
     </div>
@@ -862,7 +863,6 @@ function buildMap(){
       el('line', {x1:0, y1:9, x2:0, y2:-dy - 2, stroke:'var(--ink-faint)', 'stroke-width':1, 'stroke-dasharray':'2 2'}, t.tagG).parentNode.insertBefore(t.tagG.lastChild, t.tagG.firstChild);
     }
   });
-  buildMascot();
   buildAvatar();
   L.clouds = el('g', {'pointer-events':'none', opacity:.4}, svg);
   for (var c2 = 0; c2 < 4; c2++){
@@ -1026,19 +1026,7 @@ function drawLinks(){
   svg.classList.toggle('hide-links', !state.links);
 }
 
-/* ---------- 吉祥物「小創」、船、雲 ---------- */
-var mascot = {from:'hub', to:'idea', t:0};
-function buildMascot(){
-  L.mascot = el('g', {'pointer-events':'none'}, svg);
-  el('ellipse', {cx:0, cy:2, rx:9, ry:4, fill:'rgba(0,0,0,.18)'}, L.mascot);
-  el('circle', {cx:0, cy:-11, r:11, fill:'var(--coral)', stroke:'#fff', 'stroke-width':2}, L.mascot);
-  el('circle', {cx:-4, cy:-12, r:1.8, fill:'#fff'}, L.mascot);
-  el('circle', {cx:4, cy:-12, r:1.8, fill:'#fff'}, L.mascot);
-  el('path', {d:'M-3 -7 Q0 -5 3 -7', stroke:'#fff', 'stroke-width':1.4, fill:'none', 'stroke-linecap':'round'}, L.mascot);
-  el('path', {d:'M0 -22 L0 -34 L8 -25 Z', fill:'#f4b942', stroke:'#fff', 'stroke-width':1}, L.mascot);
-  var lab = el('text', {x:0, y:-38, 'text-anchor':'middle', 'font-size':10.5, 'font-weight':700, fill:'#fff', stroke:'#14303d', 'stroke-width':3, 'paint-order':'stroke'}, L.mascot);
-  lab.textContent = '小創';
-}
+/* ---------- 船、雲 ---------- */
 var boats = [{a:0, r:14.4, s:.03}, {a:2.3, r:15.2, s:-.022}, {a:4.4, r:14.8, s:.026}];
 function buildBoats(){
   L.boats.innerHTML = '';
@@ -1053,18 +1041,11 @@ function tick(ts){
   var dt = Math.min(.05, (ts - lastFrame) / 1000 || 0); lastFrame = ts;
   if (!state.paused){
     elapsed += dt;
-    mascot.t += dt * .12;
-    if (mascot.t >= 1){
-      mascot.t = 0; mascot.from = mascot.to;
-      var opts = ZONES.filter(function(z){ return z.id !== mascot.from; });
-      mascot.to = mascot.from === 'hub' ? opts[Math.floor(Math.random()*opts.length)].id : 'hub';
-    }
     boats.forEach(function(b){ b.a += b.s * dt; });
   }
   stepWalker(dt, ts);
-  var A = zoneById[mascot.from], B = zoneById[mascot.to], e = mascot.t < .5 ? 2*mascot.t*mascot.t : 1 - Math.pow(-2*mascot.t + 2, 2)/2;
-  var mp = iso(A.cx + (B.cx - A.cx)*e, A.cy + (B.cy - A.cy)*e), hop = Math.abs(Math.sin(elapsed * 9)) * 3;
-  L.mascot.setAttribute('transform', 'translate('+mp[0].toFixed(1)+','+(mp[1]-hop).toFixed(1)+')');
+  stepPeers(dt);
+  netTick(ts);
   boats.forEach(function(b){
     var p = iso(C[0] + Math.cos(b.a)*b.r, C[1] + Math.sin(b.a)*b.r), bob = Math.sin(elapsed*2 + b.a*5) * 1.5;
     b.g.setAttribute('transform', 'translate('+p[0].toFixed(1)+','+(p[1]+bob).toFixed(1)+')' + (b.s < 0 ? ' scale(-1,1)' : ''));
@@ -1166,38 +1147,57 @@ function walkTo(gx, gy){
   walker.path = straighten([walker.gx, walker.gy], p.length ? p : [cellPos(goal[0], goal[1])]);
 }
 function clientToGrid(cx, cy){ var p = clientToSvg(cx, cy); return [(p.x / HW + p.y / HH) / 2, (p.y / HH - p.x / HW) / 2]; }
-function buildAvatar(){
-  var g = el('g', {'pointer-events':'none', class:'avatar'}, L.blds);
-  L.avatar = g;
+// 一個「會走路的人」：自己和其他訪客共用
+function makeAvatar(data, mine){
+  var g = el('g', {'pointer-events':'none', class:'avatar'}, L.blds), av = {g:g, mine:!!mine};
   el('ellipse', {cx:0, cy:0, rx:8, ry:3.5, fill:'rgba(0,0,0,.2)'}, g);
-  var body = el('g', {}, g); L.avBody = body;
-  L.legL = el('line', {x1:-2.5, y1:-10, x2:-2.5, y2:0, stroke:'#2b3a44', 'stroke-width':3, 'stroke-linecap':'round'}, body);
-  L.legR = el('line', {x1:2.5, y1:-10, x2:2.5, y2:0, stroke:'#2b3a44', 'stroke-width':3, 'stroke-linecap':'round'}, body);
-  L.armB = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f2c9a6', 'stroke-width':2.6, 'stroke-linecap':'round'}, body);
-  el('rect', {x:-5.5, y:-21, width:11, height:12, rx:4, fill:me.shirt, class:'av-shirt'}, body);
-  L.armF = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f6d3b3', 'stroke-width':2.6, 'stroke-linecap':'round'}, body);
-  el('circle', {cx:0, cy:-27, r:6.2, fill:'#f6d3b3'}, body);
-  el('path', {d:'M-6.4 -27 A6.4 6.4 0 0 1 6.4 -27 L6.4 -29 Q2 -31 -6.4 -26 Z', fill:me.hair, class:'av-hair'}, body);
-  el('circle', {cx:2.6, cy:-27, r:1, fill:'#14303d'}, body);
-  var tag = el('g', {transform:'translate(0,-44)'}, g); L.avTag = tag;
-  renderAvatarName();
+  av.body = el('g', {}, g);
+  av.legL = el('line', {x1:-2.5, y1:-10, x2:-2.5, y2:0, stroke:'#2b3a44', 'stroke-width':3, 'stroke-linecap':'round'}, av.body);
+  av.legR = el('line', {x1:2.5, y1:-10, x2:2.5, y2:0, stroke:'#2b3a44', 'stroke-width':3, 'stroke-linecap':'round'}, av.body);
+  av.armB = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f2c9a6', 'stroke-width':2.6, 'stroke-linecap':'round'}, av.body);
+  av.shirt = el('rect', {x:-5.5, y:-21, width:11, height:12, rx:4}, av.body);
+  av.armF = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f6d3b3', 'stroke-width':2.6, 'stroke-linecap':'round'}, av.body);
+  el('circle', {cx:0, cy:-27, r:6.2, fill:'#f6d3b3'}, av.body);
+  av.hair = el('path', {d:'M-6.4 -27 A6.4 6.4 0 0 1 6.4 -27 L6.4 -29 Q2 -31 -6.4 -26 Z'}, av.body);
+  el('circle', {cx:2.6, cy:-27, r:1, fill:'#14303d'}, av.body);
+  av.tag = el('g', {transform:'translate(0,-44)'}, g);
+  setAvatarLook(av, data);
+  return av;
 }
-function renderAvatarName(){
-  var tag = L.avTag; tag.innerHTML = '';
-  var w = 0; for (var i = 0; i < me.name.length; i++) w += me.name.charCodeAt(i) > 255 ? 12 : 7; w += 18;
-  el('rect', {x:-w/2, y:-11, width:w, height:20, rx:10, fill:me.shirt, stroke:'#fff', 'stroke-width':1.5}, tag);
-  el('path', {d:'M-4 9 L0 14 L4 9 Z', fill:me.shirt}, tag);
-  el('text', {x:0, y:4, 'text-anchor':'middle', 'font-size':12, 'font-weight':700, fill:'#fff', 'font-family':'var(--f-body)'}, tag).textContent = me.name;
-  var shirt = L.avatar.querySelector('.av-shirt'), hair = L.avatar.querySelector('.av-hair');
-  if (shirt) shirt.setAttribute('fill', me.shirt);
-  if (hair) hair.setAttribute('fill', me.hair);
-  if ($('meName')) $('meName').textContent = me.name;
+function setAvatarLook(av, data){
+  av.shirt.setAttribute('fill', data.shirt); av.hair.setAttribute('fill', data.hair);
+  var tag = av.tag; tag.innerHTML = '';
+  var label = av.mine ? data.name + '（你）' : data.name;
+  var w = 0; for (var i = 0; i < label.length; i++) w += label.charCodeAt(i) > 255 ? 12 : 7; w += 18;
+  el('rect', {x:-w/2, y:-11, width:w, height:20, rx:10, fill:data.shirt, stroke:'#fff', 'stroke-width':av.mine ? 2.2 : 1, opacity:av.mine ? 1 : .92}, tag);
+  el('path', {d:'M-4 9 L0 14 L4 9 Z', fill:data.shirt}, tag);
+  el('text', {x:0, y:4, 'text-anchor':'middle', 'font-size':12, 'font-weight':700, fill:'#fff', 'font-family':'var(--f-body)'}, tag).textContent = label;
 }
-function placeAvatarDepth(){
-  var d = walker.gx + walker.gy, node = L.avatar, kids = L.blds.children, ref = null;
+function poseAvatar(av, o, moving){
+  var sw = Math.sin(o.phase) * (moving ? 28 : 0), bob = moving ? Math.abs(Math.sin(o.phase)) * 1.6 : 0;
+  var p = up(iso(o.gx, o.gy), o.elev);
+  av.g.setAttribute('transform', 'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')');
+  av.body.setAttribute('transform', 'translate(0,' + (-bob).toFixed(1) + ') scale(' + o.face + ',1)');
+  av.legL.setAttribute('transform', 'rotate(' + sw.toFixed(1) + ' -2.5 -10)');
+  av.legR.setAttribute('transform', 'rotate(' + (-sw).toFixed(1) + ' 2.5 -10)');
+  av.armF.setAttribute('transform', 'rotate(' + (-sw * .8).toFixed(1) + ' 0 -19)');
+  av.armB.setAttribute('transform', 'rotate(' + (sw * .8).toFixed(1) + ' 0 -19)');
+}
+function placeDepth(node, d){                  // 依 gx+gy 插到建築／樹之間，前後遮擋才正確
+  var kids = L.blds.children, ref = null;
   for (var i = 0; i < kids.length; i++){ var k = kids[i]; if (k !== node && k._d > d) { ref = k; break; } }
   if (node.nextSibling !== ref) L.blds.insertBefore(node, ref);
 }
+function buildAvatar(){
+  walker.av = makeAvatar(me, true);
+  walker.av.g._d = walker.gx + walker.gy;
+  if ($('meName')) $('meName').textContent = me.name;
+}
+function renderAvatarName(){
+  setAvatarLook(walker.av, me);
+  if ($('meName')) $('meName').textContent = me.name;
+}
+function placeAvatarDepth(){ placeDepth(walker.av.g, walker.gx + walker.gy); }
 function zoneAt(gx, gy){
   for (var i = 0; i < ZONES.length; i++){ var b = ZONES[i].box; if (gx >= b[0] && gx <= b[2] && gy >= b[1] && gy <= b[3]) return ZONES[i]; }
   return null;
@@ -1214,14 +1214,7 @@ function stepWalker(dt, now){
   }
   walker.phase = moving ? walker.phase + dt * 11 : walker.phase * .8;
   walker.elev += (groundAt(walker.gx, walker.gy) - walker.elev) * Math.min(1, dt * 12);
-  var sw = Math.sin(walker.phase) * (moving ? 28 : 0), bob = moving ? Math.abs(Math.sin(walker.phase)) * 1.6 : 0;
-  var p = up(iso(walker.gx, walker.gy), walker.elev);
-  L.avatar.setAttribute('transform', 'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')');
-  L.avBody.setAttribute('transform', 'translate(0,' + (-bob).toFixed(1) + ') scale(' + walker.face + ',1)');
-  L.legL.setAttribute('transform', 'rotate(' + sw.toFixed(1) + ' -2.5 -10)');
-  L.legR.setAttribute('transform', 'rotate(' + (-sw).toFixed(1) + ' 2.5 -10)');
-  L.armF.setAttribute('transform', 'rotate(' + (-sw * .8).toFixed(1) + ' 0 -19)');
-  L.armB.setAttribute('transform', 'rotate(' + (sw * .8).toFixed(1) + ' 0 -19)');
+  poseAvatar(walker.av, walker, moving);
   if (moving){
     placeAvatarDepth();
     var z = zoneAt(walker.gx, walker.gy);
@@ -1232,6 +1225,74 @@ function stepWalker(dt, now){
 function rerollName(){
   var old = me.name; me = newAvatar(); lsSet(KEY_AVATAR, me); renderAvatarName();
   addLog(old + ' 改名為 ' + me.name);
+  netSend({t:'look', name:me.name, shirt:me.shirt, hair:me.hair});
+}
+
+/* ---------- 多人同島：透過 Cloudflare Worker（Durable Object）互相看見 ---------- */
+// 只交換「隨機名字、衣服髮色、位置」，沒有其他個人資料。連不上時島上只有自己，其他功能照常。
+var PRESENCE_URL = 'wss://startup-island-presence.content-workflow.workers.dev/ws';
+(function(){ var q = /[?&]presence=([^&]+)/.exec(location.search); if (q) PRESENCE_URL = decodeURIComponent(q[1]); })();
+var net = {ws:null, open:false, retry:1500, lastSent:0, lastPing:0, sentGx:null, sentGy:null,
+           id:Math.random().toString(36).slice(2, 12)};   // 每次載入頁面一個新 id（複製分頁也不會撞號）
+var PEERS = {};
+function netSend(o){ if (net.open) try { net.ws.send(JSON.stringify(o)); } catch(e){} }
+function netConnect(){
+  if (!PRESENCE_URL || !window.WebSocket) return;
+  var ws;
+  try { ws = new WebSocket(PRESENCE_URL); } catch(e){ return; }
+  net.ws = ws;
+  ws.onopen = function(){
+    net.open = true; net.retry = 1500;
+    netSend({t:'hello', id:net.id, name:me.name, shirt:me.shirt, hair:me.hair, gx:walker.gx, gy:walker.gy});
+    net.sentGx = walker.gx; net.sentGy = walker.gy;
+  };
+  ws.onmessage = function(ev){ var m; try { m = JSON.parse(ev.data); } catch(e){ return; } netHandle(m); };
+  ws.onclose = function(){
+    net.open = false; clearPeers();
+    setTimeout(netConnect, net.retry); net.retry = Math.min(net.retry * 2, 30000);
+  };
+  ws.onerror = function(){ try { ws.close(); } catch(e){} };
+}
+function addPeer(p){
+  if (!p || !p.id || p.id === net.id) return;
+  if (PEERS[p.id]){ setAvatarLook(PEERS[p.id].av, p); return; }
+  var o = {id:p.id, name:p.name, gx:p.gx, gy:p.gy, tx:p.gx, ty:p.gy, elev:groundAt(p.gx, p.gy), phase:0, face:1};
+  o.av = makeAvatar(p, false);
+  PEERS[p.id] = o; placeDepth(o.av.g, o.gx + o.gy); poseAvatar(o.av, o, false);
+  renderOnline();
+}
+function removePeer(id){ var o = PEERS[id]; if (!o) return; o.av.g.remove(); delete PEERS[id]; renderOnline(); }
+function clearPeers(){ Object.keys(PEERS).forEach(removePeer); }
+function renderOnline(){ if ($('onlineN')) $('onlineN').textContent = Object.keys(PEERS).length + 1; }
+function netHandle(m){
+  if (m.t === 'snapshot'){ clearPeers(); (m.peers || []).forEach(addPeer); if ((m.peers || []).length) addLog('島上現在還有 ' + m.peers.length + ' 位訪客'); }
+  else if (m.t === 'join'){ addPeer(m.peer); if (m.peer && m.peer.id !== net.id) addLog(m.peer.name + ' 也來到島上'); }
+  else if (m.t === 'move' && PEERS[m.id]){ PEERS[m.id].tx = m.gx; PEERS[m.id].ty = m.gy; }
+  else if (m.t === 'look' && PEERS[m.id]){ var o = PEERS[m.id]; o.name = m.name; setAvatarLook(o.av, m); }
+  else if (m.t === 'leave' && PEERS[m.id]){ addLog(PEERS[m.id].name + ' 離開了島'); removePeer(m.id); }
+}
+function netTick(now){
+  if (!net.open) return;
+  var moved = net.sentGx === null || Math.hypot(walker.gx - net.sentGx, walker.gy - net.sentGy) > .03;
+  if (moved && now - net.lastSent > 180){
+    net.lastSent = now; net.lastPing = now; net.sentGx = walker.gx; net.sentGy = walker.gy;
+    netSend({t:'move', gx:+walker.gx.toFixed(2), gy:+walker.gy.toFixed(2)});
+  } else if (now - net.lastPing > 25000){ net.lastPing = now; netSend({t:'ping'}); }
+}
+function stepPeers(dt){
+  Object.keys(PEERS).forEach(function(id){
+    var o = PEERS[id], dx = o.tx - o.gx, dy = o.ty - o.gy, d = Math.hypot(dx, dy), moving = d > .01;
+    if (d > 8){ o.gx = o.tx; o.gy = o.ty; }                        // 斷線太久或剛回到分頁：直接就位
+    else if (moving){
+      var step = (d > 1.5 ? 4.2 : 2.1) * dt;                        // 落後太多就小跑步追上
+      if (d <= step){ o.gx = o.tx; o.gy = o.ty; } else { o.gx += dx / d * step; o.gy += dy / d * step; }
+      var sx = dx - dy; if (Math.abs(sx) > .01) o.face = sx > 0 ? 1 : -1;
+    }
+    o.phase = moving ? o.phase + dt * 11 : o.phase * .8;
+    o.elev += (groundAt(o.gx, o.gy) - o.elev) * Math.min(1, dt * 12);
+    poseAvatar(o.av, o, moving);
+    if (moving) placeDepth(o.av.g, o.gx + o.gy);
+  });
 }
 
 /* ---------- 鏡頭：縮放／拖曳／聚焦 ---------- */
@@ -1603,6 +1664,7 @@ buildWalk();
 (function(){ var c = nearestCell(walker.gx, walker.gy); if (c){ var p = cellPos(c[0], c[1]); walker.gx = p[0]; walker.gy = p[1]; } })();
 placeAvatarDepth();
 if (firstVisit) addLog(me.name + ' 登上了創業島');
+netConnect();
 renderRelList();
 setTags(state.tags);
 setPaused(state.paused);
