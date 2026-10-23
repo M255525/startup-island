@@ -359,7 +359,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
   <section class="card name-pop" id="namePop" hidden role="dialog" aria-labelledby="nameTitle">
     <div class="eyebrow">Your Character</div>
     <h3 id="nameTitle">幫你的角色取名字</h3>
-    <p class="note">同時在島上的人會看到這個名字，最多 12 個字。之後點地圖上自己的名牌也能再改。</p>
+    <p class="note">同時在島上的人會看到這個名字，最多 12 個字，不能使用不雅、歧視或冒充管理者的字詞。之後點地圖上自己的名牌也能再改。</p>
     <div class="name-row"><input id="nameInput" maxlength="12" autocomplete="off" aria-label="角色名字"><button type="button" class="chip-btn" id="nameDice">隨機一個</button></div>
     <p class="name-err" id="nameErr" aria-live="polite"></p>
     <div class="name-acts"><button type="button" class="chip-btn" id="nameCancel">取消</button><button type="button" class="save" id="nameSave">確定</button></div>
@@ -392,7 +392,8 @@ footer{background:var(--panel);padding:30px 16px 40px}
     </div>
     <div class="creator-box">
       <p><strong>創作者：Mark Tsai（蔡豐全）</strong></p>
-      <p>製作：Mark Tsai｜<a href="mailto:tsaimark@gmail.com">tsaimark@gmail.com</a></p>
+      <p>勞動力發展署創業顧問（2017 起）、經濟部 SBIR 海選專案評審委員（2019－2024），長期擔任小型企業人力提升計畫顧問與多項政府計畫業師、評審委員；專長銷售數據分析、AI 工具運用、政府補助計畫申請、創業與跨境電商。</p>
+      <p><a href="manual.html#creator">完整經歷與證照</a>｜<a href="mailto:tsaimark@gmail.com">tsaimark@gmail.com</a></p>
     </div>
     <div class="foot-links">
       <a href="manual.html">使用說明</a>
@@ -1085,10 +1086,43 @@ var NAME_B = ['店長','老闆','創辦人','企劃','設計師','工程師','�
 var NAME_C = ['小安','阿哲','小魚','阿凱','小晴','阿寶','小樹','阿福','小米','阿德','小芸','阿豪','小橘','阿翔','小柚','阿誠'];
 var SHIRTS = ['#ff6f59','#4f9dff','#f4b942','#6bbf59','#9d8cf2','#ef6b8a','#2ec4b6','#f08a4b'];
 var HAIRS = ['#3b2a20','#14303d','#6b4226','#a0522d','#2b2b2b'];
+// ---- 名字禁用字詞：由 presence-worker/badwords.js 產生，兩邊清單一致（改清單請改那個檔再重新產生） ----
+var BAD_WORDS = [
+  // 英文
+  'fuck', 'fuk', 'fck', 'fack', 'fvck', 'phuck', 'shit', 'bitch', 'asshole', 'dick', 'cock', 'pussy', 'cunt', 'nigger', 'nigga',
+  'faggot', 'bastard', 'slut', 'whore', 'porn', 'sex', 'rape', 'nazi', 'hitler', 'wtf', 'admin',
+  // 中文粗話（含簡體與常見諧音）
+  '幹你', '幹妳', '幹林', '幹拎', '幹恁', '幹死', '干你', '干林', '操你', '操妳', '操死', '肏', '屌',
+  '靠北', '靠杯', '靠腰', '靠夭', '他媽', '他妈', '你媽', '你妈', '媽的', '妈的', '林北', '林娘', '恁娘', '恁爸', '你娘',
+  '機掰', '機八', '機歪', '雞掰', '雞巴', '雞歪', '鸡巴', '三小', '洨', '屄', '婊', '妓',
+  '賤人', '贱人', '賤貨', '白痴', '白癡', '智障', '腦殘', '脑残', '傻逼', '傻b', '煞筆', '低能', '廢物', '废物', '去死',
+  // 色情、暴力、歧視
+  '色情', '淫', '性交', '做愛', '做爱', '強姦', '强奸', '強暴', '陰莖', '陰道', '打手槍', '尻槍',
+  '吸毒', '毒品', '殺人', '自殺', '支那', '黑鬼', '納粹', '希特勒',
+  // 冒充管理者
+  '管理員', '管理员',
+];
+
+var LEET = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '@': 'a', '$': 's', '!': 'i', '|': 'i' };
+
+function normName(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[！-～]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xfee0); })
+    .replace(/[0134579@$!|]/g, function(c){ return LEET[c] || c; })
+    .replace(/[^a-z㐀-鿿]/g, '');
+}
+
+function hasBadWord(name) {
+  var n = normName(name);
+  return BAD_WORDS.some(function(w){ return n.indexOf(normName(w)) >= 0; });
+}
+// ---- 名字禁用字詞 end ----
 function pick(a){ return a[Math.floor(Math.random() * a.length)]; }
-function newAvatar(){ return {name:pick(NAME_A) + pick(NAME_B) + pick(NAME_C), shirt:pick(SHIRTS), hair:pick(HAIRS)}; }
+function newAvatar(){ return {name:randomName(), shirt:pick(SHIRTS), hair:pick(HAIRS)}; }
 var me = lsGet(KEY_AVATAR, null), firstVisit = false;
 if (!me || !me.name){ me = newAvatar(); lsSet(KEY_AVATAR, me); firstVisit = true; }
+else if (hasBadWord(me.name)){ me.name = randomName(); lsSet(KEY_AVATAR, me); }
 
 // 可走格子：0.5 格一格；海、河（橋除外）、建築、池塘與噴水池不能走
 var WG = {x0:-4, y0:-4, step:.5, n:60}, walkCells = null;
@@ -1194,7 +1228,8 @@ function makeAvatar(data, mine){
 function setAvatarLook(av, data){
   av.shirt.setAttribute('fill', data.shirt); av.hair.setAttribute('fill', data.hair);
   var tag = av.tag; tag.innerHTML = '';
-  var label = av.mine ? data.name + '（你）✎' : data.name;
+  var shown = hasBadWord(data.name) ? '旅人' : data.name;
+  var label = av.mine ? shown + '（你）✎' : shown;
   var w = 0; for (var i = 0; i < label.length; i++) w += label.charCodeAt(i) > 255 ? 12 : 7; w += 18;
   el('rect', {x:-w/2, y:-11, width:w, height:20, rx:10, fill:data.shirt, stroke:'#fff', 'stroke-width':av.mine ? 2.2 : 1, opacity:av.mine ? 1 : .92}, tag);
   el('path', {d:'M-4 9 L0 14 L4 9 Z', fill:data.shirt}, tag);
@@ -1250,7 +1285,7 @@ function stepWalker(dt, now){
     walker.zone = z;
   }
 }
-function randomName(){ return pick(NAME_A) + pick(NAME_B) + pick(NAME_C); }
+function randomName(){ var n; do { n = pick(NAME_A) + pick(NAME_B) + pick(NAME_C); } while (hasBadWord(n)); return n; }
 function cleanName(v){ return String(v || '').replace(/[\u0000-\u001f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12); }
 function setMyName(name){
   if (name === me.name) return;
@@ -1268,6 +1303,7 @@ function closeNamePop(){ $('namePop').hidden = true; }
 function saveNamePop(){
   var n = cleanName($('nameInput').value);
   if (!n){ $('nameErr').textContent = '名字不能空白，或按「隨機一個」。'; $('nameInput').focus(); return; }
+  if (hasBadWord(n)){ $('nameErr').textContent = '這個名字含有不適合的字詞，請換一個。'; $('nameInput').focus(); $('nameInput').select(); return; }
   setMyName(n); closeNamePop();
 }
 

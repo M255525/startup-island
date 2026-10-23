@@ -33,6 +33,13 @@ ul,ol{padding-left:22px;margin:6px 0}
 a{color:inherit}
 .back{display:inline-block;margin-top:14px;background:#fff;color:#14303d;text-decoration:none;font-weight:700;padding:8px 16px;border-radius:999px}
 .tbl{overflow-x:auto}
+h3.sub{font-size:15px;margin:16px 0 6px;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:13.5px}
+.exp{columns:2;column-gap:28px;font-size:14px}
+.exp li{break-inside:avoid;margin:3px 0}
+@media (max-width:640px){.exp{columns:1}}
+
 .toc{display:flex;flex-wrap:wrap;gap:6px 8px;margin:0}
 .toc a{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13.5px;text-decoration:none}
 .toc a:hover{border-color:var(--coral)}
@@ -66,7 +73,7 @@ td a,li a,.stage a{color:var(--sea);font-weight:700}
 <nav class="toc" aria-label="本頁目錄" style="margin-top:4px">
   <a href="#about">這是什麼</a><a href="#views">三種看法</a><a href="#toolbar">工具列</a><a href="#places">九個地點</a>
   <a href="#roadmap">創業路線圖</a><a href="#paperwork">開業手續</a><a href="#funding">政府資源</a><a href="#numbers">一定要懂的數字</a>
-  <a href="#pitfalls">常見的坑</a><a href="#week">一週練習</a><a href="#links">官方網站</a><a href="#faq">常見問題</a>
+  <a href="#pitfalls">常見的坑</a><a href="#week">一週練習</a><a href="#links">官方網站</a><a href="#faq">常見問題</a><a href="#creator">關於創作者</a>
 </nav>
 <div class="part">PART 1 · 島上怎麼玩</div>
 
@@ -259,9 +266,17 @@ td a,li a,.stage a{color:var(--sea);font-weight:700}
   </ul>
 </section>
 
-<section>
-  <h2>創作者</h2>
-  <p>Mark Tsai（蔡豐全）｜<a href="mailto:tsaimark@gmail.com">tsaimark@gmail.com</a></p>
+<section id="creator">
+  <h2>關於創作者</h2>
+  <p>Mark Tsai（蔡豐全）為深耕創業輔導與數位轉型領域的顧問與講師，長期擔任勞動力發展署創業顧問與多項政府計畫的顧問、業師與評審委員，協助中小企業導入數據分析與 AI 工具、申請政府補助計畫，並具備跨境電商實務與講師培訓的豐富經驗。「創業島」把他多年創業輔導與教學用到的線上工具，整理成一張可以走動探索的地圖。</p>
+  <p>聯絡信箱：<a href="mailto:tsaimark@gmail.com">tsaimark@gmail.com</a></p>
+  <h3 class="sub">專長</h3>
+  <div class="chips"><span>銷售數據分析</span><span>AI 工具運用</span><span>政府補助計畫申請</span><span>創業</span><span>跨境電商</span></div>
+  <h3 class="sub">證照與培訓</h3>
+  <div class="tbl"><table><tr><th>2013</th><td>青創總會 創業輔導顧問師班</td></tr><tr><th>2014</th><td>青創總會 網路行銷講師培訓班</td></tr><tr><th>2016</th><td>阿里巴巴 P4P 認證講師</td></tr><tr><th>2017</th><td>iCap 訓練規劃與評量職能基準課程</td></tr><tr><th>2023</th><td>iCap 職能導向課程申請認證實作班</td></tr><tr><th>2025</th><td>iPAS AI 應用規劃師－初級</td></tr><tr><th>2025</th><td>新北市社會局 社區數位陪伴員</td></tr></table></div>
+  <h3 class="sub">經歷</h3>
+  <ul class="exp"><li>勞動力發展署桃竹苗分署 創業顧問（2017－迄今）</li><li>勞動力發展署（北北基）小型企業人力提升計畫 顧問（2019－迄今）</li><li>勞動力發展署（桃竹苗）小型企業人力提升計畫 顧問（2019－迄今）</li><li>農業部農業科技司「科技農企業雙軸轉型躍升發展」科技計畫 業師（2025－2026）</li><li>勞動力發展署 企業人力資源提升計畫 審查委員（2024）</li><li>勞動力發展署 職前訓練評鑑計畫 委員（2022）</li><li>勞動部桃竹苗分署 桃竹苗區域運籌人力資源整合服務計畫 顧問（2022－2023）</li><li>經濟部中小企業處 SBIR 海選專案 評審委員（2019－2024）</li><li>勞動力發展署 數位學習課程清單審查會議 審查委員（2024－2025）</li><li>輔仁大學創新跨領域學院 課務委員（2024－2025）</li><li>台北市進出口商業同業公會 跨境電商生態村 顧問</li><li>台灣網商協會 顧問</li><li>中華職能開發策進會 顧問（2018－2020）</li><li>新北市汽車美容人員職業工會 顧問（2023－迄今）</li><li>中華網路行銷講師協會 顧問（2022－迄今）</li><li>新北市社企電商基地 輔導顧問（2018－2020）</li><li>阿里巴巴國際站平台 認證講師（2016）</li><li>巨匠電腦 跨境電子商務班 講師（2016－2017）</li></ul>
+  <p class="note-sm">創業島僅供教學、課程及個人使用；其他用途請先來信取得授權。</p>
 </section>
 </main>
 </body>

@@ -1,6 +1,7 @@
 // 創業島「多人同島」轉播站：一個 Durable Object 房間，用 WebSocket 轉播每位訪客的
 // 隨機名字、衣服／髮色與位置。不寫入任何儲存，訪客離線就消失。
 import { DurableObject } from 'cloudflare:workers';
+import { hasBadWord } from './badwords.js';
 
 const ALLOWED_ORIGINS = [
   /^https:\/\/m255525\.github\.io$/,
@@ -16,7 +17,8 @@ function clampNum(v, lo, hi) {
   return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : null;
 }
 function cleanName(v) {
-  return String(v || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 24) || '旅人';
+  const n = String(v || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 24) || '旅人';
+  return hasBadWord(n) ? '旅人' : n; // 含禁用字詞一律改成「旅人」
 }
 function cleanColor(v, fallback) {
   return COLOR.test(String(v)) ? String(v) : fallback;
