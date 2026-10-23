@@ -864,6 +864,7 @@ function buildMap(){
       el('line', {x1:0, y1:9, x2:0, y2:-dy - 2, stroke:'var(--ink-faint)', 'stroke-width':1, 'stroke-dasharray':'2 2'}, t.tagG).parentNode.insertBefore(t.tagG.lastChild, t.tagG.firstChild);
     }
   });
+  L.ptags = el('g', {'pointer-events':'none'}, svg);   // 人物名牌永遠在最上層，走到建築後面也看得到名字
   buildAvatar();
   L.clouds = el('g', {'pointer-events':'none', opacity:.4}, svg);
   for (var c2 = 0; c2 < 4; c2++){
@@ -1161,7 +1162,8 @@ function makeAvatar(data, mine){
   el('circle', {cx:0, cy:-27, r:6.2, fill:'#f6d3b3'}, av.body);
   av.hair = el('path', {d:'M-6.4 -27 A6.4 6.4 0 0 1 6.4 -27 L6.4 -29 Q2 -31 -6.4 -26 Z'}, av.body);
   el('circle', {cx:2.6, cy:-27, r:1, fill:'#14303d'}, av.body);
-  av.tag = el('g', {transform:'translate(0,-44)'}, g);
+  av.tagWrap = el('g', {}, L.ptags);
+  av.tag = el('g', {transform:'translate(0,-44)'}, av.tagWrap);
   setAvatarLook(av, data);
   return av;
 }
@@ -1178,6 +1180,7 @@ function poseAvatar(av, o, moving){
   var sw = Math.sin(o.phase) * (moving ? 28 : 0), bob = moving ? Math.abs(Math.sin(o.phase)) * 1.6 : 0;
   var p = up(iso(o.gx, o.gy), o.elev);
   av.g.setAttribute('transform', 'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')');
+  av.tagWrap.setAttribute('transform', 'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')');
   av.body.setAttribute('transform', 'translate(0,' + (-bob).toFixed(1) + ') scale(' + o.face + ',1)');
   av.legL.setAttribute('transform', 'rotate(' + sw.toFixed(1) + ' -2.5 -10)');
   av.legR.setAttribute('transform', 'rotate(' + (-sw).toFixed(1) + ' 2.5 -10)');
@@ -1262,7 +1265,7 @@ function addPeer(p){
   PEERS[p.id] = o; placeDepth(o.av.g, o.gx + o.gy); poseAvatar(o.av, o, false);
   renderOnline();
 }
-function removePeer(id){ var o = PEERS[id]; if (!o) return; o.av.g.remove(); delete PEERS[id]; renderOnline(); }
+function removePeer(id){ var o = PEERS[id]; if (!o) return; o.av.g.remove(); o.av.tagWrap.remove(); delete PEERS[id]; renderOnline(); }
 function clearPeers(){ Object.keys(PEERS).forEach(removePeer); }
 function renderOnline(){ if ($('onlineN')) $('onlineN').textContent = Object.keys(PEERS).length + 1; }
 function netHandle(m){
