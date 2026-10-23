@@ -185,6 +185,16 @@ body.view-time .timebar{display:block}
 .story{position:absolute;left:16px;bottom:84px;z-index:39;width:min(380px,calc(100vw - 32px));padding:16px 18px}
 body.view-time .story{bottom:214px}
 .story[hidden]{display:none}
+.name-pop{position:absolute;z-index:45;left:50%;top:76px;transform:translateX(-50%);width:min(380px,calc(100vw - 32px));padding:16px 18px}
+.name-pop[hidden]{display:none}
+.name-pop h3{margin:2px 0 4px;font-size:17px}
+.name-pop .note{font-size:12.5px;color:var(--ink-dim);margin:0 0 10px}
+.name-row{display:flex;gap:8px}
+.name-row input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+.name-row input:focus{outline:2px solid var(--coral);outline-offset:0;border-color:transparent}
+.name-err{min-height:18px;margin:6px 0 4px;font-size:12.5px;color:var(--lic)}
+.name-acts{display:flex;justify-content:flex-end;gap:8px}
+.name-acts .save{border:0;background:var(--ink);color:var(--panel);padding:7px 18px;border-radius:999px;cursor:pointer;font-weight:700}
 .story .meta{display:flex;justify-content:space-between;align-items:center}
 .story .chap{font-size:12px;font-weight:700;color:var(--coral-ink);margin-top:8px}
 .story h2{font-family:var(--f-display);font-weight:400;font-size:21px;margin:2px 0 6px;line-height:1.35}
@@ -296,7 +306,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <div class="clock"><span>島上時間</span><b id="clockNow">--:--</b><span id="clockNote"></span></div>
     <div class="clock"><span>你已探索</span><b id="seenCount">0</b><span>棟建築</span></div>
     <div class="clock"><span>島上現在</span><b id="onlineN">1</b><span>人（其他訪客也看得到你走動）</span></div>
-    <div class="clock"><span>你是</span><b id="meName" class="me-name"></b><button type="button" class="tc-toggle" id="reroll">換名字</button></div>
+    <div class="clock"><span>你是</span><b id="meName" class="me-name"></b><button type="button" class="tc-toggle" id="reroll">改名字</button></div>
   </section>
 
   <div class="list-view" id="listView"></div>
@@ -328,7 +338,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <div class="head"><span class="eyebrow">Footprints</span><span class="log-live">探索紀錄</span><button type="button" class="x" data-close="logDrawer" aria-label="關閉">×</button></div>
     <div class="body">
       <ol class="log-list" id="logList"></ol>
-      <div class="log-actions"><button type="button" class="chip-btn" id="replayStory">重播導覽</button><button type="button" class="chip-btn" id="rerollLog">換一個名字</button><button type="button" class="chip-btn" id="clearLog">清除足跡</button></div>
+      <div class="log-actions"><button type="button" class="chip-btn" id="replayStory">重播導覽</button><button type="button" class="chip-btn" id="rerollLog">改名字</button><button type="button" class="chip-btn" id="clearLog">清除足跡</button></div>
     </div>
   </aside>
 
@@ -344,6 +354,15 @@ footer{background:var(--panel);padding:30px 16px 40px}
     </div>
     <input type="range" class="tb-range" id="tbRange" min="0" max="24" step="0.25" value="7" aria-label="時間">
     <div class="tb-ticks" id="tbTicks"></div>
+  </section>
+
+  <section class="card name-pop" id="namePop" hidden role="dialog" aria-labelledby="nameTitle">
+    <div class="eyebrow">Your Character</div>
+    <h3 id="nameTitle">幫你的角色取名字</h3>
+    <p class="note">同時在島上的人會看到這個名字，最多 12 個字。之後點地圖上自己的名牌也能再改。</p>
+    <div class="name-row"><input id="nameInput" maxlength="12" autocomplete="off" aria-label="角色名字"><button type="button" class="chip-btn" id="nameDice">隨機一個</button></div>
+    <p class="name-err" id="nameErr" aria-live="polite"></p>
+    <div class="name-acts"><button type="button" class="chip-btn" id="nameCancel">取消</button><button type="button" class="save" id="nameSave">確定</button></div>
   </section>
 
   <section class="card story" id="story" hidden aria-live="polite">
@@ -550,7 +569,7 @@ var MONTH_SCRIPT = [
 
 var STORY = [
   {chap:'01 創業者的一天', eb:'Welcome Aboard', title:'歡迎來到創業島',
-   body:'你是「{name}」。滑鼠移到哪，你就走到哪；島上每一棟建築都是一個真的線上工具，分在九個地點，點建築看它做什麼，再一鍵打開。', act:function(){ setView('map'); birdview(); }},
+   body:'你是「{name}」（可以在說明卡或「足跡」裡改名字）。滑鼠移到哪，你就走到哪；島上每一棟建築都是一個真的線上工具，分在九個地點，點建築看它做什麼，再一鍵打開。', act:function(){ setView('map'); birdview(); }},
   {chap:'01 創業者的一天', eb:'07:00', title:'一天從點子公園開始',
    body:'早上腦袋最清楚。先把點子丟進商業創意產生器，用曼陀羅九宮格展開。沒亮的建築，是這個時段用不太到的工具。', act:function(){ setView('time'); setTimeMode('day'); setT(7); focusZones(['idea','strategy']); }},
   {chap:'01 創業者的一天', eb:'14:00', title:'下午算數字、找資金',
@@ -1163,6 +1182,11 @@ function makeAvatar(data, mine){
   av.hair = el('path', {d:'M-6.4 -27 A6.4 6.4 0 0 1 6.4 -27 L6.4 -29 Q2 -31 -6.4 -26 Z'}, av.body);
   el('circle', {cx:2.6, cy:-27, r:1, fill:'#14303d'}, av.body);
   av.tagWrap = el('g', {}, L.ptags);
+  if (mine){                                  // 點自己的名牌就能改名字
+    av.tagWrap.style.pointerEvents = 'auto'; av.tagWrap.style.cursor = 'pointer';
+    av.tagWrap.addEventListener('click', function(e){ e.stopPropagation(); openNamePop(); });
+    av.tagWrap.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+  }
   av.tag = el('g', {transform:'translate(0,-44)'}, av.tagWrap);
   setAvatarLook(av, data);
   return av;
@@ -1170,7 +1194,7 @@ function makeAvatar(data, mine){
 function setAvatarLook(av, data){
   av.shirt.setAttribute('fill', data.shirt); av.hair.setAttribute('fill', data.hair);
   var tag = av.tag; tag.innerHTML = '';
-  var label = av.mine ? data.name + '（你）' : data.name;
+  var label = av.mine ? data.name + '（你）✎' : data.name;
   var w = 0; for (var i = 0; i < label.length; i++) w += label.charCodeAt(i) > 255 ? 12 : 7; w += 18;
   el('rect', {x:-w/2, y:-11, width:w, height:20, rx:10, fill:data.shirt, stroke:'#fff', 'stroke-width':av.mine ? 2.2 : 1, opacity:av.mine ? 1 : .92}, tag);
   el('path', {d:'M-4 9 L0 14 L4 9 Z', fill:data.shirt}, tag);
@@ -1226,10 +1250,25 @@ function stepWalker(dt, now){
     walker.zone = z;
   }
 }
-function rerollName(){
-  var old = me.name; me = newAvatar(); lsSet(KEY_AVATAR, me); renderAvatarName();
+function randomName(){ return pick(NAME_A) + pick(NAME_B) + pick(NAME_C); }
+function cleanName(v){ return String(v || '').replace(/[\u0000-\u001f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12); }
+function setMyName(name){
+  if (name === me.name) return;
+  var old = me.name; me.name = name; lsSet(KEY_AVATAR, me); renderAvatarName();
   addLog(old + ' 改名為 ' + me.name);
   netSend({t:'look', name:me.name, shirt:me.shirt, hair:me.hair});
+}
+function openNamePop(){
+  closeDrawer('logDrawer');
+  $('nameInput').value = me.name; $('nameErr').textContent = '';
+  $('namePop').hidden = false;
+  setTimeout(function(){ $('nameInput').focus(); $('nameInput').select(); }, 0);
+}
+function closeNamePop(){ $('namePop').hidden = true; }
+function saveNamePop(){
+  var n = cleanName($('nameInput').value);
+  if (!n){ $('nameErr').textContent = '名字不能空白，或按「隨機一個」。'; $('nameInput').focus(); return; }
+  setMyName(n); closeNamePop();
 }
 
 /* ---------- 多人同島：透過 Cloudflare Worker（Durable Object）互相看見 ---------- */
@@ -1549,7 +1588,7 @@ function closeDrawer(id){
 }
 document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click', function(){ closeDrawer(b.getAttribute('data-close')); }); });
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape'){ closeDrawer('detail'); closeDrawer('logDrawer'); $('linkPop').hidden = true; $('tbLinks').setAttribute('aria-expanded', 'false'); }
+  if (e.key === 'Escape'){ closeNamePop(); closeDrawer('detail'); closeDrawer('logDrawer'); $('linkPop').hidden = true; $('tbLinks').setAttribute('aria-expanded', 'false'); }
 });
 
 function renderSeen(){
@@ -1591,8 +1630,12 @@ $('tbPan').addEventListener('click', function(){
 });
 $('tbPause').addEventListener('click', function(){ setPaused(!state.paused); });
 $('tbWalk').addEventListener('click', function(){ walker.follow = !walker.follow; this.setAttribute('aria-pressed', String(walker.follow)); if (!walker.follow) walker.pending = null; });
-$('reroll').addEventListener('click', rerollName);
-$('rerollLog').addEventListener('click', rerollName);
+$('reroll').addEventListener('click', openNamePop);
+$('rerollLog').addEventListener('click', openNamePop);
+$('nameDice').addEventListener('click', function(){ $('nameInput').value = randomName(); $('nameErr').textContent = ''; $('nameInput').focus(); });
+$('nameSave').addEventListener('click', saveNamePop);
+$('nameCancel').addEventListener('click', closeNamePop);
+$('nameInput').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); saveNamePop(); } });
 $('tbBird').addEventListener('click', function(){ if (state.view === 'list') setView('map'); else birdview(); });
 $('tbLog').addEventListener('click', function(){
   if ($('logDrawer').classList.contains('open')) closeDrawer('logDrawer');
