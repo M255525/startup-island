@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>創業島 · 從一個點子出發，走完整座島</title>
+<meta name="description" content="把 40 個線上創業工具放進一座可以探索的島：八個創業街區、工具接力線、創業者的一天與兩年創業旅程時間軸。">
+<meta name="theme-color" content="#1c6e8c">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14303d; --ink-dim:#4d6672; --ink-faint:#8aa0aa;
+  --sea:#3d9ab5; --sea-deep:#1c6e8c; --foam:#bfe8ef;
+  --sand:#f3d798; --grass:#c4dd9c; --cliff:#b98a4e;
+  --panel:#fbfdfd; --panel-2:#eef6f8; --line:#d4e3e8;
+  --coral:#ff6f59; --coral-ink:#c8412d;
+  --shadow:0 10px 30px rgba(12,48,64,.18);
+  --mq:0px;
+  --f-display:"Huninn","Noto Sans TC",system-ui,sans-serif;
+  --f-body:"Noto Sans TC",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --ink:#e4f0f3; --ink-dim:#a4bcc5; --ink-faint:#6f8b96;
+    --sea:#145069; --sea-deep:#0b2c3c; --foam:#2c6f86;
+    --sand:#b89a62; --grass:#7d9b5c; --cliff:#6e5230;
+    --panel:#11242e; --panel-2:#183340; --line:#264552;
+    --coral:#ff8470; --coral-ink:#ffb3a5;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--f-body);color:var(--ink);background:var(--sea-deep);line-height:1.6;-webkit-font-smoothing:antialiased}
+body.has-marquee{--mq:30px}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+.mono{font-family:var(--f-mono);letter-spacing:.06em}
+
+/* ---------- 跑馬燈 ---------- */
+#marqueeBar{position:fixed;top:0;left:0;right:0;height:30px;background:var(--coral);color:#fff;z-index:1500;overflow:hidden;display:none;align-items:center;font-size:13px;font-weight:700}
+#marqueeBar.show{display:flex}
+#marqueeTrack{display:inline-block;white-space:nowrap;padding-left:100%;animation:marquee 30s linear infinite}
+#marqueeBar:hover #marqueeTrack{animation-play-state:paused}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ---------- App 外框 ---------- */
+.app{position:relative;margin-top:var(--mq);height:calc(100svh - var(--mq));min-height:520px;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,var(--sea) 0%,var(--sea-deep) 75%)}
+.topbar{position:absolute;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;gap:12px;padding:12px 16px;pointer-events:none}
+.topbar>*{pointer-events:auto}
+.brand{display:flex;align-items:baseline;gap:10px;background:var(--panel);padding:6px 14px;border-radius:999px;box-shadow:var(--shadow);text-decoration:none}
+.brand b{font-family:var(--f-display);font-weight:400;font-size:22px;letter-spacing:.04em}
+.brand span{font-size:10.5px;color:var(--ink-faint)}
+.seg{display:flex;background:var(--panel);border-radius:999px;padding:4px;box-shadow:var(--shadow);margin:0 auto}
+.seg button{border:0;background:transparent;padding:6px 16px;border-radius:999px;cursor:pointer;font-weight:500;font-size:14px;color:var(--ink-dim)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.top-link{background:var(--panel);border-radius:999px;padding:8px 14px;box-shadow:var(--shadow);font-size:13px;text-decoration:none;font-weight:500}
+
+/* ---------- 地圖 ---------- */
+#map{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+#map.pan{cursor:grab}
+#map.dragging{cursor:grabbing}
+.bld{cursor:pointer}
+.bld .hit{fill:transparent}
+.bld:hover .roof,.bld:focus .roof{filter:brightness(1.12)}
+.bld:focus{outline:none}
+.bld:focus .ring{opacity:1}
+.bld .ring{opacity:0;transition:opacity .2s}
+.bld.sel .ring{opacity:1;animation:ring 1.6s ease-in-out infinite}
+@keyframes ring{50%{stroke-width:5}}
+.bld{transition:opacity .35s}
+.bld.dim{opacity:.22}
+.tag text{font-family:var(--f-body);font-weight:700;font-size:12px;fill:var(--ink)}
+.tag rect{fill:var(--panel);stroke:var(--line)}
+.hide-tags .tag{display:none}
+.zone-tag text{font-family:var(--f-display);font-size:17px;letter-spacing:.06em}
+.zone-tag .en{font-family:var(--f-mono);font-size:9px;letter-spacing:.14em;opacity:.75}
+.link-path{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:7 7;animation:flow 1.2s linear infinite;transition:opacity .3s}
+.link-path.fade{opacity:.08}
+.link-path.hot{stroke-width:4}
+.hide-links .links{display:none}
+@keyframes flow{to{stroke-dashoffset:-14}}
+.paused .link-path,.paused .pulse{animation-play-state:paused}
+.pulse{animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{50%{opacity:.2}}
+
+/* ---------- 浮動面板通用 ---------- */
+.card{background:var(--panel);border-radius:16px;box-shadow:var(--shadow)}
+.eyebrow{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase}
+
+.title-card{position:absolute;left:16px;top:70px;z-index:20;padding:16px 18px;max-width:330px}
+.title-card h1{font-family:var(--f-display);font-weight:400;font-size:27px;line-height:1.3;margin:6px 0 8px;letter-spacing:.02em}
+.title-card p{margin:0;font-size:13px;color:var(--ink-dim)}
+.title-card .stats{display:flex;gap:14px;margin-top:10px;font-size:12.5px}
+.title-card .stats b{font-family:var(--f-mono);font-size:15px;color:var(--ink)}
+.clock{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--ink-dim)}
+.clock b{font-family:var(--f-mono);color:var(--ink)}
+
+/* 工具列 */
+.toolbar{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;z-index:30;display:flex;gap:4px;padding:6px;border-radius:999px;transition:bottom .3s}
+.toolbar button{border:0;background:transparent;border-radius:999px;padding:7px 12px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--ink-dim);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.toolbar button:hover{background:var(--panel-2)}
+.toolbar button[aria-pressed="true"]{background:var(--panel-2);color:var(--ink)}
+.toolbar button[aria-pressed="true"] .dot{background:var(--coral)}
+.toolbar .dot{width:7px;height:7px;border-radius:50%;background:var(--line)}
+body.view-time .toolbar{bottom:150px}
+
+/* 接力線面板 */
+.pop{position:absolute;z-index:35;left:50%;transform:translateX(-50%);bottom:76px;width:min(560px,calc(100vw - 32px));max-height:min(60vh,520px);display:flex;flex-direction:column;padding:16px 18px}
+body.view-time .pop{bottom:208px}
+.pop[hidden]{display:none}
+.pop h3{margin:2px 0 4px;font-size:16px}
+.pop .note{font-size:12px;color:var(--ink-dim);margin:0 0 10px}
+.pop .row{display:flex;gap:8px;margin-bottom:8px}
+.chip-btn{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:12.5px}
+.rel-list{overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding-right:4px}
+.rel-list label{display:flex;gap:8px;align-items:flex-start;font-size:13px;padding:5px 6px;border-radius:8px;cursor:pointer}
+.rel-list label:hover{background:var(--panel-2)}
+.rel-list input{margin-top:4px;accent-color:var(--coral)}
+.rel-list i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-top:6px;flex:none}
+
+/* 右側抽屜（建築／足跡） */
+.drawer{position:absolute;top:70px;right:16px;bottom:18px;width:min(370px,calc(100vw - 32px));z-index:38;display:flex;flex-direction:column;transform:translateX(calc(100% + 30px));transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.drawer.open{transform:none}
+.drawer .head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0}
+.drawer .body{padding:6px 18px 18px;overflow:auto}
+.x{border:0;background:var(--panel-2);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1}
+.zone-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;color:#16323e}
+.d-name{font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1.3;margin:10px 0 6px}
+.d-role{margin:0 0 14px;font-size:14.5px}
+.d-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px;margin:0 0 14px;padding:12px;background:var(--panel-2);border-radius:12px}
+.d-grid dt{color:var(--ink-faint);white-space:nowrap}
+.d-grid dd{margin:0}
+.lic{font-size:12.5px;background:rgba(255,111,89,.12);color:var(--coral-ink);padding:8px 12px;border-radius:10px;margin:0 0 14px}
+.go{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:var(--ink);color:var(--panel);font-weight:700;padding:12px;border-radius:12px;margin-bottom:16px}
+.go:hover{background:var(--coral);color:#fff}
+.rel-h{font-size:12px;color:var(--ink-faint);margin:0 0 6px}
+.rel-item{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 10px;margin-bottom:6px;cursor:pointer;font-size:13px}
+.rel-item:hover{border-color:var(--coral)}
+.rel-item small{display:block;color:var(--ink-faint);font-size:11.5px}
+
+.log-live{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;color:var(--coral-ink)}
+.log-live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--coral);animation:blink 1.4s infinite}
+.log-list{list-style:none;margin:8px 0 12px;padding:0}
+.log-list li{display:grid;grid-template-columns:48px 1fr;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.log-list time{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-faint);padding-top:2px}
+.log-empty{font-size:13px;color:var(--ink-dim);padding:14px 0}
+.log-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* 時間軸 */
+.timebar{position:absolute;left:16px;right:16px;bottom:18px;z-index:32;padding:12px 18px 14px;display:none}
+body.view-time .timebar{display:block}
+.tb-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tb-mode{display:flex;background:var(--panel-2);border-radius:999px;padding:3px}
+.tb-mode button{border:0;background:transparent;border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;color:var(--ink-dim)}
+.tb-mode button[aria-pressed="true"]{background:var(--panel);color:var(--ink);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.tb-play{border:0;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--panel);cursor:pointer;font-size:14px}
+.tb-read{font-family:var(--f-mono);font-size:22px;font-weight:700;min-width:118px}
+.tb-script{flex:1;min-width:220px;font-size:13.5px;color:var(--ink-dim)}
+.tb-range{width:100%;margin:10px 0 0;accent-color:var(--coral)}
+.tb-ticks{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10.5px;color:var(--ink-faint)}
+
+/* 引導故事 */
+.story{position:absolute;left:16px;bottom:84px;z-index:39;width:min(380px,calc(100vw - 32px));padding:16px 18px}
+body.view-time .story{bottom:214px}
+.story[hidden]{display:none}
+.story .meta{display:flex;justify-content:space-between;align-items:center}
+.story .chap{font-size:12px;font-weight:700;color:var(--coral-ink);margin-top:8px}
+.story h2{font-family:var(--f-display);font-weight:400;font-size:21px;margin:2px 0 6px;line-height:1.35}
+.story p{margin:0 0 12px;font-size:14px;color:var(--ink-dim)}
+.story .bar{height:3px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.story .bar i{display:block;height:100%;background:var(--coral);transition:width .3s}
+.story .acts{display:flex;gap:8px;align-items:center}
+.story .acts .next{margin-left:auto;border:0;background:var(--ink);color:var(--panel);padding:7px 16px;border-radius:999px;cursor:pointer;font-weight:700;font-size:13.5px}
+.story .acts .ghost{border:0;background:transparent;color:var(--ink-dim);cursor:pointer;font-size:13px;padding:6px 4px}
+
+/* 清單檢視 */
+.list-view{position:absolute;inset:0;z-index:25;overflow:auto;padding:76px 16px 90px;display:none;background:var(--sea-deep)}
+body.view-list .list-view{display:block}
+body.view-list .title-card,body.view-time .title-card{display:none}
+.zone-sec{max-width:1100px;margin:0 auto 26px}
+.zone-sec h2{display:flex;align-items:baseline;gap:10px;font-family:var(--f-display);font-weight:400;font-size:22px;color:#fff;margin:0 0 4px}
+.zone-sec h2 small{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;opacity:.7}
+.zone-sec>p{margin:0 0 12px;color:#cfe6ec;font-size:13.5px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.tcard{text-align:left;border:0;border-top:5px solid;background:var(--panel);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.tcard:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.tcard b{font-size:15px}
+.tcard span{font-size:12.5px;color:var(--ink-dim)}
+.tcard em{font-style:normal;font-size:11.5px;color:var(--ink-faint);margin-top:auto}
+.tcard .seen{color:var(--coral-ink)}
+
+/* 載入畫面 */
+.loader{position:fixed;inset:0;z-index:2000;background:var(--sea-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#e9f6f9;transition:opacity .5s}
+.loader.done{opacity:0;pointer-events:none}
+.loader .tiles{display:flex;gap:8px}
+.loader .tiles i{width:18px;height:18px;transform:rotate(45deg) scaleY(.7);border-radius:3px;animation:hop 1s ease-in-out infinite}
+.loader .tiles i:nth-child(2){animation-delay:.12s}.loader .tiles i:nth-child(3){animation-delay:.24s}.loader .tiles i:nth-child(4){animation-delay:.36s}
+@keyframes hop{50%{transform:translateY(-10px) rotate(45deg) scaleY(.7)}}
+.loader p{font-family:var(--f-display);font-size:19px;margin:0;letter-spacing:.08em}
+
+.tip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--panel);font-size:12.5px;padding:5px 10px;border-radius:8px;opacity:0;transition:opacity .12s;white-space:nowrap}
+.tip.show{opacity:1}
+
+/* ---------- 頁尾 ---------- */
+footer{background:var(--panel);padding:30px 16px 40px}
+.foot{max-width:900px;margin:0 auto;font-size:13px;color:var(--ink-dim)}
+.foot h2{font-family:var(--f-display);font-weight:400;color:var(--ink);font-size:20px;margin:0 0 10px}
+.warn-box{background:rgba(255,111,89,.08);border:1px solid rgba(255,111,89,.3);border-radius:12px;padding:14px 18px;margin-bottom:14px}
+.warn-box strong{color:var(--coral-ink)}
+.warn-box ul{margin:8px 0 0;padding-left:20px}
+.creator-box{background:var(--panel-2);border-radius:12px;padding:12px 18px;margin-bottom:14px}
+.creator-box p{margin:2px 0}
+.foot-links{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.foot-links button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:13px}
+
+/* ---------- RWD ---------- */
+@media (max-width:820px){
+  .title-card{display:none}
+  .brand span{display:none}
+  .toolbar{left:16px;right:16px;transform:none;overflow-x:auto;justify-content:flex-start;border-radius:16px;scrollbar-width:none}
+  .toolbar::-webkit-scrollbar{display:none}
+  .story{padding:12px 14px}
+  .story h2{font-size:18px}
+  .story p{font-size:13px;margin-bottom:8px}
+  .toolbar button{padding:7px 10px;font-size:13px}
+  .drawer{top:auto;left:16px;right:16px;bottom:16px;width:auto;max-height:72%;transform:translateY(calc(100% + 30px))}
+  .rel-list{grid-template-columns:1fr}
+  .story{bottom:80px}
+  body.view-time .toolbar{bottom:186px}
+  body.view-time .story{bottom:250px}
+  body.view-time .pop{bottom:244px}
+  .tb-script{order:3;flex-basis:100%}
+}
+@media (max-width:520px){
+  .topbar{gap:6px;padding:10px 10px}
+  .seg button{padding:6px 11px;font-size:13px}
+  .top-link{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body class="view-map">
+<div id="marqueeBar"><div id="marqueeTrack"></div></div>
+
+<div class="loader" id="loader" role="status">
+  <div class="tiles"><i style="background:#f4b942"></i><i style="background:#2ec4b6"></i><i style="background:#ef6b8a"></i><i style="background:#4f9dff"></i></div>
+  <p>小船靠岸中，工具正在搬上島…</p>
+</div>
+
+<main class="app" id="app">
+  <header class="topbar">
+    <a class="brand" href="#" id="brandLink"><b>創業島</b><span class="mono">STARTUP ISLAND</span></a>
+    <nav class="seg" aria-label="檢視模式">
+      <button type="button" data-view="map" aria-pressed="true">地圖</button>
+      <button type="button" data-view="list" aria-pressed="false">清單</button>
+      <button type="button" data-view="time" aria-pressed="false">時間軸</button>
+    </nav>
+    <a class="top-link" href="manual.html">使用說明</a>
+  </header>
+
+  <svg id="map" class="pan" role="application" aria-label="創業島地圖：每棟建築是一個線上工具"></svg>
+
+  <section class="card title-card" aria-label="關於創業島">
+    <div class="eyebrow">Startup Island Map</div>
+    <h1>從一個點子出發，<br>走完整座島</h1>
+    <p>點一棟建築，看它在創業路上做什麼，再一鍵打開真的工具。</p>
+    <div class="stats"><span><b id="stZones">8</b> 街區</span><span><b id="stTools">0</b> 工具</span><span><b id="stLinks">0</b> 接力線</span></div>
+    <div class="clock"><span>島上時間</span><b id="clockNow">--:--</b><span id="clockNote"></span></div>
+    <div class="clock"><span>你已探索</span><b id="seenCount">0</b><span>棟建築</span></div>
+  </section>
+
+  <div class="list-view" id="listView"></div>
+
+  <nav class="card toolbar" id="toolbar" aria-label="地圖工具">
+    <button type="button" id="tbTags" aria-pressed="true"><span class="dot"></span>標籤</button>
+    <button type="button" id="tbPan" aria-pressed="true"><span class="dot"></span>拖曳</button>
+    <button type="button" id="tbLinks" aria-pressed="false" aria-expanded="false"><span class="dot"></span>接力線</button>
+    <button type="button" id="tbPause" aria-pressed="false"><span class="dot"></span>靜止</button>
+    <button type="button" id="tbBird">看全島</button>
+    <button type="button" id="tbLog" aria-pressed="false"><span class="dot"></span>足跡</button>
+  </nav>
+
+  <section class="card pop" id="linkPop" hidden aria-label="接力線">
+    <div class="eyebrow">Relay Lines</div>
+    <h3>工具之間怎麼接力</h3>
+    <p class="note">虛線表示「前一個工具的產出，適合拿來當下一個工具的輸入」。這是課程整理的使用順序，各工具之間沒有自動傳資料。可以複選。</p>
+    <div class="row"><button type="button" class="chip-btn" id="relAll">全選</button><button type="button" class="chip-btn" id="relNone">清除</button><button type="button" class="chip-btn" id="relClose" style="margin-left:auto">收起</button></div>
+    <div class="rel-list" id="relList"></div>
+  </section>
+
+  <aside class="card drawer" id="detail" aria-label="建築資訊">
+    <div class="head"><span class="eyebrow" id="dEyebrow">Building</span><button type="button" class="x" data-close="detail" aria-label="關閉">×</button></div>
+    <div class="body" id="dBody"></div>
+  </aside>
+
+  <aside class="card drawer" id="logDrawer" aria-label="探索足跡">
+    <div class="head"><span class="eyebrow">Footprints</span><span class="log-live">探索紀錄</span><button type="button" class="x" data-close="logDrawer" aria-label="關閉">×</button></div>
+    <div class="body">
+      <ol class="log-list" id="logList"></ol>
+      <div class="log-actions"><button type="button" class="chip-btn" id="replayStory">重播導覽</button><button type="button" class="chip-btn" id="clearLog">清除足跡</button></div>
+    </div>
+  </aside>
+
+  <section class="card timebar" id="timebar" aria-label="時間軸">
+    <div class="tb-top">
+      <div class="tb-mode" role="group" aria-label="時間軸類型">
+        <button type="button" data-tmode="day" aria-pressed="true">創業者的一天</button>
+        <button type="button" data-tmode="month" aria-pressed="false">兩年創業旅程</button>
+      </div>
+      <button type="button" class="tb-play" id="tbPlay" aria-label="播放">▶</button>
+      <div class="tb-read" id="tbRead">07:00</div>
+      <div class="tb-script" id="tbScript"></div>
+    </div>
+    <input type="range" class="tb-range" id="tbRange" min="0" max="24" step="0.25" value="7" aria-label="時間">
+    <div class="tb-ticks" id="tbTicks"></div>
+  </section>
+
+  <section class="card story" id="story" hidden aria-live="polite">
+    <div class="meta"><span class="eyebrow" id="sEyebrow">Welcome Aboard</span><span class="eyebrow" id="sCount">01 / 10</span></div>
+    <div class="chap" id="sChap"></div>
+    <h2 id="sTitle"></h2>
+    <p id="sBody"></p>
+    <div class="bar"><i id="sBar"></i></div>
+    <div class="acts"><button type="button" class="ghost" id="sSkip">略過導覽</button><button type="button" class="ghost" id="sPrev">上一步</button><button type="button" class="next" id="sNext">下一步</button></div>
+  </section>
+</main>
+
+<div class="tip" id="tip"></div>
+
+<footer>
+  <div class="foot">
+    <h2>關於創業島</h2>
+    <div class="warn-box">
+      <strong>使用警語</strong>
+      <ul>
+        <li>本頁是工具導覽地圖，本身不提供創業試算、文件產生或任何內容生成功能；點「前往工具」會在新分頁開啟各自獨立的網站。</li>
+        <li>各工具的功能、計算結果與正確性，以該工具自己的說明與警語為準。標示「需序號」的工具須另外取得課程序號或登入。</li>
+        <li>接力線與時間軸是課程整理的建議使用順序，工具之間沒有自動傳資料。</li>
+        <li>探索足跡只存在你這台裝置的瀏覽器，不會上傳。</li>
+        <li>僅供教學、課程及個人使用，禁止未經授權公開發布、販售或商業化使用。</li>
+      </ul>
+    </div>
+    <div class="creator-box">
+      <p><strong>創作者：Mark Tsai（蔡豐全）</strong></p>
+      <p>製作：Mark Tsai｜<a href="mailto:tsaimark@gmail.com">tsaimark@gmail.com</a></p>
+    </div>
+    <div class="foot-links">
+      <a href="manual.html">使用說明</a>
+      <button type="button" id="installBtn">加入主畫面</button>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ================= 創業島：資料 ================= */
+var ZONES = [
+  {id:'idea',     name:'點子灣',   en:'IDEA BAY',      color:'#f4b942', at:[2,2],   desc:'把模糊的念頭變成可以比較的點子。'},
+  {id:'strategy', name:'策略高地', en:'STRATEGY HILL', color:'#9d8cf2', at:[6,1],   desc:'想清楚賣給誰、靠什麼贏、怎麼落地。'},
+  {id:'calc',     name:'試算港',   en:'NUMBERS PORT',  color:'#2ec4b6', at:[10,3],  desc:'開店、上架前先把成本和損益算清楚。'},
+  {id:'fund',     name:'資金廣場', en:'FUNDING PLAZA', color:'#f08a4b', at:[11,7],  desc:'確認貸款資格，把試算數字寫進申請書。'},
+  {id:'brand',    name:'品牌街',   en:'BRAND STREET',  color:'#ef6b8a', at:[8,10],  desc:'社群、檔期、素材：讓人看見你。'},
+  {id:'ecom',     name:'電商碼頭', en:'E-COM DOCK',    color:'#4f9dff', at:[3,11],  desc:'市場、關鍵字、商品頁、物流與廣告。'},
+  {id:'ops',      name:'營運區',   en:'OPERATIONS',    color:'#6bbf59', at:[1,7],   desc:'顧客回饋、會員經營、流程與記帳。'},
+  {id:'hub',      name:'指揮塔',   en:'CONTROL TOWER', color:'#e05a47', at:[6,6],   desc:'把一路上的工具串成會自己跑的流程。'}
+];
+
+// hour：創業者的一天最常用的時段 [起, 迄)；month：兩年創業旅程中最常用的月份 [起, 迄]；lic：需序號或登入
+var TOOLS = [
+  {id:'business-idea-generator', zone:'idea', short:'商業創意', name:'商業創意產生器', lic:true, hour:[6,8], month:[0,2],
+   role:'輸入幾個關鍵字，組合出商業點子，並用五個構面打分數。', input:'興趣、專長、關鍵字', output:'點子清單與評分'},
+  {id:'mandala-thinking', zone:'idea', short:'曼陀羅', name:'曼陀羅思考法產生器', hour:[6,8], month:[0,1],
+   role:'把一個主題展開成九宮格，逼自己想到八個面向。', input:'一個核心主題', output:'九宮格延伸想法'},
+  {id:'scamper-thinking-generator', zone:'idea', short:'SCAMPER', name:'SCAMPER 創新思考法產生器', hour:[7,9], month:[0,2],
+   role:'用替代、合併、調整等七個角度改造現有產品或服務。', input:'既有產品或服務', output:'七構面改造方案與前三名'},
+  {id:'six-thinking-hats-generator', zone:'idea', short:'六頂思考帽', name:'六頂思考帽分析產生器', hour:[8,9], month:[1,2],
+   role:'換六種角色檢視同一個點子，避免只看到優點。', input:'點子或決策', output:'六帽觀點與結論'},
+  {id:'innovation-matrix-studio', zone:'idea', short:'創意打版台', name:'創意打版台', lic:true, hour:[7,9], month:[1,3],
+   role:'把商品和附加價值排成矩陣交叉配對，找出差異化組合。', input:'商品清單、附加價值', output:'交叉創意組合'},
+
+  {id:'business-model-canvas-generator', zone:'strategy', short:'商業模式圖', name:'商業模式圖產生器', hour:[9,11], month:[1,3],
+   role:'用九宮格寫清楚顧客、價值主張、通路與收入來源。', input:'選定的點子', output:'商業模式九宮格'},
+  {id:'where-what-how-strategy-studio', zone:'strategy', short:'商業策略', name:'商業策略工作室', hour:[9,11], month:[2,4],
+   role:'回答在哪裡打仗、靠什麼贏、怎麼落地三個問題。', input:'商業模式', output:'三層策略藍圖'},
+  {id:'new-product-strategy-studio', zone:'strategy', short:'新品策略', name:'新品開發策略工作室', lic:true, hour:[10,12], month:[2,5],
+   role:'產品五層次、SWOT、定價和競品比較一次做完。', input:'產品構想', output:'定位與定價建議'},
+  {id:'swot-game', zone:'strategy', short:'SWOT 卡牌', name:'SWOT 卡牌配對', hour:[10,11], month:[1,3],
+   role:'卡牌配對練習，熟悉優勢、劣勢、機會、威脅怎麼分。', input:'不需準備', output:'SWOT 判讀手感'},
+  {id:'mentors-panel', zone:'strategy', short:'AI 顧問團', name:'AI 人物顧問團', hour:[22,24], month:[0,24],
+   role:'請多位人物思維顧問同時給意見，替計畫做壓力測試。', input:'問題或計畫', output:'多角度建議'},
+
+  {id:'restaurant-feasibility-calculator', zone:'calc', short:'餐飲店評估', name:'餐飲店經營評估試算工具', hour:[11,13], month:[3,5],
+   role:'開店前試算租金、人事、坪效與損益兩平。', input:'店面與營運假設', output:'月損益與回本期'},
+  {id:'restaurant-menu-mix-calculator', zone:'calc', short:'菜單組合', name:'餐飲菜單組合收支平衡計算機', hour:[11,13], month:[4,6],
+   role:'算每道菜的成本和毛利，找出該主推、該下架的品項。', input:'菜單與食材成本', output:'損益兩平與菜單工程矩陣'},
+  {id:'tourism-hotel-feasibility-calculator', zone:'calc', short:'飯店評估', name:'觀光飯店經營評估試算工具', hour:[12,14], month:[3,6],
+   role:'依淡旺季逐月試算住房率與損益。', input:'房數、房價、季節', output:'逐月損益與兩平住房率'},
+  {id:'amazon-cost-calculator', zone:'calc', short:'Amazon 成本', name:'Amazon 成本分析計算機', lic:true, hour:[12,13], month:[4,6],
+   role:'算出一件商品在 Amazon 賣掉之後真正剩多少。', input:'進貨價、運費、平台費', output:'單件利潤'},
+  {id:'amazon-listing-mix-calculator', zone:'calc', short:'商品組合', name:'亞馬遜商品組合收支平衡計算機', lic:true, hour:[12,14], month:[5,8],
+   role:'把整倉商品放在一起算收支，看組合賺不賺。', input:'多項商品成本與銷量', output:'組合損益兩平'},
+
+  {id:'loan-eligibility-checker', zone:'fund', short:'貸款資格', name:'創業貸款資格核對小工具', hour:[14,15], month:[3,5],
+   role:'先確認自己符不符合鳳凰貸款或創業貸款的條件。', input:'個人與事業狀況', output:'資格比對結果'},
+  {id:'phoenix-loan-generator', zone:'fund', short:'鳳凰貸款', name:'微型創業鳳凰貸款申請書產生器', hour:[14,16], month:[4,6],
+   role:'照官方格式填好微型創業鳳凰貸款的申請書。', input:'營運計畫、試算數字', output:'申請書文件'},
+  {id:'industry-talent-generator', zone:'fund', short:'人才投資', name:'產業人才投資方案開課申請書產生器', hour:[15,16], month:[15,20],
+   role:'替員工訓練課程寫開課申請書，申請政府訓練補助。', input:'課程規劃', output:'附表二申請書'},
+
+  {id:'coffee-ig-planner', zone:'brand', short:'社群規劃', name:'社群內容規劃報告產生器', hour:[16,17], month:[5,8],
+   role:'整理品牌變數，產出一份社群經營規劃報告。', input:'品牌資料', output:'社群規劃報告'},
+  {id:'annual-marketing-calendar', zone:'brand', short:'行銷行事曆', name:'全年度行銷行事曆產生器', hour:[16,17], month:[5,7],
+   role:'把一年 52 週的節日與檔期排成行銷時間軸。', input:'產業、目標客群', output:'全年行銷檔期'},
+  {id:'SocialPost', zone:'brand', short:'社群貼文', name:'社群貼文產生器', hour:[16,18], month:[6,24],
+   role:'產生 FB、IG、X、Threads 的貼文，Facebook 可以直接發布。', input:'主題、品牌語氣', output:'各平台貼文'},
+  {id:'social-post-grader', zone:'brand', short:'貼文健診', name:'社群貼文健診站', hour:[17,18], month:[6,24],
+   role:'發文前用八個維度替貼文打分數。', input:'貼文草稿', output:'分數與修改建議'},
+  {id:'ai-image-prompt-studio', zone:'brand', short:'繪圖提示詞', name:'AI 繪圖提示詞工廠', lic:true, hour:[17,19], month:[6,12],
+   role:'寫出好用的 AI 生圖提示詞，做商品圖和行銷素材。', input:'畫面需求', output:'生圖提示詞'},
+  {id:'ai-video-prompt-studio', zone:'brand', short:'短影片提示詞', name:'AI 短影片提示詞產生器', lic:true, hour:[18,19], month:[7,12],
+   role:'替 Sora、Veo、Runway、Kling 各寫一份影片提示詞。', input:'影片構想', output:'影片提示詞'},
+  {id:'ai-video-studio-play', zone:'brand', short:'AI 影音工坊', name:'AI 影音工坊（純瀏覽器版）', hour:[18,20], month:[7,14],
+   role:'用文字稿和影庫素材合成有配音的短片。', input:'腳本', output:'配音短影片'},
+  {id:'line-sticker-studio', zone:'brand', short:'LINE 貼圖', name:'LINE 貼圖自動化助手', hour:[19,20], month:[8,12],
+   role:'把品牌角色做成一組符合 LINE 規格的貼圖。', input:'主題、角色圖', output:'LINE 貼圖 ZIP'},
+
+  {id:'traffic-rank-estimator', zone:'ecom', short:'流量排名', name:'網站流量排名比較工具', lic:true, hour:[9,10], month:[6,9],
+   role:'比較競爭網站的流量排名，估市場有多大。', input:'競爭者網址', output:'流量比較'},
+  {id:'amazon-logistics-game', zone:'ecom', short:'跨境物流', name:'跨境物流大挑戰', lic:true, hour:[20,21], month:[6,9],
+   role:'用遊戲搞懂 FBA 與 FBM 的物流流程。', input:'不需準備', output:'物流流程概念'},
+  {id:'product-keyword-cloud', zone:'ecom', short:'關鍵字雲', name:'跨境電商關鍵字文字雲產生器', lic:true, hour:[19,20], month:[6,9],
+   role:'把商品關鍵字整理成文字雲，看出買家在搜什麼。', input:'關鍵字清單', output:'關鍵字權重圖'},
+  {id:'product-title-generator', zone:'ecom', short:'商品標題', name:'跨境商品標題產生器', lic:true, hour:[19,21], month:[7,10],
+   role:'依規格、功能、形容詞與核心關鍵詞組出商品標題。', input:'商品資訊、關鍵字', output:'平台商品標題'},
+  {id:'amazon-listing-generator', zone:'ecom', short:'五點說明', name:'亞馬遜5點式產品說明產生器', lic:true, hour:[20,21], month:[7,10],
+   role:'寫出中英對照的 Amazon 五點式產品說明。', input:'商品特色', output:'五點說明'},
+  {id:'amazon-ppc-advisor', zone:'ecom', short:'PPC 廣告', name:'Amazon PPC 關鍵字廣告建議工具', lic:true, hour:[20,22], month:[9,18],
+   role:'依關鍵字和預算算出廣告出價建議。', input:'關鍵字、預算', output:'廣告活動建議'},
+  {id:'ecommerce-health-dashboard', zone:'ecom', short:'電商健檢', name:'跨境電商健檢總覽儀表板', hour:[21,22], month:[12,24],
+   role:'讀取商品組合資料，逐項檢查店鋪健康度。', input:'商品組合資料', output:'健檢清單'},
+
+  {id:'amazon-review-reply-generator', zone:'ops', short:'客評回覆', name:'Amazon 客評／客訴回覆信產生器', lic:true, hour:[8,9], month:[10,24],
+   role:'替負評和客訴寫出得體的回覆信。', input:'顧客評論', output:'回覆信'},
+  {id:'company-digital-transformation-analyzer', zone:'ops', short:'數位轉型', name:'企業數位轉型分析', hour:[10,12], month:[15,24],
+   role:'盤點部門流程，算出數位化能省下多少人力成本。', input:'部門與流程工時', output:'可釋放人時與回收期'},
+  {id:'expense-tracker-pwa', zone:'ops', short:'隨手記帳', name:'隨手記帳', hour:[12,13], month:[0,24],
+   role:'每一筆支出隨手記下，月底看錢花去哪。', input:'每筆開銷', output:'分類報表'},
+  {id:'private-domain-rfm-studio', zone:'ops', short:'RFM 分群', name:'私域流量與 RFM 顧客價值分析工作站', lic:true, hour:[21,23], month:[12,24],
+   role:'依最近購買、頻率、金額把顧客分群，找出該回購的人。', input:'訂單資料', output:'顧客分群與私域試算'},
+  {id:'IPA_Kano', zone:'ops', short:'滿意度分析', name:'IPA × Kano 滿意度分析', lic:true, hour:[22,23], month:[12,24],
+   role:'用 IPA 與 Kano 找出顧客最在意、最該先改的服務。', input:'問卷資料', output:'改善優先順序'},
+
+  {id:'content-workflow-studio-cf', zone:'hub', short:'內容工作流', name:'內容工作流工作室', lic:true, hour:[22,24], month:[18,24], tall:96,
+   url:'https://content-workflow-studio-cf.content-workflow.workers.dev/',
+   role:'把多個工具串成一條會自己跑的內容流程。', input:'主題', output:'整條流程的產出'},
+  {id:'animal-ecommerce-adventure', zone:'hub', short:'電商大冒險', name:'動物朋友的跨境電商大冒險', lic:true, hour:[9,10], month:[6,12], tall:64,
+   role:'跟著動物朋友把跨境電商工具一關一關走完。', input:'不需準備', output:'跨境電商學習路徑'}
+];
+
+// 接力線：chain 依序相連；star 由第一個連到其餘每一個
+var LINKS = [
+  {id:'l1',  name:'點子 → 商業模式',   chain:['business-idea-generator','business-model-canvas-generator'], desc:'把挑出來的點子寫成商業模式九宮格。'},
+  {id:'l2',  name:'展開 → 改造 → 檢查', chain:['mandala-thinking','scamper-thinking-generator','six-thinking-hats-generator'], desc:'先發散、再改造，最後換帽子挑毛病。'},
+  {id:'l3',  name:'差異化 → 新品策略', chain:['innovation-matrix-studio','new-product-strategy-studio'], desc:'交叉配對出的組合，拿去做定位與定價。'},
+  {id:'l4',  name:'商業模式 → 策略',   chain:['business-model-canvas-generator','where-what-how-strategy-studio'], desc:'九宮格寫完，接著決定戰場與致勝方式。'},
+  {id:'l5',  name:'策略壓力測試',      chain:['where-what-how-strategy-studio','mentors-panel'], desc:'把策略丟給 AI 顧問團挑戰。'},
+  {id:'l6',  name:'SWOT 練功',         chain:['swot-game','new-product-strategy-studio'], desc:'卡牌練熟分類，再寫自己產品的 SWOT。'},
+  {id:'l7',  name:'開一家餐廳',        chain:['business-model-canvas-generator','restaurant-feasibility-calculator','restaurant-menu-mix-calculator'], desc:'模式確定後試算店面，再細算菜單。'},
+  {id:'l8',  name:'開一間旅宿',        chain:['business-model-canvas-generator','tourism-hotel-feasibility-calculator'], desc:'觀光旅宿要算淡旺季。'},
+  {id:'l9',  name:'試算 → 貸款',       chain:['restaurant-feasibility-calculator','loan-eligibility-checker','phoenix-loan-generator'], desc:'損益數字是申請書裡最重要的佐證。'},
+  {id:'l10', name:'定價 → 成本 → 組合', chain:['new-product-strategy-studio','amazon-cost-calculator','amazon-listing-mix-calculator'], desc:'先定價，再算單件利潤，最後算整倉組合。'},
+  {id:'l11', name:'組合 → 健檢',       chain:['amazon-listing-mix-calculator','ecommerce-health-dashboard'], desc:'健檢儀表板直接讀取組合計算機的資料。'},
+  {id:'l12', name:'社群規劃三步',      chain:['coffee-ig-planner','annual-marketing-calendar','SocialPost'], desc:'先定方向、排檔期，再開始寫貼文。'},
+  {id:'l13', name:'發文前健診',        chain:['SocialPost','social-post-grader'], desc:'貼文寫完先打分數，再發出去。'},
+  {id:'l14', name:'素材生產線',        chain:['ai-image-prompt-studio','ai-video-prompt-studio','ai-video-studio-play'], desc:'圖、影片提示詞，再到合成成片。'},
+  {id:'l15', name:'品牌角色 → 貼圖',   chain:['ai-image-prompt-studio','line-sticker-studio'], desc:'用生圖提示詞做出角色，再做成貼圖。'},
+  {id:'l16', name:'上架三步',          chain:['product-keyword-cloud','product-title-generator','amazon-listing-generator'], desc:'關鍵字、標題、五點說明，一路寫好商品頁。'},
+  {id:'l17', name:'市場 → 物流',       chain:['traffic-rank-estimator','amazon-logistics-game'], desc:'看完市場大小，再搞懂貨怎麼送過去。'},
+  {id:'l18', name:'關鍵字 → 廣告',     chain:['product-keyword-cloud','amazon-ppc-advisor'], desc:'整理好的關鍵字就是廣告出價的素材。'},
+  {id:'l19', name:'顧客回饋迴圈',      chain:['amazon-review-reply-generator','IPA_Kano','new-product-strategy-studio'], desc:'回覆評論、分析滿意度，再回頭改產品。'},
+  {id:'l20', name:'熟客經營',          chain:['private-domain-rfm-studio','SocialPost'], desc:'分群後針對熟客寫專屬貼文。'},
+  {id:'l21', name:'團隊變大之後',      chain:['company-digital-transformation-analyzer','industry-talent-generator'], desc:'盤點流程後，申請補助訓練員工。'},
+  {id:'l22', name:'記帳回頭校正',      chain:['expense-tracker-pwa','restaurant-feasibility-calculator'], desc:'實際開銷回頭修正當初的試算假設。'},
+  {id:'l23', name:'內容工作流一條龍',  star:['content-workflow-studio-cf','business-idea-generator','where-what-how-strategy-studio','SocialPost','social-post-grader'], desc:'工作流把商業創意、商業策略、貼文產生與健診四個節點串成一條線。'},
+  {id:'l24', name:'跨境電商冒險路線',  star:['animal-ecommerce-adventure','traffic-rank-estimator','amazon-logistics-game','product-title-generator','amazon-cost-calculator'], desc:'動物朋友帶你依序走過這些關卡。'}
+];
+
+var DAY_SCRIPT = [
+  {t:0,  text:'島上睡了。創業者也要睡，明天的點子才會好。'},
+  {t:6,  text:'點子灣先醒：晨跑時想到的點子，趁還記得先丟進商業創意產生器。'},
+  {t:8,  text:'打開信箱回覆客評與客訴，再用六頂思考帽檢查昨天的想法。'},
+  {t:9,  text:'爬上策略高地：把點子寫成商業模式，想清楚在哪裡打仗、靠什麼贏。'},
+  {t:11, text:'進試算港算數字：租金、人事、食材、平台費，每一筆都要算進去。'},
+  {t:12, text:'午餐順手記一筆帳。'},
+  {t:14, text:'數字有了，到資金廣場確認貸款資格，把試算結果填進申請書。'},
+  {t:16, text:'品牌街開門：規劃社群、排行銷檔期、寫今天的貼文。'},
+  {t:18, text:'傍晚是素材時間：生圖提示詞、短影片、LINE 貼圖。'},
+  {t:19, text:'電商碼頭亮燈：整理關鍵字，寫標題和五點說明。'},
+  {t:21, text:'看廣告出價和店鋪健檢，再用 RFM 找出該回購的熟客。'},
+  {t:22, text:'回指揮塔把今天的流程串起來，問問 AI 顧問團明天的計畫。'}
+];
+var MONTH_SCRIPT = [
+  {t:0,  text:'還只是一個念頭。到點子灣多想幾種可能。'},
+  {t:1,  text:'點子寫成商業模式，用 SWOT 把優劣勢分清楚。'},
+  {t:3,  text:'進試算港算損益兩平，同時確認貸款資格。'},
+  {t:5,  text:'申請書送出，品牌街開始排行銷檔期。'},
+  {t:6,  text:'上架前研究市場流量、關鍵字與物流。'},
+  {t:9,  text:'開始投廣告，客評與客訴也跟著來了。'},
+  {t:12, text:'顧客分群、滿意度分析，回頭修正產品。'},
+  {t:15, text:'團隊變大：盤點流程做數位轉型，申請員工訓練補助。'},
+  {t:18, text:'把整套流程串進內容工作流，讓它每天自己跑。'},
+  {t:24, text:'兩年了。這座島，你已經走過一圈。'}
+];
+
+var STORY = [
+  {chap:'01 創業者的一天', eb:'Welcome Aboard', title:'歡迎來到創業島',
+   body:'島上每一棟建築都是一個真的線上工具，分在八個街區。點建築看它在創業路上做什麼，再一鍵打開。', act:function(){ setView('map'); birdview(); }},
+  {chap:'01 創業者的一天', eb:'07:00', title:'一天從點子灣開始',
+   body:'早上腦袋最清楚。先把點子丟進商業創意產生器，用曼陀羅九宮格展開。沒亮的建築，是這個時段用不太到的工具。', act:function(){ setView('time'); setTimeMode('day'); setT(7); focusZones(['idea','strategy']); }},
+  {chap:'01 創業者的一天', eb:'14:00', title:'下午算數字、找資金',
+   body:'試算港算出損益兩平，資金廣場確認貸款資格、填好申請書。', act:function(){ setView('time'); setTimeMode('day'); setT(14); focusZones(['calc','fund']); }},
+  {chap:'01 創業者的一天', eb:'20:00', title:'晚上品牌街與電商碼頭亮燈',
+   body:'下班後寫貼文、做素材、整理商品頁。夜裡亮著窗的建築，就是這個時段最常用的工具。', act:function(){ setView('time'); setTimeMode('day'); setT(20); focusZones(['brand','ecom']); }},
+  {chap:'02 兩年創業旅程', eb:'Month 0–3', title:'先想清楚，再花錢',
+   body:'前三個月待在點子灣和策略高地：點子、商業模式、SWOT。', act:function(){ setView('time'); setTimeMode('month'); setT(2); focusZones(['idea','strategy']); }},
+  {chap:'02 兩年創業旅程', eb:'Month 3–6', title:'算得出來，才借得到',
+   body:'把店面、菜單或商品成本算清楚，這些數字就是貸款申請書的骨架。', act:function(){ setView('time'); setTimeMode('month'); setT(5); focusZones(['calc','fund']); }},
+  {chap:'02 兩年創業旅程', eb:'Month 6–18', title:'讓別人看見你',
+   body:'品牌街和電商碼頭最忙的一年：社群、素材、關鍵字、商品頁、廣告。', act:function(){ setView('time'); setTimeMode('month'); setT(12); focusZones(['brand','ecom']); }},
+  {chap:'02 兩年創業旅程', eb:'Month 18–24', title:'把流程變成系統',
+   body:'顧客分群、滿意度、數位轉型，最後把重複的工作交給內容工作流。', act:function(){ setView('time'); setTimeMode('month'); setT(20); focusZones(['ops','hub']); }},
+  {chap:'03 創業島地圖', eb:'Relay Lines', title:'接力線：工具之間怎麼接力',
+   body:'虛線表示前一個工具的產出，適合當下一個工具的輸入。在工具列的「接力線」可以只看你在意的幾條。', act:function(){ setView('map'); setLinks(true); birdview(); }},
+  {chap:'03 創業島地圖', eb:'Your Turn', title:'點一棟建築，開始探索',
+   body:'探索過的建築會插上小旗子，「足跡」會記下你的路線。想重看導覽，打開足跡按「重播導覽」。', act:function(){ setView('map'); birdview(); }}
+];
+
+/* ================= 創業島：主程式 ================= */
+var KEY_SEEN = 'startupIslandSeen', KEY_LOG = 'startupIslandLog', KEY_STORY = 'startupIslandStoryDone', KEY_PREF = 'startupIslandPrefs';
+var NS = 'http://www.w3.org/2000/svg';
+var HW = 36, HH = 18;                     // 等角格子半寬、半高
+var SLOTS = [[0,0],[1,0],[0,1],[1,1],[2,0],[0,2],[2,1],[1,2]];
+var GAP = 1.6;
+var REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function lsGet(k, d){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function $(id){ return document.getElementById(id); }
+function el(tag, attrs, parent){
+  var n = document.createElementNS(NS, tag);
+  for (var k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+function iso(gx, gy){ return [(gx - gy) * HW, (gx + gy) * HH]; }
+function pts(arr){ return arr.map(function(p){ return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }
+function mix(a, b, t){
+  var pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  var r = Math.round(((pa>>16)&255)*(1-t) + ((pb>>16)&255)*t),
+      g = Math.round(((pa>>8)&255)*(1-t) + ((pb>>8)&255)*t),
+      bl = Math.round((pa&255)*(1-t) + (pb&255)*t);
+  return '#' + ((1<<24) + (r<<16) + (g<<8) + bl).toString(16).slice(1);
+}
+function hash(s){ var h = 0; for (var i = 0; i < s.length; i++) h = (h*31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+function rng(seed){ return function(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function fmtHour(t){ var h = Math.floor(t), m = Math.round((t - h) * 60); if (m === 60){ h++; m = 0; } return pad2(h % 25) + ':' + pad2(m); }
+function toolUrl(t){ return t.url || ('https://m255525.github.io/' + t.id + '/'); }
+
+var zoneById = {}, toolById = {};
+ZONES.forEach(function(z){ zoneById[z.id] = z; z.tools = []; });
+TOOLS.forEach(function(t){ toolById[t.id] = t; zoneById[t.zone].tools.push(t); });
+
+// 建築位置
+ZONES.forEach(function(z){
+  z.tools.forEach(function(t, i){
+    t.gx = z.at[0] + SLOTS[i][0] * GAP;
+    t.gy = z.at[1] + SLOTS[i][1] * GAP;
+    t.h = t.tall || (26 + (hash(t.id) % 4) * 9);
+  });
+  var xs = z.tools.map(function(t){ return t.gx; }), ys = z.tools.map(function(t){ return t.gy; });
+  z.box = [Math.min.apply(null, xs) - .75, Math.min.apply(null, ys) - .75, Math.max.apply(null, xs) + .75, Math.max.apply(null, ys) + .75];
+  z.cx = (z.box[0] + z.box[2]) / 2; z.cy = (z.box[1] + z.box[3]) / 2;
+});
+
+// 接力線 → 邊
+var EDGES = [];
+LINKS.forEach(function(L){
+  if (L.chain) for (var i = 0; i < L.chain.length - 1; i++) EDGES.push({rel:L.id, a:L.chain[i], b:L.chain[i+1]});
+  if (L.star) for (var j = 1; j < L.star.length; j++) EDGES.push({rel:L.id, a:L.star[0], b:L.star[j]});
+  L.color = zoneById[toolById[(L.chain || L.star)[0]].zone].color;
+});
+
+var state = {
+  view:'map', tmode:'day', dayT:7, monthT:2, playing:false, paused:REDUCED, tags:true, pan:true,
+  links:false, rels:{}, sel:null, seen:lsGet(KEY_SEEN, {}), log:lsGet(KEY_LOG, [])
+};
+LINKS.forEach(function(L){ state.rels[L.id] = true; });
+(function(){ var p = lsGet(KEY_PREF, null); if (p){ if (p.rels) for (var k in p.rels) if (k in state.rels) state.rels[k] = p.rels[k]; if (typeof p.tags === 'boolean') state.tags = p.tags; } })();
+function savePrefs(){ lsSet(KEY_PREF, {rels:state.rels, tags:state.tags}); }
+
+/* ---------- 繪製地圖 ---------- */
+var svg = $('map'), L = {};
+function buildMap(){
+  svg.innerHTML = '';
+  var defs = el('defs', {}, svg);
+  var pat = el('pattern', {id:'waves', width:60, height:30, patternUnits:'userSpaceOnUse'}, defs);
+  el('path', {d:'M4 18 q8 -6 16 0 M34 8 q8 -6 16 0', stroke:'rgba(255,255,255,.18)', 'stroke-width':1.6, fill:'none', 'stroke-linecap':'round'}, pat);
+  el('rect', {x:-4000, y:-3000, width:8000, height:7000, fill:'url(#waves)'}, svg);
+
+  L.boats = el('g', {}, svg);
+  var ground = el('g', {}, svg);
+
+  // 島嶼輪廓
+  var R = rng(7), C = [7.2, 7.4], outline = [], beach = [];
+  for (var i = 0; i < 80; i++){
+    var a = i / 80 * Math.PI * 2;
+    var r = 8.7 + .35 * Math.sin(3*a + .6) + .25 * Math.cos(5*a + 1.3) + .15 * Math.sin(9*a);
+    outline.push(iso(C[0] + Math.cos(a) * r, C[1] + Math.sin(a) * r));
+    beach.push(iso(C[0] + Math.cos(a) * (r + .55), C[1] + Math.sin(a) * (r + .55)));
+  }
+  el('polygon', {points:pts(beach.map(function(p){ return [p[0], p[1] + 8]; })), fill:'var(--foam)', opacity:.55}, ground);
+  el('polygon', {points:pts(beach.map(function(p){ return [p[0], p[1] + 18]; })), fill:'var(--cliff)'}, ground);
+  el('polygon', {points:pts(beach), fill:'var(--sand)'}, ground);
+  el('polygon', {points:pts(outline), fill:'var(--grass)'}, ground);
+
+  // 道路：各街區通往指揮塔
+  var hub = zoneById.hub;
+  ZONES.forEach(function(z){
+    if (z.id === 'hub') return;
+    var p = iso(z.cx, z.cy), q = iso(hub.cx, hub.cy), mx = (p[0]+q[0])/2 + (p[1]-q[1])*.15, my = (p[1]+q[1])/2;
+    el('path', {d:'M'+p[0]+' '+p[1]+' Q'+mx+' '+my+' '+q[0]+' '+q[1], stroke:'rgba(255,255,255,.55)', 'stroke-width':9, fill:'none', 'stroke-linecap':'round'}, ground);
+  });
+
+  // 街區地塊
+  ZONES.forEach(function(z){
+    var b = z.box, corners = [iso(b[0],b[1]), iso(b[2],b[1]), iso(b[2],b[3]), iso(b[0],b[3])];
+    el('polygon', {points:pts(corners), fill:z.color, 'fill-opacity':.22, stroke:z.color, 'stroke-width':2, 'stroke-dasharray':'6 5', 'stroke-linejoin':'round'}, ground);
+  });
+
+  // 樹
+  var trees = [], tr = rng(42);
+  for (var k = 0; k < 260 && trees.length < 46; k++){
+    var ta = tr() * Math.PI * 2, rr = Math.sqrt(tr()) * 8.1, gx = C[0] + Math.cos(ta)*rr, gy = C[1] + Math.sin(ta)*rr;
+    var clash = ZONES.some(function(z){ return gx > z.box[0]-.4 && gx < z.box[2]+.4 && gy > z.box[1]-.4 && gy < z.box[3]+.4; });
+    if (!clash) trees.push([gx, gy]);
+  }
+
+  var things = [];
+  trees.forEach(function(t){ things.push({kind:'tree', gx:t[0], gy:t[1]}); });
+  TOOLS.forEach(function(t){ things.push({kind:'bld', t:t, gx:t.gx, gy:t.gy}); });
+  things.sort(function(a, b){ return (a.gx + a.gy) - (b.gx + b.gy); });
+
+  L.blds = el('g', {}, svg);
+  things.forEach(function(o){
+    if (o.kind === 'tree'){
+      var p = iso(o.gx, o.gy);
+      var g = el('g', {'pointer-events':'none'}, L.blds);
+      el('ellipse', {cx:p[0], cy:p[1], rx:7, ry:3.5, fill:'rgba(0,0,0,.12)'}, g);
+      el('rect', {x:p[0]-1.5, y:p[1]-8, width:3, height:8, fill:'#8a6239'}, g);
+      el('polygon', {points:pts([[p[0], p[1]-28], [p[0]+8, p[1]-6], [p[0]-8, p[1]-6]]), fill:'#4f9a5a'}, g);
+      el('polygon', {points:pts([[p[0], p[1]-28], [p[0]+8, p[1]-6], [p[0], p[1]-6]]), fill:'#3f8550'}, g);
+    } else drawBuilding(o.t);
+  });
+
+  // 街區名稱
+  L.zoneTags = el('g', {'pointer-events':'none'}, svg);
+  ZONES.forEach(function(z){
+    // 街區名稱放在地塊朝外（遠離島中心）的那一側；指揮塔在正中央，放前方
+    var dx = z.cx - C[0], dy = z.cy - C[1], dl = Math.hypot(dx, dy) || 1, half = (z.box[2] - z.box[0]) / 2;
+    var p = z.id === 'hub' ? iso(z.box[2] + .3, z.box[3] + .3) : iso(z.cx + dx/dl * (half + .9), z.cy + dy/dl * (half + .9));
+    var g = el('g', {class:'zone-tag', transform:'translate('+p[0]+','+(p[1]+8)+')'}, L.zoneTags);
+    var t1 = el('text', {'text-anchor':'middle', fill:'#fff', stroke:mix(z.color, '#14303d', .55), 'stroke-width':4, 'paint-order':'stroke', 'stroke-linejoin':'round'}, g);
+    t1.textContent = z.name;
+    var t2 = el('text', {class:'en', y:14, 'text-anchor':'middle', fill:'#fff', stroke:mix(z.color, '#14303d', .55), 'stroke-width':3, 'paint-order':'stroke'}, g);
+    t2.textContent = z.en;
+  });
+
+  // 夜色、窗燈、接力線、標籤、吉祥物、雲
+  L.night = el('rect', {x:-4000, y:-3000, width:8000, height:7000, fill:'#071a35', opacity:0, 'pointer-events':'none'}, svg);
+  L.lights = el('g', {'pointer-events':'none'}, svg);
+  TOOLS.forEach(function(t){ t.lightG = el('g', {opacity:0}, L.lights); drawWindows(t, t.lightG, '#ffd36b'); });
+  L.links = el('g', {class:'links', 'pointer-events':'none'}, svg);
+  L.tags = el('g', {class:'tags', 'pointer-events':'none'}, svg);
+  TOOLS.forEach(function(t){
+    var top = iso(t.gx, t.gy);
+    var w = 0; for (var i = 0; i < t.short.length; i++) w += t.short.charCodeAt(i) > 255 ? 12.5 : 7.2;
+    w += 16;
+    var g = el('g', {class:'tag', transform:'translate('+top[0]+','+(top[1] - t.h - 30)+')'}, L.tags);
+    el('rect', {x:-w/2, y:-11, width:w, height:20, rx:10, 'stroke-width':1}, g);
+    el('rect', {x:-w/2 + 6, y:-3, width:4, height:4, rx:2, fill:zoneById[t.zone].color, stroke:'none', class:'zdot'}, g);
+    var tx = el('text', {x:3, y:4, 'text-anchor':'middle'}, g); tx.textContent = t.short;
+    t.tagG = g; t.tagBox = {x:top[0] - w/2, y:top[1] - t.h - 41, w:w, h:20};
+  });
+  // 名稱標籤避讓：由前往後放，撞到已放好的就往上疊
+  var placed = [];
+  TOOLS.slice().sort(function(a, b){ return (b.gx + b.gy) - (a.gx + a.gy); }).forEach(function(t){
+    var b = t.tagBox, dy = 0, hit = true;
+    while (hit && dy > -140){
+      hit = placed.some(function(o){ return b.x < o.x + o.w + 3 && o.x < b.x + b.w + 3 && b.y + dy < o.y + o.h + 2 && o.y < b.y + dy + b.h + 2; });
+      if (hit) dy -= 11;
+    }
+    placed.push({x:b.x, y:b.y + dy, w:b.w, h:b.h});
+    if (dy){
+      var c = iso(t.gx, t.gy);
+      t.tagG.setAttribute('transform', 'translate('+c[0]+','+(c[1] - t.h - 30 + dy)+')');
+      el('line', {x1:0, y1:9, x2:0, y2:-dy - 2, stroke:'var(--ink-faint)', 'stroke-width':1, 'stroke-dasharray':'2 2'}, t.tagG).parentNode.insertBefore(t.tagG.lastChild, t.tagG.firstChild);
+    }
+  });
+  buildMascot();
+  L.clouds = el('g', {'pointer-events':'none', opacity:.4}, svg);
+  for (var c = 0; c < 4; c++){
+    var cg = el('g', {}, L.clouds), w0 = 50 + c * 14;
+    el('ellipse', {cx:0, cy:0, rx:w0, ry:w0*.32, fill:'#fff', opacity:.75}, cg);
+    el('ellipse', {cx:w0*.35, cy:-w0*.18, rx:w0*.5, ry:w0*.3, fill:'#fff', opacity:.75}, cg);
+    cg._seed = c;
+  }
+  drawLinks();
+}
+
+function footprint(t, s){
+  return {T:iso(t.gx - s, t.gy - s), R:iso(t.gx + s, t.gy - s), B:iso(t.gx + s, t.gy + s), Lp:iso(t.gx - s, t.gy + s)};
+}
+function up(p, h){ return [p[0], p[1] - h]; }
+
+function drawBuilding(t){
+  var z = zoneById[t.zone], f = footprint(t, .46), h = t.h;
+  var g = el('g', {class:'bld', tabindex:0, role:'button', 'aria-label':t.name + '（' + z.name + '）', 'data-id':t.id}, L.blds);
+  var c = iso(t.gx, t.gy);
+  el('ellipse', {class:'ring', cx:c[0], cy:c[1], rx:HW*1.05, ry:HH*1.05, fill:'none', stroke:'var(--coral)', 'stroke-width':3}, g);
+  el('polygon', {points:pts([f.T, f.R, f.B, f.Lp].map(function(p){ return [p[0]+5, p[1]+3]; })), fill:'rgba(0,0,0,.14)'}, g);
+  var wallL = mix(z.color, '#4a5d68', .45), wallR = mix(z.color, '#ffffff', .55);
+  el('polygon', {points:pts([f.Lp, f.B, up(f.B, h), up(f.Lp, h)]), fill:wallL}, g);
+  el('polygon', {points:pts([f.B, f.R, up(f.R, h), up(f.B, h)]), fill:wallR}, g);
+  drawWindows(t, g, 'rgba(255,255,255,.55)', 'rgba(20,48,61,.28)');
+  el('polygon', {class:'roof', points:pts([up(f.T, h), up(f.R, h), up(f.B, h), up(f.Lp, h)]), fill:z.color}, g);
+  // 屋頂小設施：工具名字首的顏色塊，讓同街區的建築也看得出差異
+  var r2 = footprint(t, .2), rh = h + 6 + (hash(t.id) % 3) * 3;
+  if (t.zone === 'hub'){
+    var top = up(c, h);
+    el('line', {x1:top[0], y1:top[1], x2:top[0], y2:top[1]-26, stroke:'#14303d', 'stroke-width':2}, g);
+    el('circle', {class:'pulse', cx:top[0], cy:top[1]-28, r:4, fill:'var(--coral)'}, g);
+  } else if (hash(t.id) % 2){
+    el('polygon', {points:pts([up(r2.Lp, h), up(r2.B, h), up(r2.B, rh), up(r2.Lp, rh)]), fill:mix(z.color, '#14303d', .3)}, g);
+    el('polygon', {points:pts([up(r2.B, h), up(r2.R, h), up(r2.R, rh), up(r2.B, rh)]), fill:mix(z.color, '#ffffff', .25)}, g);
+    el('polygon', {points:pts([up(r2.T, rh), up(r2.R, rh), up(r2.B, rh), up(r2.Lp, rh)]), fill:'#fff', opacity:.9}, g);
+  }
+  t.flagG = el('g', {opacity:0}, g);
+  var ft = up(c, h + 2);
+  el('line', {x1:ft[0]+10, y1:ft[1], x2:ft[0]+10, y2:ft[1]-24, stroke:'#14303d', 'stroke-width':1.6}, t.flagG);
+  el('polygon', {points:pts([[ft[0]+10, ft[1]-24], [ft[0]+24, ft[1]-19], [ft[0]+10, ft[1]-14]]), fill:'var(--coral)'}, t.flagG);
+  el('polygon', {class:'hit', points:pts([f.T, f.R, f.B, f.Lp].map(function(p){ return p; }).concat([up(f.Lp, h+8), up(f.T, h+8), up(f.R, h+8)]))}, g);
+  t.g = g;
+}
+
+function drawWindows(t, g, lit, frame){
+  var f = footprint(t, .46), rows = Math.max(1, Math.floor((t.h - 8) / 13));
+  [[f.Lp, f.B], [f.B, f.R]].forEach(function(face){
+    var A = face[0], B = face[1], u = [B[0]-A[0], B[1]-A[1]];
+    [[.18,.42],[.58,.82]].forEach(function(col){
+      for (var r = 0; r < rows; r++){
+        var z1 = 7 + r * 13, z2 = z1 + 7;
+        var P = function(a, z){ return [A[0] + u[0]*a, A[1] + u[1]*a - z]; };
+        el('polygon', {points:pts([P(col[0], z1), P(col[1], z1), P(col[1], z2), P(col[0], z2)]), fill:lit, stroke:frame || 'none', 'stroke-width':frame ? .6 : 0}, g);
+      }
+    });
+  });
+}
+
+function edgePath(e){
+  var a = toolById[e.a], b = toolById[e.b];
+  var p = up(iso(a.gx, a.gy), a.h + 4), q = up(iso(b.gx, b.gy), b.h + 4);
+  var d = Math.hypot(q[0]-p[0], q[1]-p[1]);
+  var mx = (p[0]+q[0])/2, my = (p[1]+q[1])/2 - Math.min(90, 24 + d * .22);
+  return 'M'+p[0].toFixed(1)+' '+p[1].toFixed(1)+' Q'+mx.toFixed(1)+' '+my.toFixed(1)+' '+q[0].toFixed(1)+' '+q[1].toFixed(1);
+}
+function drawLinks(){
+  L.links.innerHTML = '';
+  var rel = {}; LINKS.forEach(function(x){ rel[x.id] = x; });
+  EDGES.forEach(function(e){
+    if (!state.rels[e.rel]) return;
+    var touches = state.sel && (e.a === state.sel || e.b === state.sel);
+    var cls = 'link-path' + (state.sel ? (touches ? ' hot' : ' fade') : '');
+    el('path', {d:edgePath(e), class:cls, stroke:rel[e.rel].color}, L.links);
+    var q = toolById[e.b], end = up(iso(q.gx, q.gy), q.h + 4);
+    el('circle', {cx:end[0], cy:end[1], r:3.5, fill:rel[e.rel].color, class:state.sel && !touches ? 'link-path fade' : ''}, L.links);
+  });
+  svg.classList.toggle('hide-links', !state.links);
+}
+
+/* ---------- 吉祥物「小創」、船、雲 ---------- */
+var mascot = {from:'hub', to:'idea', t:0};
+function buildMascot(){
+  L.mascot = el('g', {'pointer-events':'none'}, svg);
+  el('ellipse', {cx:0, cy:2, rx:9, ry:4, fill:'rgba(0,0,0,.18)'}, L.mascot);
+  el('circle', {cx:0, cy:-11, r:11, fill:'var(--coral)', stroke:'#fff', 'stroke-width':2}, L.mascot);
+  el('circle', {cx:-4, cy:-12, r:1.8, fill:'#fff'}, L.mascot);
+  el('circle', {cx:4, cy:-12, r:1.8, fill:'#fff'}, L.mascot);
+  el('path', {d:'M-3 -7 Q0 -5 3 -7', stroke:'#fff', 'stroke-width':1.4, fill:'none', 'stroke-linecap':'round'}, L.mascot);
+  el('path', {d:'M0 -22 L0 -34 L8 -25 Z', fill:'#f4b942', stroke:'#fff', 'stroke-width':1}, L.mascot);
+  var lab = el('text', {x:0, y:-38, 'text-anchor':'middle', 'font-size':10.5, 'font-weight':700, fill:'#fff', stroke:'#14303d', 'stroke-width':3, 'paint-order':'stroke'}, L.mascot);
+  lab.textContent = '小創';
+}
+var boats = [{a:0, r:10.6, s:.035}, {a:2.3, r:11.4, s:-.025}, {a:4.4, r:10.9, s:.03}];
+function buildBoats(){
+  L.boats.innerHTML = '';
+  boats.forEach(function(b){
+    b.g = el('g', {}, L.boats);
+    el('path', {d:'M-12 0 L12 0 L7 6 L-7 6 Z', fill:'#fff'}, b.g);
+    el('path', {d:'M0 -1 L0 -20 L10 -4 Z', fill:'var(--coral)'}, b.g);
+  });
+}
+var lastFrame = 0, elapsed = 0;
+function tick(ts){
+  var dt = Math.min(.05, (ts - lastFrame) / 1000 || 0); lastFrame = ts;
+  if (!state.paused){
+    elapsed += dt;
+    mascot.t += dt * .12;
+    if (mascot.t >= 1){
+      mascot.t = 0; mascot.from = mascot.to;
+      var opts = ZONES.filter(function(z){ return z.id !== mascot.from; });
+      mascot.to = mascot.from === 'hub' ? opts[Math.floor(Math.random()*opts.length)].id : 'hub';
+    }
+    boats.forEach(function(b){ b.a += b.s * dt; });
+  }
+  var A = zoneById[mascot.from], B = zoneById[mascot.to], e = mascot.t < .5 ? 2*mascot.t*mascot.t : 1 - Math.pow(-2*mascot.t + 2, 2)/2;
+  var mp = iso(A.cx + (B.cx - A.cx)*e, A.cy + (B.cy - A.cy)*e), hop = Math.abs(Math.sin(elapsed * 9)) * 3;
+  L.mascot.setAttribute('transform', 'translate('+mp[0].toFixed(1)+','+(mp[1]-hop).toFixed(1)+')');
+  boats.forEach(function(b){
+    var p = iso(7.2 + Math.cos(b.a)*b.r, 7.4 + Math.sin(b.a)*b.r), bob = Math.sin(elapsed*2 + b.a*5) * 1.5;
+    b.g.setAttribute('transform', 'translate('+p[0].toFixed(1)+','+(p[1]+bob).toFixed(1)+')' + (b.s < 0 ? ' scale(-1,1)' : ''));
+  });
+  Array.prototype.forEach.call(L.clouds.children, function(cg, i){
+    var x = ((elapsed * (10 + i*3) + i * 300) % 1400) - 700, y = -40 + i * 110;
+    cg.setAttribute('transform', 'translate('+x.toFixed(1)+','+y+')');
+  });
+  requestAnimationFrame(tick);
+}
+
+/* ---------- 鏡頭：縮放／拖曳／聚焦 ---------- */
+var vb = {x:0, y:0, w:100, h:100}, home = null, anim = null;
+function setVB(){ svg.setAttribute('viewBox', vb.x.toFixed(1)+' '+vb.y.toFixed(1)+' '+vb.w.toFixed(1)+' '+vb.h.toFixed(1)); }
+function islandBox(){
+  var xs = [], ys = [];
+  for (var a = 0; a < Math.PI*2; a += .2){ var p = iso(7.2 + Math.cos(a)*10, 7.4 + Math.sin(a)*10); xs.push(p[0]); ys.push(p[1]); }
+  return {x:Math.min.apply(null, xs), y:Math.min.apply(null, ys) - 90, w:Math.max.apply(null, xs) - Math.min.apply(null, xs), h:Math.max.apply(null, ys) - Math.min.apply(null, ys) + 110};
+}
+function padBox(b){
+  // 預留頂部列、底部工具列、時間軸的空間
+  var r = svg.getBoundingClientRect(), topPx = 70, botPx = state.view === 'time' ? 230 : 80;
+  var leftPx = r.width > 820 && state.view === 'map' ? 360 : 0;
+  var st = $('story');
+  if (r.width <= 820 && !st.hidden) botPx = Math.max(botPx, r.bottom - st.getBoundingClientRect().top + 10);
+  var usableH = Math.max(120, r.height - topPx - botPx), usableW = Math.max(200, r.width - leftPx);
+  var s = Math.min(usableW / b.w, usableH / b.h) * .96;
+  var w = r.width / s, h = r.height / s;
+  return {x:b.x + b.w/2 - w/2 - (leftPx / 2) / s, y:b.y + b.h/2 - h/2 - ((topPx - botPx) / 2) / s, w:w, h:h};
+}
+function animateTo(target, ms){
+  if (anim) cancelAnimationFrame(anim);
+  var from = {x:vb.x, y:vb.y, w:vb.w, h:vb.h}, t0 = performance.now(), dur = REDUCED ? 1 : (ms || 650);
+  (function step(now){
+    var k = Math.max(0, Math.min(1, (now - t0) / dur)), e = 1 - Math.pow(1 - k, 3);
+    ['x','y','w','h'].forEach(function(p){ vb[p] = from[p] + (target[p] - from[p]) * e; });
+    setVB();
+    if (k < 1) anim = requestAnimationFrame(step);
+  })(t0);
+}
+function birdview(){ home = padBox(islandBox()); animateTo(home); }
+function focusZones(ids){
+  var xs = [], ys = [];
+  ids.forEach(function(id){
+    var z = zoneById[id], b = z.box;
+    [[b[0],b[1]],[b[2],b[1]],[b[2],b[3]],[b[0],b[3]]].forEach(function(c){ var p = iso(c[0], c[1]); xs.push(p[0]); ys.push(p[1]); });
+  });
+  var x0 = Math.min.apply(null, xs) - 60, x1 = Math.max.apply(null, xs) + 60, y0 = Math.min.apply(null, ys) - 110, y1 = Math.max.apply(null, ys) + 60;
+  animateTo(padBox({x:x0, y:y0, w:x1-x0, h:y1-y0}));
+}
+function focusTool(t){
+  var p = iso(t.gx, t.gy), r = svg.getBoundingClientRect(), wide = r.width > 820;
+  var box = padBox({x:p[0]-420, y:p[1]-340, w:840, h:560});
+  if (wide) box.x += (200 * box.w / r.width);   // 讓出右側抽屜
+  animateTo(box);
+}
+function clientToSvg(cx, cy){
+  var pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+function zoomAt(cx, cy, k){
+  if (!home) return;
+  var nw = Math.max(home.w * .28, Math.min(home.w * 1.8, vb.w * k)); k = nw / vb.w;
+  var p = clientToSvg(cx, cy);
+  vb.x = p.x - (p.x - vb.x) * k; vb.y = p.y - (p.y - vb.y) * k; vb.w *= k; vb.h *= k; setVB();
+}
+var pointers = {}, drag = null, moved = false;
+svg.addEventListener('wheel', function(e){ e.preventDefault(); if (anim) cancelAnimationFrame(anim); zoomAt(e.clientX, e.clientY, Math.pow(1.0015, e.deltaY)); }, {passive:false});
+svg.addEventListener('pointerdown', function(e){
+  pointers[e.pointerId] = {x:e.clientX, y:e.clientY};
+  var ids = Object.keys(pointers);
+  if (ids.length === 1){ moved = false; drag = {x:e.clientX, y:e.clientY, vx:vb.x, vy:vb.y}; }
+  if (ids.length === 2){ var a = pointers[ids[0]], b = pointers[ids[1]]; drag = {pinch:Math.hypot(a.x-b.x, a.y-b.y)}; }
+});
+svg.addEventListener('pointermove', function(e){
+  if (!(e.pointerId in pointers)) { hoverTip(e); return; }
+  pointers[e.pointerId] = {x:e.clientX, y:e.clientY};
+  var ids = Object.keys(pointers);
+  if (ids.length === 2 && drag && drag.pinch){
+    var a = pointers[ids[0]], b = pointers[ids[1]], d = Math.hypot(a.x-b.x, a.y-b.y);
+    zoomAt((a.x+b.x)/2, (a.y+b.y)/2, drag.pinch / d); drag.pinch = d; moved = true; return;
+  }
+  if (!drag || drag.pinch || !state.pan) return;
+  var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!moved && Math.hypot(dx, dy) < 5) return;
+  if (!moved){ moved = true; svg.setPointerCapture(e.pointerId); svg.classList.add('dragging'); if (anim) cancelAnimationFrame(anim); }
+  var r = svg.getBoundingClientRect(), s = Math.min(r.width / vb.w, r.height / vb.h);
+  vb.x = drag.vx - dx / s; vb.y = drag.vy - dy / s; setVB();
+});
+function endPointer(e){
+  delete pointers[e.pointerId];
+  if (!Object.keys(pointers).length){ drag = null; svg.classList.remove('dragging'); }
+}
+svg.addEventListener('pointerup', endPointer);
+svg.addEventListener('pointercancel', endPointer);
+svg.addEventListener('pointerleave', function(){ $('tip').classList.remove('show'); });
+svg.addEventListener('click', function(e){
+  if (moved){ moved = false; return; }
+  var g = e.target.closest && e.target.closest('.bld');
+  if (g) openTool(g.getAttribute('data-id'));
+});
+svg.addEventListener('keydown', function(e){
+  var g = e.target.closest && e.target.closest('.bld');
+  if (g && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openTool(g.getAttribute('data-id')); }
+});
+svg.addEventListener('focusin', function(e){
+  var g = e.target.closest && e.target.closest('.bld');
+  if (g){ var r = g.getBoundingClientRect(); showTip(toolById[g.getAttribute('data-id')], r.left + r.width/2, r.top); }
+});
+svg.addEventListener('focusout', function(){ $('tip').classList.remove('show'); });
+function hoverTip(e){
+  var g = e.target.closest && e.target.closest('.bld');
+  if (!g){ $('tip').classList.remove('show'); return; }
+  showTip(toolById[g.getAttribute('data-id')], e.clientX, e.clientY - 12);
+}
+function showTip(t, x, y){
+  var tip = $('tip'); tip.textContent = t.name + (t.lic ? '　需序號' : '');
+  tip.style.left = Math.min(window.innerWidth - tip.offsetWidth - 8, Math.max(8, x - tip.offsetWidth/2)) + 'px';
+  tip.style.top = Math.max(8, y - 34) + 'px';
+  tip.classList.add('show');
+}
+
+/* ---------- 時間與夜色 ---------- */
+function darkness(h){
+  if (h < 5) return 1; if (h < 7) return 1 - (h - 5) / 2; if (h < 17) return 0; if (h < 19.5) return (h - 17) / 2.5; return 1;
+}
+function nowHour(){ var d = new Date(); return d.getHours() + d.getMinutes() / 60; }
+function activeAt(t){
+  if (state.view === 'time' && state.tmode === 'month') return state.monthT >= t.month[0] && state.monthT <= t.month[1];
+  var h = state.view === 'time' ? state.dayT : nowHour();
+  return h >= t.hour[0] && h < t.hour[1];
+}
+function renderTime(){
+  var dayMode = state.view !== 'time' || state.tmode === 'day';
+  var h = state.view === 'time' ? state.dayT : nowHour();
+  var dk = dayMode ? darkness(h) : 0;
+  L.night.setAttribute('opacity', (dk * .46).toFixed(3));
+  TOOLS.forEach(function(t){
+    var on = activeAt(t);
+    t.lightG.setAttribute('opacity', dayMode && dk > .15 && on ? 1 : 0);
+    t.g.classList.toggle('dim', state.view === 'time' && !on);
+    t.tagG.style.opacity = state.view === 'time' && !on ? .3 : 1;
+  });
+  if (state.view === 'time'){
+    var T = state.tmode === 'day' ? state.dayT : state.monthT;
+    $('tbRange').value = T;
+    $('tbRead').textContent = state.tmode === 'day' ? fmtHour(T) : ('第 ' + Math.floor(T) + ' 個月');
+    var S = state.tmode === 'day' ? DAY_SCRIPT : MONTH_SCRIPT, line = S[0];
+    S.forEach(function(s){ if (s.t <= T) line = s; });
+    var n = TOOLS.filter(activeAt).length;
+    $('tbScript').textContent = line.text + '（' + n + ' 個工具亮著）';
+    if (line !== state.lastLine){ state.lastLine = line; if (state.playing) addLog((state.tmode === 'day' ? fmtHour(line.t) : '第 ' + line.t + ' 個月') + '　' + line.text); }
+  }
+  var nh = nowHour();
+  $('clockNow').textContent = fmtHour(nh);
+  $('clockNote').textContent = darkness(nh) > .15 ? '· 夜裡亮窗的是這時段常用的工具' : '';
+}
+function setTimeMode(m){
+  state.tmode = m;
+  document.querySelectorAll('[data-tmode]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-tmode') === m)); });
+  var ticks = m === 'day' ? ['00:00','06:00','12:00','18:00','24:00'] : ['第 0 月','第 6 月','第 12 月','第 18 月','第 24 月'];
+  $('tbTicks').innerHTML = ticks.map(function(x){ return '<span>' + x + '</span>'; }).join('');
+  state.lastLine = null;
+  renderTime();
+}
+function setT(v){ if (state.tmode === 'day') state.dayT = v; else state.monthT = v; renderTime(); }
+var playTimer = null;
+function setPlaying(on){
+  state.playing = on;
+  $('tbPlay').textContent = on ? '❚❚' : '▶';
+  $('tbPlay').setAttribute('aria-label', on ? '暫停播放' : '播放');
+  clearInterval(playTimer);
+  if (on) playTimer = setInterval(function(){
+    var T = (state.tmode === 'day' ? state.dayT : state.monthT) + .25;
+    if (T > 24){ setPlaying(false); return; }
+    setT(T);
+  }, 380);
+}
+
+/* ---------- 檢視切換 ---------- */
+function setView(v){
+  if (state.view === v) return;
+  state.view = v;
+  document.body.className = document.body.className.replace(/view-\w+/, 'view-' + v);
+  document.querySelectorAll('[data-view]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-view') === v)); });
+  if (v !== 'time') setPlaying(false);
+  if (v === 'list') renderList();
+  state.lastLine = null;
+  renderTime();
+  if (v !== 'list') birdview();
+}
+
+/* ---------- 清單檢視 ---------- */
+function renderList(){
+  var html = '';
+  ZONES.forEach(function(z, i){
+    html += '<section class="zone-sec"><h2><span style="color:' + z.color + '">■</span>' + z.name + '<small>' + z.en + '</small></h2><p>' + z.desc + '</p><div class="cards">';
+    z.tools.forEach(function(t){
+      html += '<button type="button" class="tcard" data-id="' + t.id + '" style="border-top-color:' + z.color + '"><b>' + t.name + '</b><span>' + t.role + '</span><em>' +
+        (state.seen[t.id] ? '<span class="seen">已探索</span>　' : '') + (t.lic ? '需序號　' : '') + t.input + ' → ' + t.output + '</em></button>';
+    });
+    html += '</div></section>';
+  });
+  $('listView').innerHTML = html;
+}
+$('listView').addEventListener('click', function(e){ var c = e.target.closest('.tcard'); if (c) openTool(c.getAttribute('data-id')); });
+
+/* ---------- 建築資訊抽屜 ---------- */
+function relsOf(id){
+  return LINKS.filter(function(Lk){ return (Lk.chain || Lk.star).indexOf(id) >= 0; });
+}
+function openTool(id){
+  var t = toolById[id], z = zoneById[t.zone];
+  if (state.sel && toolById[state.sel]) toolById[state.sel].g.classList.remove('sel');
+  state.sel = id; t.g.classList.add('sel');
+  closeDrawer('logDrawer');
+  var h = t.hour, m = t.month;
+  var rels = relsOf(id).map(function(Lk){
+    var seq = Lk.chain || Lk.star, others = seq.filter(function(x){ return x !== id; });
+    return '<button type="button" class="rel-item" data-rel="' + Lk.id + '" data-go="' + others[0] + '"><b>' + Lk.name + '</b><small>' +
+      seq.map(function(x){ return x === id ? '【' + toolById[x].short + '】' : toolById[x].short; }).join(Lk.star ? '・' : ' → ') + '</small><small>' + Lk.desc + '</small></button>';
+  }).join('');
+  $('dEyebrow').textContent = z.en;
+  $('dBody').innerHTML =
+    '<span class="zone-chip" style="background:' + z.color + '">' + z.name + '</span>' +
+    '<h2 class="d-name">' + t.name + '</h2>' +
+    '<p class="d-role">' + t.role + '</p>' +
+    '<dl class="d-grid"><dt>帶進來</dt><dd>' + t.input + '</dd><dt>帶出去</dt><dd>' + t.output + '</dd>' +
+    '<dt>一天中</dt><dd>' + fmtHour(h[0]) + '–' + fmtHour(h[1]) + '</dd><dt>創業旅程</dt><dd>' + (m[0] === 0 && m[1] === 24 ? '從頭到尾都用得到' : '第 ' + m[0] + '–' + m[1] + ' 個月') + '</dd></dl>' +
+    (t.lic ? '<p class="lic">這個工具需要課程序號' + (t.id === 'content-workflow-studio-cf' ? '並登入' : '') + '才能使用，請向授課講師索取。</p>' : '') +
+    '<a class="go" href="' + toolUrl(t) + '" target="_blank" rel="noopener">前往工具 ↗</a>' +
+    (rels ? '<p class="rel-h">接力線（點一下飛到下一棟）</p>' + rels : '');
+  openDrawer('detail');
+  if (!state.seen[id]){ state.seen[id] = Date.now(); lsSet(KEY_SEEN, state.seen); }
+  addLog('造訪 ' + z.name + '・' + t.name);
+  renderSeen();
+  drawLinks();
+  if (state.view === 'map' || state.view === 'time') focusTool(t);
+  if (state.view === 'list') renderList();
+}
+$('dBody').addEventListener('click', function(e){
+  var r = e.target.closest('.rel-item');
+  if (!r) return;
+  var rel = r.getAttribute('data-rel');
+  if (!state.rels[rel]){ state.rels[rel] = true; renderRelList(); }
+  setLinks(true);
+  if (state.view === 'list') setView('map');
+  openTool(r.getAttribute('data-go'));
+});
+$('dBody').addEventListener('click', function(e){
+  if (e.target.closest('.go')) addLog('前往 ' + toolById[state.sel].name);
+});
+function openDrawer(id){ $(id).classList.add('open'); if (id === 'logDrawer') $('tbLog').setAttribute('aria-pressed', 'true'); }
+function closeDrawer(id){
+  $(id).classList.remove('open');
+  if (id === 'logDrawer') $('tbLog').setAttribute('aria-pressed', 'false');
+  if (id === 'detail' && state.sel){ toolById[state.sel].g.classList.remove('sel'); state.sel = null; drawLinks(); }
+}
+document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click', function(){ closeDrawer(b.getAttribute('data-close')); }); });
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){ closeDrawer('detail'); closeDrawer('logDrawer'); $('linkPop').hidden = true; $('tbLinks').setAttribute('aria-expanded', 'false'); }
+});
+
+function renderSeen(){
+  var n = 0;
+  TOOLS.forEach(function(t){ var s = !!state.seen[t.id]; if (s) n++; t.flagG.setAttribute('opacity', s ? 1 : 0); });
+  $('seenCount').textContent = n + ' / ' + TOOLS.length;
+}
+
+/* ---------- 足跡 ---------- */
+function addLog(text){
+  var d = new Date();
+  state.log.unshift({t:pad2(d.getHours()) + ':' + pad2(d.getMinutes()), text:text});
+  state.log = state.log.slice(0, 60);
+  lsSet(KEY_LOG, state.log);
+  renderLog();
+}
+function renderLog(){
+  var ol = $('logList');
+  ol.innerHTML = '';
+  if (!state.log.length){ ol.innerHTML = '<li class="log-empty" style="display:block">還沒有足跡。點一棟建築，或到「時間軸」按播放，走過的地方會記在這裡。</li>'; return; }
+  state.log.forEach(function(x){
+    var li = document.createElement('li'), tm = document.createElement('time'), sp = document.createElement('span');
+    tm.textContent = x.t; sp.textContent = x.text; li.appendChild(tm); li.appendChild(sp); ol.appendChild(li);
+  });
+}
+$('clearLog').addEventListener('click', function(){
+  state.log = []; state.seen = {}; lsSet(KEY_LOG, []); lsSet(KEY_SEEN, {});
+  renderLog(); renderSeen(); if (state.view === 'list') renderList();
+});
+$('replayStory').addEventListener('click', function(){ closeDrawer('logDrawer'); startStory(); });
+
+/* ---------- 工具列 ---------- */
+function setTags(on){ state.tags = on; $('tbTags').setAttribute('aria-pressed', String(on)); svg.classList.toggle('hide-tags', !on); savePrefs(); }
+function setLinks(on){ state.links = on; $('tbLinks').setAttribute('aria-pressed', String(on)); drawLinks(); }
+function setPaused(on){ state.paused = on; $('tbPause').setAttribute('aria-pressed', String(on)); svg.classList.toggle('paused', on); }
+$('tbTags').addEventListener('click', function(){ setTags(!state.tags); });
+$('tbPan').addEventListener('click', function(){
+  state.pan = !state.pan; this.setAttribute('aria-pressed', String(state.pan)); svg.classList.toggle('pan', state.pan);
+});
+$('tbPause').addEventListener('click', function(){ setPaused(!state.paused); });
+$('tbBird').addEventListener('click', function(){ if (state.view === 'list') setView('map'); else birdview(); });
+$('tbLog').addEventListener('click', function(){
+  if ($('logDrawer').classList.contains('open')) closeDrawer('logDrawer');
+  else { closeDrawer('detail'); renderLog(); openDrawer('logDrawer'); }
+});
+$('tbLinks').addEventListener('click', function(){
+  var pop = $('linkPop'), open = pop.hidden;
+  pop.hidden = !open; this.setAttribute('aria-expanded', String(open));
+  if (open && !state.links) setLinks(true);
+  else if (!open) setLinks(false);
+});
+$('relClose').addEventListener('click', function(){ $('linkPop').hidden = true; $('tbLinks').setAttribute('aria-expanded', 'false'); });
+function renderRelList(){
+  $('relList').innerHTML = LINKS.map(function(Lk){
+    return '<label><input type="checkbox" data-rel="' + Lk.id + '"' + (state.rels[Lk.id] ? ' checked' : '') + '><i style="background:' + Lk.color + '"></i><span>' + Lk.name + '</span></label>';
+  }).join('');
+}
+$('relList').addEventListener('change', function(e){
+  var id = e.target.getAttribute('data-rel'); if (!id) return;
+  state.rels[id] = e.target.checked; savePrefs(); setLinks(true);
+});
+$('relAll').addEventListener('click', function(){ LINKS.forEach(function(Lk){ state.rels[Lk.id] = true; }); savePrefs(); renderRelList(); setLinks(true); });
+$('relNone').addEventListener('click', function(){ LINKS.forEach(function(Lk){ state.rels[Lk.id] = false; }); savePrefs(); renderRelList(); drawLinks(); });
+
+document.querySelectorAll('[data-view]').forEach(function(b){ b.addEventListener('click', function(){ setView(b.getAttribute('data-view')); }); });
+document.querySelectorAll('[data-tmode]').forEach(function(b){ b.addEventListener('click', function(){ setPlaying(false); setTimeMode(b.getAttribute('data-tmode')); }); });
+$('tbPlay').addEventListener('click', function(){
+  var T = state.tmode === 'day' ? state.dayT : state.monthT;
+  if (!state.playing && T >= 24) setT(0);
+  setPlaying(!state.playing);
+});
+$('tbRange').addEventListener('input', function(){ setPlaying(false); setT(parseFloat(this.value)); });
+$('brandLink').addEventListener('click', function(e){ e.preventDefault(); setView('map'); birdview(); });
+
+/* ---------- 引導故事 ---------- */
+var storyI = 0;
+function startStory(){ storyI = 0; $('story').hidden = false; showStep(); }
+function endStory(){ $('story').hidden = true; lsSet(KEY_STORY, true); if (state.view !== 'list') birdview(); }
+function showStep(){
+  var s = STORY[storyI];
+  $('sEyebrow').textContent = s.eb;
+  $('sCount').textContent = pad2(storyI + 1) + ' / ' + pad2(STORY.length);
+  $('sChap').textContent = s.chap;
+  $('sTitle').textContent = s.title;
+  $('sBody').textContent = s.body;
+  $('sBar').style.width = ((storyI + 1) / STORY.length * 100) + '%';
+  $('sPrev').style.visibility = storyI ? 'visible' : 'hidden';
+  $('sNext').textContent = storyI === STORY.length - 1 ? '開始探索' : '下一步';
+  setPlaying(false);
+  s.act();
+}
+$('sNext').addEventListener('click', function(){ if (storyI < STORY.length - 1){ storyI++; showStep(); } else endStory(); });
+$('sPrev').addEventListener('click', function(){ if (storyI > 0){ storyI--; showStep(); } });
+$('sSkip').addEventListener('click', function(){ endStory(); setView('map'); birdview(); });
+
+/* ---------- 啟動 ---------- */
+$('stTools').textContent = TOOLS.length;
+$('stLinks').textContent = LINKS.length;
+buildMap();
+buildBoats();
+renderRelList();
+setTags(state.tags);
+setPaused(state.paused);
+setTimeMode('day');
+renderSeen();
+renderLog();
+birdview();
+requestAnimationFrame(tick);
+setInterval(renderTime, 60000);
+var resizeT; window.addEventListener('resize', function(){ clearTimeout(resizeT); resizeT = setTimeout(function(){ if (state.view !== 'list') birdview(); }, 200); });
+setTimeout(function(){
+  $('loader').classList.add('done');
+  setTimeout(function(){ $('loader').remove(); }, 600);
+  if (!lsGet(KEY_STORY, false)) startStory();
+}, REDUCED ? 100 : 900);
+window.__startupIsland = {state:state, TOOLS:TOOLS, LINKS:LINKS, ZONES:ZONES, setView:setView, setT:setT, setTimeMode:setTimeMode, openTool:openTool, toolUrl:toolUrl};
+</script>
+
+<script>
+/* ================= 頂部跑馬燈 — 獨立運作，沿用工作區共用授權伺服器的公告內容 ================= */
+(function () {
+  'use strict';
+  var MARQUEE_CHECK_URL = "https://script.google.com/macros/s/AKfycbwKX0DNNbY8y4nf90BFTHtxgfqJcHHcZasRrgycl4QAe52_hkjMWSkYk4xOsqU-JPCROw/exec";
+  var STORAGE_KEY = 'startupIslandMarquee';
+  var REFRESH_MS = 20 * 60 * 1000;
+
+  var bar = document.getElementById('marqueeBar');
+  var track = document.getElementById('marqueeTrack');
+  var lastKey = null;
+
+  function loadCache() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function saveCache(items) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch (e) {}
+  }
+  function appendParsedText(container, text) {
+    var re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    var lastIndex = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > lastIndex) container.appendChild(document.createTextNode(text.slice(lastIndex, m.index)));
+      var a = document.createElement('a');
+      a.href = m[2]; a.textContent = m[1]; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.style.color = 'inherit'; a.style.textDecoration = 'underline';
+      container.appendChild(a);
+      lastIndex = re.lastIndex;
+    }
+    if (lastIndex < text.length) container.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+  function buildTrackContent(items) {
+    var frag = document.createDocumentFragment();
+    function appendPass() {
+      items.forEach(function (item, idx) {
+        if (idx > 0) frag.appendChild(document.createTextNode('　★　'));
+        appendParsedText(frag, item);
+      });
+    }
+    appendPass();
+    frag.appendChild(document.createTextNode('　★　'));
+    appendPass();
+    return frag;
+  }
+  function render(items) {
+    if (!items || !items.length) return;
+    var key = JSON.stringify(items);
+    if (key === lastKey) return;
+    lastKey = key;
+    track.innerHTML = '';
+    track.appendChild(buildTrackContent(items));
+    bar.classList.add('show');
+    document.body.classList.add('has-marquee');
+    var width = track.scrollWidth / 2;
+    track.style.animationDuration = Math.max(width / 80, 10) + 's';
+  }
+  function fetchMarquee() {
+    fetch(MARQUEE_CHECK_URL, { method: 'POST', body: JSON.stringify({ serial: '' }) })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && Array.isArray(data.marquee) && data.marquee.length) {
+          saveCache(data.marquee);
+          render(data.marquee);
+        }
+      })
+      .catch(function () {});
+  }
+
+  render(loadCache());
+  fetchMarquee();
+  setInterval(fetchMarquee, REFRESH_MS);
+})();
+</script>
+
+<script>
+/* ================= 加入主畫面（PWA） ================= */
+(function () {
+  'use strict';
+  var deferredPrompt = null;
+  var btn = document.getElementById('installBtn');
+
+  var ua = navigator.userAgent || '';
+  var isIOSDevice = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isMacDesktop = /Macintosh/.test(ua) && !isIOSDevice;
+  var isSafariEngine = /^((?!chrome|crios|fxios|edgios|android).)*safari/i.test(ua);
+  var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+
+  function fallbackMessage() {
+    if (isIOSDevice) return '請點畫面上的「分享」圖示，選「加入主畫面」';
+    if (isMacDesktop && isSafariEngine) return '請用選單列「檔案」→「加入 Dock」（Safari 17 以上）';
+    return '瀏覽器不支援，或已安裝過';
+  }
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+  window.addEventListener('appinstalled', function () {
+    deferredPrompt = null;
+  });
+
+  if (btn) {
+    if (isStandalone) {
+      btn.style.display = 'none';
+    } else {
+      btn.addEventListener('click', function () {
+        if (!deferredPrompt) {
+          window.alert(fallbackMessage());
+          return;
+        }
+        try {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(function () { deferredPrompt = null; });
+        } catch (err) {
+          window.alert(fallbackMessage());
+        }
+      });
+    }
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('service-worker.js').catch(function () {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
