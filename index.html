@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>創業島 · 從一個點子出發，走完整座島</title>
-<meta name="description" content="把 40 個線上創業工具放進一座可以探索的島：八個創業街區、工具接力線、創業者的一天與兩年創業旅程時間軸。">
+<meta name="description" content="把 41 個線上創業工具放進一座可以探索的島：公園、山丘、學校、河口碼頭等九個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
 <meta name="theme-color" content="#1c6e8c">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -20,6 +20,8 @@
   --panel:#fbfdfd; --panel-2:#eef6f8; --line:#d4e3e8;
   --coral:#ff6f59; --coral-ink:#c8412d;
   --lic:#e11d2e;
+  --park:#8fcf6e; --lawn:#bfe09c; --yard:#efdfb2; --paving:#e6e2d8; --wood:#d8b588; --road:#eef0ea;
+  --river:#5fb8d4; --river-rim:#3a8fae; --hillside:#86b85f; --hilltop:#b3d98a;
   --shadow:0 10px 30px rgba(12,48,64,.18);
   --mq:0px;
   --f-display:"Huninn","Noto Sans TC",system-ui,sans-serif;
@@ -34,6 +36,8 @@
     --panel:#11242e; --panel-2:#183340; --line:#264552;
     --coral:#ff8470; --coral-ink:#ffb3a5;
     --lic:#ff4d5a;
+    --park:#4f7a3c; --lawn:#5f8445; --yard:#8a7a52; --paving:#56616a; --wood:#7a5e3c; --road:#6d7780;
+    --river:#2a7a96; --river-rim:#174f63; --hillside:#56773a; --hilltop:#6f9550;
     --shadow:0 10px 30px rgba(0,0,0,.45);
   }
 }
@@ -86,6 +90,8 @@ a{color:inherit}
 .tag rect{fill:var(--panel);stroke:var(--line)}
 .hide-tags .tag{display:none}
 .zone-tag text{font-family:var(--f-display);font-size:17px;letter-spacing:.06em}
+.zone-tag.decor-tag text{font-size:13px;letter-spacing:.08em}
+.me-name{font-family:var(--f-body)!important;font-weight:700}
 .zone-tag .en{font-family:var(--f-mono);font-size:9px;letter-spacing:.14em;opacity:.75}
 .link-path{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:7 7;animation:flow 1.2s linear infinite;transition:opacity .3s}
 .link-path.fade{opacity:.08}
@@ -286,9 +292,10 @@ footer{background:var(--panel);padding:30px 16px 40px}
   <section class="card title-card" id="titleCard" aria-label="關於創業島">
     <div class="tc-head"><span class="eyebrow">Startup Island Map</span><button type="button" class="tc-toggle" id="tcToggle" aria-expanded="true">收合</button></div>
     <h1>從一個點子出發，<br>走完整座島</h1>
-    <div class="stats"><span><b id="stZones">8</b> 街區</span><span><b id="stTools">0</b> 工具</span><span><b id="stLinks">0</b> 接力線</span><span><i class="lic-dot"></i><b id="stLic">0</b> 需序號</span></div>
+    <div class="stats"><span><b id="stZones">9</b> 地點</span><span><b id="stTools">0</b> 工具</span><span><b id="stLinks">0</b> 接力線</span><span><i class="lic-dot"></i><b id="stLic">0</b> 需序號</span></div>
     <div class="clock"><span>島上時間</span><b id="clockNow">--:--</b><span id="clockNote"></span></div>
     <div class="clock"><span>你已探索</span><b id="seenCount">0</b><span>棟建築</span></div>
+    <div class="clock"><span>你是</span><b id="meName" class="me-name"></b><button type="button" class="tc-toggle" id="reroll">換名字</button></div>
   </section>
 
   <div class="list-view" id="listView"></div>
@@ -299,6 +306,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <button type="button" id="tbLinks" aria-pressed="false" aria-expanded="false"><span class="dot"></span>接力線</button>
     <button type="button" id="tbPause" aria-pressed="false"><span class="dot"></span>靜止</button>
     <button type="button" id="tbBird">看全島</button>
+    <button type="button" id="tbWalk" aria-pressed="true"><span class="dot"></span>人物跟隨</button>
     <button type="button" id="tbLog" aria-pressed="false"><span class="dot"></span>足跡</button>
   </nav>
 
@@ -319,7 +327,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <div class="head"><span class="eyebrow">Footprints</span><span class="log-live">探索紀錄</span><button type="button" class="x" data-close="logDrawer" aria-label="關閉">×</button></div>
     <div class="body">
       <ol class="log-list" id="logList"></ol>
-      <div class="log-actions"><button type="button" class="chip-btn" id="replayStory">重播導覽</button><button type="button" class="chip-btn" id="clearLog">清除足跡</button></div>
+      <div class="log-actions"><button type="button" class="chip-btn" id="replayStory">重播導覽</button><button type="button" class="chip-btn" id="rerollLog">換一個名字</button><button type="button" class="chip-btn" id="clearLog">清除足跡</button></div>
     </div>
   </aside>
 
@@ -376,14 +384,15 @@ footer{background:var(--panel);padding:30px 16px 40px}
 <script>
 /* ================= 創業島：資料 ================= */
 var ZONES = [
-  {id:'idea',     name:'點子灣',   en:'IDEA BAY',      color:'#f4b942', at:[2,2],   desc:'把模糊的念頭變成可以比較的點子。'},
-  {id:'strategy', name:'策略高地', en:'STRATEGY HILL', color:'#9d8cf2', at:[6,1],   desc:'想清楚賣給誰、靠什麼贏、怎麼落地。'},
-  {id:'calc',     name:'試算港',   en:'NUMBERS PORT',  color:'#2ec4b6', at:[10,3],  desc:'開店、上架前先把成本和損益算清楚。'},
-  {id:'fund',     name:'資金廣場', en:'FUNDING PLAZA', color:'#f08a4b', at:[11,7],  desc:'確認貸款資格，把試算數字寫進申請書。'},
-  {id:'brand',    name:'品牌街',   en:'BRAND STREET',  color:'#ef6b8a', at:[8,10],  desc:'社群、檔期、素材：讓人看見你。'},
-  {id:'ecom',     name:'電商碼頭', en:'E-COM DOCK',    color:'#4f9dff', at:[3,11],  desc:'市場、關鍵字、商品頁、物流與廣告。'},
-  {id:'ops',      name:'營運區',   en:'OPERATIONS',    color:'#6bbf59', at:[1,7],   desc:'顧客回饋、會員經營、流程與記帳。'},
-  {id:'hub',      name:'指揮塔',   en:'CONTROL TOWER', color:'#e05a47', at:[6,6],   desc:'把一路上的工具串成會自己跑的流程。'}
+  {id:'idea',     name:'點子公園',   en:'IDEA PARK',       color:'#f4b942', ground:'var(--park)', label:[-1.6,12.9,0],   desc:'在公園散步想點子：把模糊的念頭變成可以比較的點子。'},
+  {id:'strategy', name:'策略山丘',   en:'STRATEGY HILL',   color:'#9d8cf2', ground:null, label:[6.4,4.3,13],            desc:'爬上山頂看清楚：賣給誰、靠什麼贏、怎麼落地。'},
+  {id:'school',   name:'創業學校',   en:'STARTUP SCHOOL',  color:'#6672e0', ground:'var(--yard)',   extra:[10.15,.45,11.85,2.15], desc:'用遊戲練功，也替團隊開課申請訓練補助。'},
+  {id:'calc',     name:'試算商辦區', en:'NUMBERS OFFICES', color:'#2ec4b6', ground:'var(--paving)', desc:'開店、上架前，先把成本和損益算清楚。'},
+  {id:'fund',     name:'資金廣場',   en:'FUNDING PLAZA',   color:'#f08a4b', ground:'var(--paving)', extra:[15.4,10.7,16.6,11.9], desc:'銀行與公所前的廣場：確認貸款資格，送出申請書。'},
+  {id:'brand',    name:'品牌商店街', en:'BRAND STREET',    color:'#ef6b8a', ground:'var(--paving)', desc:'社群、檔期、素材：讓人看見你。'},
+  {id:'ecom',     name:'河口碼頭',   en:'RIVER DOCK',      color:'#4f9dff', ground:'var(--wood)',   desc:'貨從這裡出海：關鍵字、商品頁、廣告；燈塔替你看市場流量。'},
+  {id:'ops',      name:'營運社區',   en:'OPS TOWN',        color:'#6bbf59', ground:'var(--lawn)',   desc:'顧客回饋、會員經營、流程與記帳。'},
+  {id:'hub',      name:'指揮塔',     en:'CONTROL TOWER',   color:'#e05a47', ground:'var(--paving)', desc:'河邊的高塔與工作坊：把一路上的工具串成會自己跑的流程。'}
 ];
 
 // hour：創業者的一天最常用的時段 [起, 迄)；month：兩年創業旅程中最常用的月份 [起, 迄]；lic：需序號或登入
@@ -405,7 +414,7 @@ var TOOLS = [
    role:'回答在哪裡打仗、靠什麼贏、怎麼落地三個問題。', input:'商業模式', output:'三層策略藍圖'},
   {id:'new-product-strategy-studio', zone:'strategy', short:'新品策略', name:'新品開發策略工作室', lic:true, hour:[10,12], month:[2,5],
    role:'產品五層次、SWOT、定價和競品比較一次做完。', input:'產品構想', output:'定位與定價建議'},
-  {id:'swot-game', zone:'strategy', short:'SWOT 卡牌', name:'SWOT 卡牌配對', hour:[10,11], month:[1,3],
+  {id:'swot-game', zone:'school', short:'SWOT 卡牌', name:'SWOT 卡牌配對', hour:[10,11], month:[1,3],
    role:'卡牌配對練習，熟悉優勢、劣勢、機會、威脅怎麼分。', input:'不需準備', output:'SWOT 判讀手感'},
   {id:'mentors-panel', zone:'strategy', short:'AI 顧問團', name:'AI 人物顧問團', hour:[22,24], month:[0,24],
    role:'請多位人物思維顧問同時給意見，替計畫做壓力測試。', input:'問題或計畫', output:'多角度建議'},
@@ -425,7 +434,7 @@ var TOOLS = [
    role:'先確認自己符不符合鳳凰貸款或創業貸款的條件。', input:'個人與事業狀況', output:'資格比對結果'},
   {id:'phoenix-loan-generator', zone:'fund', short:'鳳凰貸款', name:'微型創業鳳凰貸款申請書產生器', hour:[14,16], month:[4,6],
    role:'照官方格式填好微型創業鳳凰貸款的申請書。', input:'營運計畫、試算數字', output:'申請書文件'},
-  {id:'industry-talent-generator', zone:'fund', short:'人才投資', name:'產業人才投資方案開課申請書產生器', hour:[15,16], month:[15,20],
+  {id:'industry-talent-generator', zone:'school', short:'人才投資', name:'產業人才投資方案開課申請書產生器', hour:[15,16], month:[15,20],
    role:'替員工訓練課程寫開課申請書，申請政府訓練補助。', input:'課程規劃', output:'附表二申請書'},
 
   {id:'coffee-ig-planner', zone:'brand', short:'社群規劃', name:'社群內容規劃報告產生器', hour:[16,17], month:[5,8],
@@ -447,7 +456,7 @@ var TOOLS = [
 
   {id:'traffic-rank-estimator', zone:'ecom', short:'流量排名', name:'網站流量排名比較工具', lic:true, hour:[9,10], month:[6,9],
    role:'比較競爭網站的流量排名，估市場有多大。', input:'競爭者網址', output:'流量比較'},
-  {id:'amazon-logistics-game', zone:'ecom', short:'跨境物流', name:'跨境物流大挑戰', lic:true, hour:[20,21], month:[6,9],
+  {id:'amazon-logistics-game', zone:'school', short:'跨境物流', name:'跨境物流大挑戰', lic:true, hour:[20,21], month:[6,9],
    role:'用遊戲搞懂 FBA 與 FBM 的物流流程。', input:'不需準備', output:'物流流程概念'},
   {id:'product-keyword-cloud', zone:'ecom', short:'關鍵字雲', name:'跨境電商關鍵字文字雲產生器', lic:true, hour:[19,20], month:[6,9],
    role:'把商品關鍵字整理成文字雲，看出買家在搜什麼。', input:'關鍵字清單', output:'關鍵字權重圖'},
@@ -457,7 +466,7 @@ var TOOLS = [
    role:'寫出中英對照的 Amazon 五點式產品說明。', input:'商品特色', output:'五點說明'},
   {id:'amazon-ppc-advisor', zone:'ecom', short:'PPC 廣告', name:'Amazon PPC 關鍵字廣告建議工具', lic:true, hour:[20,22], month:[9,18],
    role:'依關鍵字和預算算出廣告出價建議。', input:'關鍵字、預算', output:'廣告活動建議'},
-  {id:'ecommerce-health-dashboard', zone:'ecom', short:'電商健檢', name:'跨境電商健檢總覽儀表板', hour:[21,22], month:[12,24],
+  {id:'ecommerce-health-dashboard', zone:'calc', short:'電商健檢', name:'跨境電商健檢總覽儀表板', hour:[21,22], month:[12,24],
    role:'讀取商品組合資料，逐項檢查店鋪健康度。', input:'商品組合資料', output:'健檢清單'},
 
   {id:'amazon-review-reply-generator', zone:'ops', short:'客評回覆', name:'Amazon 客評／客訴回覆信產生器', lic:true, hour:[8,9], month:[10,24],
@@ -471,10 +480,13 @@ var TOOLS = [
   {id:'IPA_Kano', zone:'ops', short:'滿意度分析', name:'IPA × Kano 滿意度分析', lic:true, hour:[22,23], month:[12,24],
    role:'用 IPA 與 Kano 找出顧客最在意、最該先改的服務。', input:'問卷資料', output:'改善優先順序'},
 
-  {id:'content-workflow-studio-cf', zone:'hub', short:'內容工作流', name:'內容工作流工作室', lic:true, hour:[22,24], month:[18,24], tall:96,
+  {id:'content-workflow-studio-cf', zone:'hub', short:'內容工作流', name:'內容工作流工作室', lic:true, hour:[22,24], month:[18,24],
    url:'https://content-workflow-studio-cf.content-workflow.workers.dev/',
    role:'把多個工具串成一條會自己跑的內容流程。', input:'主題', output:'整條流程的產出'},
-  {id:'animal-ecommerce-adventure', zone:'hub', short:'電商大冒險', name:'動物朋友的跨境電商大冒險', lic:true, hour:[9,10], month:[6,12], tall:64,
+  {id:'node-pack-designer-cf', zone:'hub', short:'節點補充包', name:'節點補充包設計工具', lic:true, hour:[21,22], month:[18,24],
+   url:'https://node-pack-designer-cf.content-workflow.workers.dev/',
+   role:'替內容工作流設計自己的節點補充包，把常用步驟做成新節點。', input:'想自動化的步驟', output:'節點補充包'},
+  {id:'animal-ecommerce-adventure', zone:'school', short:'電商大冒險', name:'動物朋友的跨境電商大冒險', lic:true, hour:[9,10], month:[6,12],
    role:'跟著動物朋友把跨境電商工具一關一關走完。', input:'不需準備', output:'跨境電商學習路徑'}
 ];
 
@@ -503,28 +515,29 @@ var LINKS = [
   {id:'l21', name:'團隊變大之後',      chain:['company-digital-transformation-analyzer','industry-talent-generator'], desc:'盤點流程後，申請補助訓練員工。'},
   {id:'l22', name:'記帳回頭校正',      chain:['expense-tracker-pwa','restaurant-feasibility-calculator'], desc:'實際開銷回頭修正當初的試算假設。'},
   {id:'l23', name:'內容工作流一條龍',  star:['content-workflow-studio-cf','business-idea-generator','where-what-how-strategy-studio','SocialPost','social-post-grader'], desc:'工作流把商業創意、商業策略、貼文產生與健診四個節點串成一條線。'},
+  {id:'l25', name:'自製節點 → 工作流', chain:['node-pack-designer-cf','content-workflow-studio-cf'], desc:'設計好的節點補充包，裝進內容工作流就能用。'},
   {id:'l24', name:'跨境電商冒險路線',  star:['animal-ecommerce-adventure','traffic-rank-estimator','amazon-logistics-game','product-title-generator','amazon-cost-calculator'], desc:'動物朋友帶你依序走過這些關卡。'}
 ];
 
 var DAY_SCRIPT = [
   {t:0,  text:'島上睡了。創業者也要睡，明天的點子才會好。'},
-  {t:6,  text:'點子灣先醒：晨跑時想到的點子，趁還記得先丟進商業創意產生器。'},
+  {t:6,  text:'點子公園先醒：晨跑時想到的點子，趁還記得先丟進商業創意產生器。'},
   {t:8,  text:'打開信箱回覆客評與客訴，再用六頂思考帽檢查昨天的想法。'},
-  {t:9,  text:'爬上策略高地：把點子寫成商業模式，想清楚在哪裡打仗、靠什麼贏。'},
-  {t:11, text:'進試算港算數字：租金、人事、食材、平台費，每一筆都要算進去。'},
+  {t:9,  text:'爬上策略山丘：把點子寫成商業模式，想清楚在哪裡打仗、靠什麼贏。'},
+  {t:11, text:'進試算商辦區算數字：租金、人事、食材、平台費，每一筆都要算進去。'},
   {t:12, text:'午餐順手記一筆帳。'},
   {t:14, text:'數字有了，到資金廣場確認貸款資格，把試算結果填進申請書。'},
-  {t:16, text:'品牌街開門：規劃社群、排行銷檔期、寫今天的貼文。'},
+  {t:16, text:'品牌商店街開門：規劃社群、排行銷檔期、寫今天的貼文。'},
   {t:18, text:'傍晚是素材時間：生圖提示詞、短影片、LINE 貼圖。'},
-  {t:19, text:'電商碼頭亮燈：整理關鍵字，寫標題和五點說明。'},
+  {t:19, text:'河口碼頭亮燈：整理關鍵字，寫標題和五點說明。'},
   {t:21, text:'看廣告出價和店鋪健檢，再用 RFM 找出該回購的熟客。'},
   {t:22, text:'回指揮塔把今天的流程串起來，問問 AI 顧問團明天的計畫。'}
 ];
 var MONTH_SCRIPT = [
-  {t:0,  text:'還只是一個念頭。到點子灣多想幾種可能。'},
+  {t:0,  text:'還只是一個念頭。到點子公園多想幾種可能。'},
   {t:1,  text:'點子寫成商業模式，用 SWOT 把優劣勢分清楚。'},
-  {t:3,  text:'進試算港算損益兩平，同時確認貸款資格。'},
-  {t:5,  text:'申請書送出，品牌街開始排行銷檔期。'},
+  {t:3,  text:'進試算商辦區算損益兩平，同時確認貸款資格。'},
+  {t:5,  text:'申請書送出，品牌商店街開始排行銷檔期。'},
   {t:6,  text:'上架前研究市場流量、關鍵字與物流。'},
   {t:9,  text:'開始投廣告，客評與客訴也跟著來了。'},
   {t:12, text:'顧客分群、滿意度分析，回頭修正產品。'},
@@ -535,19 +548,19 @@ var MONTH_SCRIPT = [
 
 var STORY = [
   {chap:'01 創業者的一天', eb:'Welcome Aboard', title:'歡迎來到創業島',
-   body:'島上每一棟建築都是一個真的線上工具，分在八個街區。點建築看它在創業路上做什麼，再一鍵打開。', act:function(){ setView('map'); birdview(); }},
-  {chap:'01 創業者的一天', eb:'07:00', title:'一天從點子灣開始',
+   body:'你是「{name}」。滑鼠移到哪，你就走到哪；島上每一棟建築都是一個真的線上工具，分在九個地點，點建築看它做什麼，再一鍵打開。', act:function(){ setView('map'); birdview(); }},
+  {chap:'01 創業者的一天', eb:'07:00', title:'一天從點子公園開始',
    body:'早上腦袋最清楚。先把點子丟進商業創意產生器，用曼陀羅九宮格展開。沒亮的建築，是這個時段用不太到的工具。', act:function(){ setView('time'); setTimeMode('day'); setT(7); focusZones(['idea','strategy']); }},
   {chap:'01 創業者的一天', eb:'14:00', title:'下午算數字、找資金',
-   body:'試算港算出損益兩平，資金廣場確認貸款資格、填好申請書。', act:function(){ setView('time'); setTimeMode('day'); setT(14); focusZones(['calc','fund']); }},
-  {chap:'01 創業者的一天', eb:'20:00', title:'晚上品牌街與電商碼頭亮燈',
+   body:'試算商辦區算出損益兩平，資金廣場確認貸款資格、填好申請書。', act:function(){ setView('time'); setTimeMode('day'); setT(14); focusZones(['calc','fund']); }},
+  {chap:'01 創業者的一天', eb:'20:00', title:'晚上品牌商店街與河口碼頭亮燈',
    body:'下班後寫貼文、做素材、整理商品頁。夜裡亮著窗的建築，就是這個時段最常用的工具。', act:function(){ setView('time'); setTimeMode('day'); setT(20); focusZones(['brand','ecom']); }},
   {chap:'02 兩年創業旅程', eb:'Month 0–3', title:'先想清楚，再花錢',
-   body:'前三個月待在點子灣和策略高地：點子、商業模式、SWOT。', act:function(){ setView('time'); setTimeMode('month'); setT(2); focusZones(['idea','strategy']); }},
+   body:'前三個月待在點子公園和策略山丘：點子、商業模式、SWOT。', act:function(){ setView('time'); setTimeMode('month'); setT(2); focusZones(['idea','strategy']); }},
   {chap:'02 兩年創業旅程', eb:'Month 3–6', title:'算得出來，才借得到',
    body:'把店面、菜單或商品成本算清楚，這些數字就是貸款申請書的骨架。', act:function(){ setView('time'); setTimeMode('month'); setT(5); focusZones(['calc','fund']); }},
   {chap:'02 兩年創業旅程', eb:'Month 6–18', title:'讓別人看見你',
-   body:'品牌街和電商碼頭最忙的一年：社群、素材、關鍵字、商品頁、廣告。', act:function(){ setView('time'); setTimeMode('month'); setT(12); focusZones(['brand','ecom']); }},
+   body:'品牌商店街和河口碼頭最忙的一年：社群、素材、關鍵字、商品頁、廣告。', act:function(){ setView('time'); setTimeMode('month'); setT(12); focusZones(['brand','ecom']); }},
   {chap:'02 兩年創業旅程', eb:'Month 18–24', title:'把流程變成系統',
    body:'顧客分群、滿意度、數位轉型，最後把重複的工作交給內容工作流。', act:function(){ setView('time'); setTimeMode('month'); setT(20); focusZones(['ops','hub']); }},
   {chap:'03 創業島地圖', eb:'Relay Lines', title:'接力線：工具之間怎麼接力',
@@ -592,16 +605,74 @@ var zoneById = {}, toolById = {};
 ZONES.forEach(function(z){ zoneById[z.id] = z; z.tools = []; });
 TOOLS.forEach(function(t){ toolById[t.id] = t; zoneById[t.zone].tools.push(t); });
 
-// 建築位置
+// 島嶼地形：中心、河流、山丘、綠地、水景
+var C = [9, 9];
+var RIVER = [[5.8,5.2],[8.1,6.9],[9.7,9.3],[10.8,11.8],[12.2,13.8],[14.7,15.3],[16.6,17.8],[19.4,20.6]];
+var HILLS = [
+  {id:'strategy', at:[3.8,3.8], layers:[[3.1,13],[2.5,26]]},            // [半徑, 高度 px]
+  {id:'lookout', at:[15.3,6.9], layers:[[1.4,10],[.85,20]], name:'觀景小山', en:'LOOKOUT HILL', label:[16.9,5.9]}
+];
+var GREENS = [{at:[6.5,9.5], r:1.25, name:'河畔綠地', en:'RIVERSIDE GREEN', label:[5.4,10.6]}];
+var WATERS = [{at:[.9,9.9], r:.75}, {at:[16.0,11.3], r:.5}];          // 公園池塘、廣場噴水池
+// 每個工具在島上的位置（格子座標）
+var POS = {
+  'business-idea-generator':[-.6,8.0], 'mandala-thinking':[1.1,7.9], 'scamper-thinking-generator':[2.6,8.6], 'six-thinking-hats-generator':[2.5,10.6], 'innovation-matrix-studio':[-.7,11.2],
+  'mentors-panel':[3.0,3.0], 'business-model-canvas-generator':[4.6,3.0], 'where-what-how-strategy-studio':[3.0,4.6], 'new-product-strategy-studio':[4.6,4.6],
+  'animal-ecommerce-adventure':[7.9,.4], 'swot-game':[9.4,.4], 'amazon-logistics-game':[7.9,2.2], 'industry-talent-generator':[9.4,2.2],
+  'restaurant-feasibility-calculator':[13.2,2.5], 'restaurant-menu-mix-calculator':[14.9,2.5], 'tourism-hotel-feasibility-calculator':[16.4,2.5],
+  'amazon-cost-calculator':[13.2,4.4], 'amazon-listing-mix-calculator':[14.9,4.4], 'ecommerce-health-dashboard':[16.4,4.4],
+  'content-workflow-studio-cf':[10.9,7.6], 'node-pack-designer-cf':[12.3,7.4],
+  'loan-eligibility-checker':[15.2,9.6], 'phoenix-loan-generator':[16.9,9.6],
+  'coffee-ig-planner':[6.1,12.4], 'annual-marketing-calendar':[8.5,12.4], 'SocialPost':[6.1,13.9], 'social-post-grader':[8.5,13.9],
+  'ai-image-prompt-studio':[6.1,15.4], 'ai-video-prompt-studio':[8.5,15.4], 'ai-video-studio-play':[6.1,16.9], 'line-sticker-studio':[8.5,16.9],
+  'product-keyword-cloud':[11.0,16.0], 'product-title-generator':[12.6,16.0], 'amazon-listing-generator':[11.0,17.7], 'amazon-ppc-advisor':[12.6,17.7],
+  'traffic-rank-estimator':[17.3,14.6],
+  'amazon-review-reply-generator':[1.9,13.4], 'company-digital-transformation-analyzer':[3.4,13.4], 'expense-tracker-pwa':[1.9,14.8],
+  'private-domain-rfm-studio':[3.4,14.8], 'IPA_Kano':[2.65,16.2]
+};
+var FREE = {'traffic-rank-estimator':true};                          // 不併入場地地塊（河口燈塔）
+var STYLE = {idea:'pavilion', strategy:'office', school:'school', calc:'tower', fund:'civic', brand:'shop', ecom:'warehouse', ops:'house', hub:'office'};
+var SPECIAL = {'mentors-panel':'observatory', 'traffic-rank-estimator':'lighthouse', 'content-workflow-studio-cf':'spire', 'node-pack-designer-cf':'warehouse'};
+var SHAPE = {   // s 足跡半寬、h 牆高、roof 屋頂高（px）
+  pavilion:{s:.36, h:14, roof:14}, house:{s:.4, h:16, roof:12}, warehouse:{s:.55, h:20, roof:12}, school:{s:.55, h:30, roof:0},
+  civic:{s:.55, h:30, roof:0}, shop:{s:.42, h:22, roof:0}, tower:{s:.42, h:46, roof:0}, office:{s:.46, h:28, roof:0},
+  lighthouse:{s:.26, h:60, roof:10}, observatory:{s:.46, h:26, roof:18}, spire:{s:.46, h:96, roof:0}
+};
+function groundAt(gx, gy){
+  var e = 0;
+  HILLS.forEach(function(H){ var d = Math.hypot(gx - H.at[0], gy - H.at[1]); H.layers.forEach(function(Ly){ if (d <= Ly[0] && Ly[1] > e) e = Ly[1]; }); });
+  return e;
+}
+function catmull(ps, seg){
+  var out = [];
+  for (var i = 0; i < ps.length - 1; i++){
+    var p0 = ps[i-1] || ps[i], p1 = ps[i], p2 = ps[i+1], p3 = ps[i+2] || p2;
+    for (var k = 0; k < seg; k++){
+      var t = k / seg, t2 = t*t, t3 = t2*t;
+      out.push([0, 1].map(function(c){ return .5 * (2*p1[c] + (-p0[c] + p2[c])*t + (2*p0[c] - 5*p1[c] + 4*p2[c] - p3[c])*t2 + (-p0[c] + 3*p1[c] - 3*p2[c] + p3[c])*t3); }));
+    }
+  }
+  out.push(ps[ps.length - 1]);
+  return out;
+}
+var RIVER_S = catmull(RIVER, 12), ROAD_S = [], BRIDGE_S = [];
+function minDist(list, gx, gy){ var m = 1e9; for (var i = 0; i < list.length; i++){ var d = Math.hypot(list[i][0] - gx, list[i][1] - gy); if (d < m) m = d; } return m; }
+function riverDist(gx, gy){ return minDist(RIVER_S, gx, gy); }
+
+TOOLS.forEach(function(t){
+  var p = POS[t.id], st = SPECIAL[t.id] || STYLE[t.zone], sh = SHAPE[st], hv = hash(t.id);
+  t.gx = p[0]; t.gy = p[1]; t.style = st; t.s = sh.s; t.roof = sh.roof;
+  t.h = sh.h + (st === 'tower' ? (hv % 4) * 10 : st === 'shop' ? (hv % 2) * 8 : st === 'office' ? (hv % 3) * 8 : 0);
+  t.elev = groundAt(t.gx, t.gy);
+  t.top = t.elev + t.h + t.roof;
+});
 ZONES.forEach(function(z){
-  z.tools.forEach(function(t, i){
-    t.gx = z.at[0] + SLOTS[i][0] * GAP;
-    t.gy = z.at[1] + SLOTS[i][1] * GAP;
-    t.h = t.tall || (26 + (hash(t.id) % 4) * 9);
-  });
-  var xs = z.tools.map(function(t){ return t.gx; }), ys = z.tools.map(function(t){ return t.gy; });
+  var m = z.tools.filter(function(t){ return !FREE[t.id]; });
+  var xs = m.map(function(t){ return t.gx; }), ys = m.map(function(t){ return t.gy; });
   z.box = [Math.min.apply(null, xs) - .75, Math.min.apply(null, ys) - .75, Math.max.apply(null, xs) + .75, Math.max.apply(null, ys) + .75];
+  if (z.extra) z.box = [Math.min(z.box[0], z.extra[0]), Math.min(z.box[1], z.extra[1]), Math.max(z.box[2], z.extra[2]), Math.max(z.box[3], z.extra[3])];
   z.cx = (z.box[0] + z.box[2]) / 2; z.cy = (z.box[1] + z.box[3]) / 2;
+  z.elev = groundAt(z.cx, z.cy);
 });
 
 // 接力線 → 邊
@@ -622,97 +693,159 @@ function savePrefs(){ lsSet(KEY_PREF, {rels:state.rels, tags:state.tags}); }
 
 /* ---------- 繪製地圖 ---------- */
 var svg = $('map'), L = {};
+function islandR(a){ return 12.4 + .35 * Math.sin(3*a + .6) + .25 * Math.cos(5*a + 1.3) + .12 * Math.sin(9*a); }
+function circlePts(cx, cy, r, n, elev){
+  var o = [];
+  for (var i = 0; i < n; i++){ var a = i / n * Math.PI * 2; o.push(up(iso(cx + Math.cos(a)*r, cy + Math.sin(a)*r), elev || 0)); }
+  return o;
+}
+function boxPts(b, elev){ return [iso(b[0],b[1]), iso(b[2],b[1]), iso(b[2],b[3]), iso(b[0],b[3])].map(function(p){ return up(p, elev || 0); }); }
+function polyD(list){ return list.map(function(p, i){ return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' '); }
+
 function buildMap(){
   svg.innerHTML = '';
   var defs = el('defs', {}, svg);
   var pat = el('pattern', {id:'waves', width:60, height:30, patternUnits:'userSpaceOnUse'}, defs);
   el('path', {d:'M4 18 q8 -6 16 0 M34 8 q8 -6 16 0', stroke:'rgba(255,255,255,.18)', 'stroke-width':1.6, fill:'none', 'stroke-linecap':'round'}, pat);
-  el('rect', {x:-4000, y:-3000, width:8000, height:7000, fill:'url(#waves)'}, svg);
-
+  el('rect', {x:-5000, y:-4000, width:10000, height:9000, fill:'url(#waves)'}, svg);
   L.boats = el('g', {}, svg);
   var ground = el('g', {}, svg);
 
-  // 島嶼輪廓
-  var R = rng(7), C = [7.2, 7.4], outline = [], beach = [];
-  for (var i = 0; i < 80; i++){
-    var a = i / 80 * Math.PI * 2;
-    var r = 8.7 + .35 * Math.sin(3*a + .6) + .25 * Math.cos(5*a + 1.3) + .15 * Math.sin(9*a);
+  // 島嶼輪廓、沙灘、懸崖
+  var outline = [], beach = [];
+  for (var i = 0; i < 96; i++){
+    var a = i / 96 * Math.PI * 2, r = islandR(a);
     outline.push(iso(C[0] + Math.cos(a) * r, C[1] + Math.sin(a) * r));
-    beach.push(iso(C[0] + Math.cos(a) * (r + .55), C[1] + Math.sin(a) * (r + .55)));
+    beach.push(iso(C[0] + Math.cos(a) * (r + .6), C[1] + Math.sin(a) * (r + .6)));
   }
   el('polygon', {points:pts(beach.map(function(p){ return [p[0], p[1] + 8]; })), fill:'var(--foam)', opacity:.55}, ground);
   el('polygon', {points:pts(beach.map(function(p){ return [p[0], p[1] + 18]; })), fill:'var(--cliff)'}, ground);
   el('polygon', {points:pts(beach), fill:'var(--sand)'}, ground);
   el('polygon', {points:pts(outline), fill:'var(--grass)'}, ground);
 
-  // 道路：各街區通往指揮塔
+  // 綠地
+  GREENS.forEach(function(G){ el('polygon', {points:pts(circlePts(G.at[0], G.at[1], G.r, 36)), fill:'var(--park)'}, ground); });
+
+  // 道路：各地點通往指揮塔；過河的地方自動架橋
   var hub = zoneById.hub;
+  ROAD_S = []; BRIDGE_S = [];
+  var bridges = [];
   ZONES.forEach(function(z){
     if (z.id === 'hub') return;
-    var p = iso(z.cx, z.cy), q = iso(hub.cx, hub.cy), mx = (p[0]+q[0])/2 + (p[1]-q[1])*.15, my = (p[1]+q[1])/2;
-    el('path', {d:'M'+p[0]+' '+p[1]+' Q'+mx+' '+my+' '+q[0]+' '+q[1], stroke:'rgba(255,255,255,.55)', 'stroke-width':9, fill:'none', 'stroke-linecap':'round'}, ground);
+    var a = [z.cx, z.cy], b = [hub.cx, hub.cy], len = Math.hypot(b[0]-a[0], b[1]-a[1]);
+    var mid = [(a[0]+b[0])/2 + (b[1]-a[1]) * .12, (a[1]+b[1])/2 - (b[0]-a[0]) * .12], road = [], run = [];
+    for (var k = 0; k <= 48; k++){
+      var t = k / 48, q = [(1-t)*(1-t)*a[0] + 2*(1-t)*t*mid[0] + t*t*b[0], (1-t)*(1-t)*a[1] + 2*(1-t)*t*mid[1] + t*t*b[1]];
+      road.push(q); ROAD_S.push(q);
+      if (riverDist(q[0], q[1]) < .7) run.push(q);
+      else if (run.length){ bridges.push(run); run = []; }
+    }
+    if (run.length) bridges.push(run);
+    var sp = road.map(function(q){ return iso(q[0], q[1]); });
+    el('path', {d:polyD(sp), stroke:'rgba(120,110,80,.25)', 'stroke-width':12, fill:'none', 'stroke-linecap':'round', 'stroke-linejoin':'round'}, ground);
+    el('path', {d:polyD(sp), stroke:'var(--road)', 'stroke-width':9, fill:'none', 'stroke-linecap':'round', 'stroke-linejoin':'round'}, ground);
   });
 
-  // 街區地塊
+  // 河流
+  var rs = RIVER_S.map(function(q){ return iso(q[0], q[1]); });
+  el('path', {d:polyD(rs), stroke:'var(--river-rim)', 'stroke-width':34, fill:'none', 'stroke-linecap':'round', 'stroke-linejoin':'round'}, ground);
+  el('path', {d:polyD(rs), stroke:'var(--river)', 'stroke-width':27, fill:'none', 'stroke-linecap':'round', 'stroke-linejoin':'round'}, ground);
+  el('path', {d:polyD(rs), stroke:'rgba(255,255,255,.35)', 'stroke-width':2, 'stroke-dasharray':'10 18', fill:'none', class:'link-path'}, ground);
+  bridges.forEach(function(run){
+    var ext = run.slice(); BRIDGE_S = BRIDGE_S.concat(run);
+    var sp = ext.map(function(q){ return iso(q[0], q[1]); });
+    el('path', {d:polyD(sp), stroke:'#8a5f37', 'stroke-width':15, fill:'none', 'stroke-linecap':'butt'}, ground);
+    el('path', {d:polyD(sp), stroke:'#d9b07a', 'stroke-width':10, fill:'none', 'stroke-linecap':'butt'}, ground);
+    el('path', {d:polyD(sp), stroke:'#8a5f37', 'stroke-width':1, 'stroke-dasharray':'2 4', fill:'none'}, ground);
+  });
+
+  // 場地地塊與場地裝飾
   ZONES.forEach(function(z){
-    var b = z.box, corners = [iso(b[0],b[1]), iso(b[2],b[1]), iso(b[2],b[3]), iso(b[0],b[3])];
-    el('polygon', {points:pts(corners), fill:z.color, 'fill-opacity':.22, stroke:z.color, 'stroke-width':2, 'stroke-dasharray':'6 5', 'stroke-linejoin':'round'}, ground);
+    if (z.id === 'strategy') return;
+    el('polygon', {points:pts(boxPts(z.box)), fill:z.ground}, ground);
+    el('polygon', {points:pts(boxPts(z.box)), fill:z.color, 'fill-opacity':.1, stroke:z.color, 'stroke-width':2, 'stroke-dasharray':'6 5', 'stroke-linejoin':'round'}, ground);
+    decorate(z, ground);
+  });
+
+  // 山丘（一層層台地）
+  HILLS.forEach(function(H){
+    var prev = 0;
+    H.layers.forEach(function(Ly){
+      for (var k = prev; k < Ly[1]; k += 3) el('polygon', {points:pts(circlePts(H.at[0], H.at[1], Ly[0], 40, k)), fill:'var(--hillside)'}, ground);
+      el('polygon', {points:pts(circlePts(H.at[0], H.at[1], Ly[0], 40, Ly[1])), fill:'var(--hilltop)'}, ground);
+      prev = Ly[1];
+    });
+    if (H.id === 'strategy'){
+      var z = zoneById.strategy;
+      el('polygon', {points:pts(boxPts(z.box, z.elev)), fill:z.color, 'fill-opacity':.16, stroke:z.color, 'stroke-width':2, 'stroke-dasharray':'6 5', 'stroke-linejoin':'round'}, ground);
+    }
   });
 
   // 樹
   var trees = [], tr = rng(42);
-  for (var k = 0; k < 260 && trees.length < 46; k++){
-    var ta = tr() * Math.PI * 2, rr = Math.sqrt(tr()) * 8.1, gx = C[0] + Math.cos(ta)*rr, gy = C[1] + Math.sin(ta)*rr;
-    var clash = ZONES.some(function(z){ return gx > z.box[0]-.4 && gx < z.box[2]+.4 && gy > z.box[1]-.4 && gy < z.box[3]+.4; });
-    if (!clash) trees.push([gx, gy]);
+  function treeOK(gx, gy){
+    var a = Math.atan2(gy - C[1], gx - C[0]);
+    if (Math.hypot(gx - C[0], gy - C[1]) > islandR(a) - .7) return false;
+    if (riverDist(gx, gy) < .95 || minDist(ROAD_S, gx, gy) < .45) return false;
+    if (TOOLS.some(function(t){ return Math.abs(gx - t.gx) < t.s + .4 && Math.abs(gy - t.gy) < t.s + .4; })) return false;
+    if (WATERS.some(function(w){ return Math.hypot(gx - w.at[0], gy - w.at[1]) < w.r + .45; })) return false;
+    if (ZONES.some(function(z){ return z.id !== 'idea' && gx > z.box[0]-.15 && gx < z.box[2]+.15 && gy > z.box[1]-.15 && gy < z.box[3]+.15; })) return false;
+    if (Math.hypot(gx - HILLS[0].at[0], gy - HILLS[0].at[1]) < 2.6) return false;
+    return !trees.some(function(o){ return Math.hypot(o.gx - gx, o.gy - gy) < .6; });
   }
+  function tryTree(gx, gy){ if (treeOK(gx, gy)) trees.push({gx:gx, gy:gy, elev:groundAt(gx, gy), big:tr() > .7}); }
+  GREENS.forEach(function(G){ for (var k = 0; k < 40; k++){ var a = tr()*Math.PI*2, r = Math.sqrt(tr())*G.r; tryTree(G.at[0] + Math.cos(a)*r, G.at[1] + Math.sin(a)*r); } });
+  HILLS.forEach(function(H){ for (var k = 0; k < 40; k++){ var a = tr()*Math.PI*2, r = Math.sqrt(tr())*H.layers[0][0]; tryTree(H.at[0] + Math.cos(a)*r, H.at[1] + Math.sin(a)*r); } });
+  for (var k2 = 0; k2 < 40; k2++){ var a2 = tr()*Math.PI*2, r2 = 1 + tr()*2.6; tryTree(1.0 + Math.cos(a2)*r2, 9.6 + Math.sin(a2)*r2); }   // 公園裡的樹
+  for (var k3 = 0; k3 < 2500 && trees.length < 150; k3++){ var a3 = tr()*Math.PI*2, r3 = Math.sqrt(tr())*12.4; tryTree(C[0] + Math.cos(a3)*r3, C[1] + Math.sin(a3)*r3); }
 
   var things = [];
-  trees.forEach(function(t){ things.push({kind:'tree', gx:t[0], gy:t[1]}); });
-  TOOLS.forEach(function(t){ things.push({kind:'bld', t:t, gx:t.gx, gy:t.gy}); });
-  things.sort(function(a, b){ return (a.gx + a.gy) - (b.gx + b.gy); });
-
+  trees.forEach(function(t){ things.push({kind:'tree', t:t, d:t.gx + t.gy}); });
+  TOOLS.forEach(function(t){ things.push({kind:'bld', t:t, d:t.gx + t.gy}); });
+  things.sort(function(a, b){ return a.d - b.d; });
   L.blds = el('g', {}, svg);
-  things.forEach(function(o){
-    if (o.kind === 'tree'){
-      var p = iso(o.gx, o.gy);
-      var g = el('g', {'pointer-events':'none'}, L.blds);
-      el('ellipse', {cx:p[0], cy:p[1], rx:7, ry:3.5, fill:'rgba(0,0,0,.12)'}, g);
-      el('rect', {x:p[0]-1.5, y:p[1]-8, width:3, height:8, fill:'#8a6239'}, g);
-      el('polygon', {points:pts([[p[0], p[1]-28], [p[0]+8, p[1]-6], [p[0]-8, p[1]-6]]), fill:'#4f9a5a'}, g);
-      el('polygon', {points:pts([[p[0], p[1]-28], [p[0]+8, p[1]-6], [p[0], p[1]-6]]), fill:'#3f8550'}, g);
-    } else drawBuilding(o.t);
-  });
+  things.forEach(function(o){ if (o.kind === 'tree') drawTree(o.t); else drawBuilding(o.t); });
 
-  // 街區名稱
+  // 地點名稱：放在地塊朝外（遠離島中心）的那一側；指揮塔放前方
   L.zoneTags = el('g', {'pointer-events':'none'}, svg);
+  function zoneTag(x, y, name, en, color, cls){
+    var g = el('g', {class:cls || 'zone-tag', transform:'translate('+x.toFixed(1)+','+y.toFixed(1)+')'}, L.zoneTags);
+    var stroke = color ? mix(color, '#14303d', .55) : '#2f5b3a';
+    el('text', {'text-anchor':'middle', fill:'#fff', stroke:stroke, 'stroke-width':4, 'paint-order':'stroke', 'stroke-linejoin':'round'}, g).textContent = name;
+    if (en) el('text', {class:'en', y:14, 'text-anchor':'middle', fill:'#fff', stroke:stroke, 'stroke-width':3, 'paint-order':'stroke'}, g).textContent = en;
+  }
   ZONES.forEach(function(z){
-    // 街區名稱放在地塊朝外（遠離島中心）的那一側；指揮塔在正中央，放前方
     var dx = z.cx - C[0], dy = z.cy - C[1], dl = Math.hypot(dx, dy) || 1, half = (z.box[2] - z.box[0]) / 2;
-    var p = z.id === 'hub' ? iso(z.box[2] + .3, z.box[3] + .3) : iso(z.cx + dx/dl * (half + .9), z.cy + dy/dl * (half + .9));
-    var g = el('g', {class:'zone-tag', transform:'translate('+p[0]+','+(p[1]+8)+')'}, L.zoneTags);
-    var t1 = el('text', {'text-anchor':'middle', fill:'#fff', stroke:mix(z.color, '#14303d', .55), 'stroke-width':4, 'paint-order':'stroke', 'stroke-linejoin':'round'}, g);
-    t1.textContent = z.name;
-    var t2 = el('text', {class:'en', y:14, 'text-anchor':'middle', fill:'#fff', stroke:mix(z.color, '#14303d', .55), 'stroke-width':3, 'paint-order':'stroke'}, g);
-    t2.textContent = z.en;
+    var p = z.label ? up(iso(z.label[0], z.label[1]), z.label[2]) : z.id === 'hub' ? iso(z.box[2] + .3, z.box[3] + .3) : iso(z.cx + dx/dl * (half + .9), z.cy + dy/dl * (half + .9));
+    zoneTag(p[0], p[1] + 8, z.name, z.en, z.color);
   });
+  GREENS.concat(HILLS.filter(function(H){ return H.name; })).forEach(function(G){
+    var p = iso(G.label[0], G.label[1]);
+    zoneTag(p[0], p[1] + 14, G.name, '', null, 'zone-tag decor-tag');
+  });
+  var rp = iso(RIVER[4][0] + .2, RIVER[4][1] - .9);
+  zoneTag(rp[0], rp[1], '創業河', 'STARTUP RIVER', '#3a8fae', 'zone-tag decor-tag');
 
   // 夜色、窗燈、接力線、標籤、吉祥物、雲
-  L.night = el('rect', {x:-4000, y:-3000, width:8000, height:7000, fill:'#071a35', opacity:0, 'pointer-events':'none'}, svg);
+  L.night = el('rect', {x:-5000, y:-4000, width:10000, height:9000, fill:'#071a35', opacity:0, 'pointer-events':'none'}, svg);
   L.lights = el('g', {'pointer-events':'none'}, svg);
-  TOOLS.forEach(function(t){ t.lightG = el('g', {opacity:0}, L.lights); drawWindows(t, t.lightG, '#ffd36b'); });
+  TOOLS.forEach(function(t){
+    t.lightG = el('g', {opacity:0}, L.lights);
+    drawWindows(t, t.lightG, '#ffd36b');
+    if (t.style === 'lighthouse'){ var lp = up(iso(t.gx, t.gy), t.elev + t.h - 6); el('circle', {cx:lp[0], cy:lp[1], r:9, fill:'#ffe08a', opacity:.85}, t.lightG); }
+  });
   L.links = el('g', {class:'links', 'pointer-events':'none'}, svg);
   L.tags = el('g', {class:'tags', 'pointer-events':'none'}, svg);
   TOOLS.forEach(function(t){
-    var top = iso(t.gx, t.gy);
+    var top = up(iso(t.gx, t.gy), t.top);
     var w = 0; for (var i = 0; i < t.short.length; i++) w += t.short.charCodeAt(i) > 255 ? 12.5 : 7.2;
     w += t.lic ? 28 : 16;
-    var g = el('g', {class:'tag', transform:'translate('+top[0]+','+(top[1] - t.h - 30)+')'}, L.tags);
+    var g = el('g', {class:'tag', transform:'translate('+top[0]+','+(top[1] - 30)+')'}, L.tags);
     el('rect', {x:-w/2, y:-11, width:w, height:20, rx:10, 'stroke-width':1}, g);
     if (t.lic) el('circle', {cx:-w/2 + 12, cy:-1, r:4.5, fill:'var(--lic)', stroke:'none'}, g);
     var tx = el('text', {x:t.lic ? 6 : 0, y:4, 'text-anchor':'middle'}, g); tx.textContent = t.short;
     if (t.lic) el('title', {}, g).textContent = '需序號';
-    t.tagG = g; t.tagBox = {x:top[0] - w/2, y:top[1] - t.h - 41, w:w, h:20};
+    t.tagG = g; t.tagBox = {x:top[0] - w/2, y:top[1] - 41, w:w, h:20};
   });
   // 名稱標籤避讓：由前往後放，撞到已放好的就往上疊
   var placed = [];
@@ -724,21 +857,65 @@ function buildMap(){
     }
     placed.push({x:b.x, y:b.y + dy, w:b.w, h:b.h});
     if (dy){
-      var c = iso(t.gx, t.gy);
-      t.tagG.setAttribute('transform', 'translate('+c[0]+','+(c[1] - t.h - 30 + dy)+')');
+      var c = up(iso(t.gx, t.gy), t.top);
+      t.tagG.setAttribute('transform', 'translate('+c[0]+','+(c[1] - 30 + dy)+')');
       el('line', {x1:0, y1:9, x2:0, y2:-dy - 2, stroke:'var(--ink-faint)', 'stroke-width':1, 'stroke-dasharray':'2 2'}, t.tagG).parentNode.insertBefore(t.tagG.lastChild, t.tagG.firstChild);
     }
   });
   buildMascot();
+  buildAvatar();
   L.clouds = el('g', {'pointer-events':'none', opacity:.4}, svg);
-  for (var c = 0; c < 4; c++){
-    var cg = el('g', {}, L.clouds), w0 = 50 + c * 14;
+  for (var c2 = 0; c2 < 4; c2++){
+    var cg = el('g', {}, L.clouds), w0 = 50 + c2 * 14;
     el('ellipse', {cx:0, cy:0, rx:w0, ry:w0*.32, fill:'#fff', opacity:.75}, cg);
     el('ellipse', {cx:w0*.35, cy:-w0*.18, rx:w0*.5, ry:w0*.3, fill:'#fff', opacity:.75}, cg);
-    cg._seed = c;
   }
   svg.insertBefore(L.clouds, L.links);   // 雲在建築之上、接力線與標籤之下，不擋字
   drawLinks();
+}
+
+// 各場地的地面裝飾
+function decorate(z, g){
+  if (z.id === 'idea'){
+    var w = WATERS[0];
+    el('polygon', {points:pts(circlePts(w.at[0], w.at[1], w.r + .55, 40)), fill:'none', stroke:'var(--road)', 'stroke-width':5, opacity:.9}, g);
+    el('polygon', {points:pts(circlePts(w.at[0], w.at[1], w.r + .12, 40)), fill:'var(--river-rim)'}, g);
+    el('polygon', {points:pts(circlePts(w.at[0], w.at[1], w.r, 40)), fill:'var(--river)'}, g);
+    var lp = iso(w.at[0] - .2, w.at[1] + .1);
+    el('ellipse', {cx:lp[0], cy:lp[1], rx:6, ry:3, fill:'#7cc36a'}, g);   // 荷葉
+  }
+  if (z.id === 'school'){
+    var tc = [11.0, 1.3];
+    el('polygon', {points:pts(circlePts(tc[0], tc[1], .85, 40)), fill:'#d0745a'}, g);
+    el('polygon', {points:pts(circlePts(tc[0], tc[1], .72, 40)), fill:'none', stroke:'#fff', 'stroke-width':1, opacity:.8}, g);
+    el('polygon', {points:pts(circlePts(tc[0], tc[1], .56, 40)), fill:'#7fc46b'}, g);
+  }
+  if (z.id === 'fund'){
+    var f = WATERS[1];
+    el('polygon', {points:pts(circlePts(f.at[0], f.at[1], f.r + .15, 32)), fill:'#c9c1ae'}, g);
+    el('polygon', {points:pts(circlePts(f.at[0], f.at[1], f.r, 32)), fill:'var(--river)'}, g);
+    var fp = iso(f.at[0], f.at[1]);
+    el('ellipse', {class:'pulse', cx:fp[0], cy:fp[1] - 6, rx:3, ry:7, fill:'#fff', opacity:.85}, g);
+  }
+  if (z.id === 'brand'){
+    var st = [[7.0, z.box[1] + .1], [7.6, z.box[1] + .1], [7.6, z.box[3] - .1], [7.0, z.box[3] - .1]].map(function(q){ return iso(q[0], q[1]); });
+    el('polygon', {points:pts(st), fill:'var(--road)'}, g);
+    el('line', {x1:iso(7.3, z.box[1] + .2)[0], y1:iso(7.3, z.box[1] + .2)[1], x2:iso(7.3, z.box[3] - .2)[0], y2:iso(7.3, z.box[3] - .2)[1], stroke:'#f4b942', 'stroke-width':1.5, 'stroke-dasharray':'6 6'}, g);
+  }
+  if (z.id === 'ecom'){
+    var pier = [[13.3, 16.2], [14.85, 16.2], [14.85, 16.85], [13.3, 16.85]].map(function(q){ return iso(q[0], q[1]); });
+    el('polygon', {points:pts(pier.map(function(p){ return [p[0], p[1] + 5]; })), fill:'#8a5f37'}, g);
+    el('polygon', {points:pts(pier), fill:'#d9b07a', stroke:'#8a5f37', 'stroke-width':1}, g);
+  }
+}
+
+function drawTree(t){
+  var p = up(iso(t.gx, t.gy), t.elev), k = t.big ? 1.3 : 1;
+  var g = el('g', {'pointer-events':'none'}, L.blds); g._d = t.gx + t.gy;
+  el('ellipse', {cx:p[0], cy:p[1], rx:7*k, ry:3.5*k, fill:'rgba(0,0,0,.12)'}, g);
+  el('rect', {x:p[0]-1.5, y:p[1]-8, width:3, height:8, fill:'#8a6239'}, g);
+  el('polygon', {points:pts([[p[0], p[1]-28*k], [p[0]+8*k, p[1]-6], [p[0]-8*k, p[1]-6]]), fill:'#4f9a5a'}, g);
+  el('polygon', {points:pts([[p[0], p[1]-28*k], [p[0]+8*k, p[1]-6], [p[0], p[1]-6]]), fill:'#3f8550'}, g);
 }
 
 function footprint(t, s){
@@ -746,44 +923,82 @@ function footprint(t, s){
 }
 function up(p, h){ return [p[0], p[1] - h]; }
 
+var CREAM = {house:1, pavilion:1, school:1, civic:1, lighthouse:1};
 function drawBuilding(t){
-  var z = zoneById[t.zone], f = footprint(t, .46), h = t.h;
-  var g = el('g', {class:'bld', tabindex:0, role:'button', 'aria-label':t.name + '（' + z.name + '）', 'data-id':t.id}, L.blds);
+  var z = zoneById[t.zone], s = t.s, h = t.h, e = t.elev, st = t.style, f = footprint(t, s), top = h + t.roof;
+  function F(p, k){ return up(p, e + (k || 0)); }
+  var g = el('g', {class:'bld', tabindex:0, role:'button', 'aria-label':t.name + '（' + z.name + '）' + (t.lic ? '，需序號' : ''), 'data-id':t.id}, L.blds);
+  g._d = t.gx + t.gy;
   var c = iso(t.gx, t.gy);
-  el('ellipse', {class:'ring', cx:c[0], cy:c[1], rx:HW*1.05, ry:HH*1.05, fill:'none', stroke:'var(--coral)', 'stroke-width':3}, g);
-  el('polygon', {points:pts([f.T, f.R, f.B, f.Lp].map(function(p){ return [p[0]+5, p[1]+3]; })), fill:'rgba(0,0,0,.14)'}, g);
-  var wallL = mix(z.color, '#4a5d68', .45), wallR = mix(z.color, '#ffffff', .55);
-  el('polygon', {points:pts([f.Lp, f.B, up(f.B, h), up(f.Lp, h)]), fill:wallL}, g);
-  el('polygon', {points:pts([f.B, f.R, up(f.R, h), up(f.B, h)]), fill:wallR}, g);
+  el('ellipse', {class:'ring', cx:c[0], cy:c[1] - e, rx:HW*(s*2 + .15), ry:HH*(s*2 + .15), fill:'none', stroke:'var(--coral)', 'stroke-width':3}, g);
+  el('polygon', {points:pts([f.T, f.R, f.B, f.Lp].map(function(p){ return [p[0]+5, p[1]+3 - e]; })), fill:'rgba(0,0,0,.14)'}, g);
+  var wallL = CREAM[st] ? '#e3d6c0' : mix(z.color, '#4a5d68', .45), wallR = CREAM[st] ? '#faf4e8' : mix(z.color, '#ffffff', .55);
+  el('polygon', {points:pts([F(f.Lp), F(f.B), F(f.B, h), F(f.Lp, h)]), fill:wallL}, g);
+  el('polygon', {points:pts([F(f.B), F(f.R), F(f.R, h), F(f.B, h)]), fill:wallR}, g);
+  function onFace(A, B, a1, a2, z1, z2){ var u = [B[0]-A[0], B[1]-A[1]]; var P = function(a, zz){ return [A[0] + u[0]*a, A[1] + u[1]*a - e - zz]; }; return [P(a1, z1), P(a2, z1), P(a2, z2), P(a1, z2)]; }
+  var faces = [[f.Lp, f.B], [f.B, f.R]];
+  if (st === 'lighthouse') faces.forEach(function(fc){ [[14, 22], [36, 44]].forEach(function(b){ el('polygon', {points:pts(onFace(fc[0], fc[1], 0, 1, b[0], b[1])), fill:'#e05a47'}, g); }); });
+  if (st === 'civic') faces.forEach(function(fc){ [.14, .38, .62, .86].forEach(function(a){ el('polygon', {points:pts(onFace(fc[0], fc[1], a - .04, a + .04, 3, h - 5)), fill:'#ffffff', opacity:.85}, g); }); el('polygon', {points:pts(onFace(fc[0], fc[1], 0, 1, h - 5, h)), fill:mix(z.color, '#14303d', .2)}, g); });
+  if (st === 'warehouse') el('polygon', {points:pts(onFace(f.B, f.R, .3, .7, 0, 12)), fill:'#5a4632'}, g);
+  if (st === 'shop') faces.forEach(function(fc){
+    el('polygon', {points:pts(onFace(fc[0], fc[1], .08, .92, 0, 10)), fill:'rgba(255,255,255,.75)'}, g);
+    [0,1,2,3,4,5].forEach(function(i){ el('polygon', {points:pts(onFace(fc[0], fc[1], i/6, (i+1)/6, 10, 15)), fill:i % 2 ? '#fff' : z.color}, g); });
+  });
   drawWindows(t, g, 'rgba(255,255,255,.55)', 'rgba(20,48,61,.28)');
-  el('polygon', {class:'roof', points:pts([up(f.T, h), up(f.R, h), up(f.B, h), up(f.Lp, h)]), fill:z.color}, g);
-  // 屋頂小設施：工具名字首的顏色塊，讓同街區的建築也看得出差異
-  var r2 = footprint(t, .2), rh = h + 6 + (hash(t.id) % 3) * 3;
-  if (t.zone === 'hub'){
-    var top = up(c, h);
-    el('line', {x1:top[0], y1:top[1], x2:top[0], y2:top[1]-26, stroke:'#14303d', 'stroke-width':2}, g);
-    el('circle', {class:'pulse', cx:top[0], cy:top[1]-28, r:4, fill:'var(--coral)'}, g);
-  } else if (hash(t.id) % 2){
-    el('polygon', {points:pts([up(r2.Lp, h), up(r2.B, h), up(r2.B, rh), up(r2.Lp, rh)]), fill:mix(z.color, '#14303d', .3)}, g);
-    el('polygon', {points:pts([up(r2.B, h), up(r2.R, h), up(r2.R, rh), up(r2.B, rh)]), fill:mix(z.color, '#ffffff', .25)}, g);
-    el('polygon', {points:pts([up(r2.T, rh), up(r2.R, rh), up(r2.B, rh), up(r2.Lp, rh)]), fill:'#fff', opacity:.9}, g);
+  if (t.roof && (st === 'house' || st === 'warehouse')){
+    var P1 = iso(t.gx - s, t.gy), P2 = iso(t.gx + s, t.gy);
+    el('polygon', {points:pts([F(f.T, h), F(f.R, h), F(P2, top), F(P1, top)]), fill:mix(z.color, '#14303d', .25)}, g);
+    el('polygon', {points:pts([F(f.R, h), F(f.B, h), F(P2, top)]), fill:wallR}, g);
+    el('polygon', {class:'roof', points:pts([F(P1, top), F(P2, top), F(f.B, h), F(f.Lp, h)]), fill:z.color}, g);
+  } else if (t.roof){
+    var A = F(c, top);
+    el('polygon', {points:pts([F(f.Lp, h), F(f.T, h), A]), fill:mix(z.color, '#14303d', .3)}, g);
+    el('polygon', {points:pts([F(f.T, h), F(f.R, h), A]), fill:mix(z.color, '#14303d', .2)}, g);
+    el('polygon', {class:'roof', points:pts([F(f.R, h), F(f.B, h), A]), fill:mix(z.color, '#ffffff', .2)}, g);
+    el('polygon', {class:'roof', points:pts([F(f.B, h), F(f.Lp, h), A]), fill:st === 'lighthouse' ? '#e05a47' : z.color}, g);
+  } else {
+    el('polygon', {class:'roof', points:pts([F(f.T, h), F(f.R, h), F(f.B, h), F(f.Lp, h)]), fill:z.color}, g);
+    if (st === 'spire'){
+      var tp = F(c, h);
+      el('line', {x1:tp[0], y1:tp[1], x2:tp[0], y2:tp[1]-26, stroke:'#14303d', 'stroke-width':2}, g);
+      el('circle', {class:'pulse', cx:tp[0], cy:tp[1]-28, r:4, fill:'var(--coral)'}, g);
+    } else if (st === 'school'){
+      var fpL = F(f.T, h);
+      el('line', {x1:fpL[0], y1:fpL[1], x2:fpL[0], y2:fpL[1]-24, stroke:'#14303d', 'stroke-width':1.5}, g);
+      el('polygon', {points:pts([[fpL[0], fpL[1]-24], [fpL[0]+12, fpL[1]-20], [fpL[0], fpL[1]-16]]), fill:z.color}, g);
+      var ck = onFace(f.B, f.R, .42, .58, h - 13, h - 4);
+      el('circle', {cx:(ck[0][0] + ck[2][0])/2, cy:(ck[0][1] + ck[2][1])/2, r:4, fill:'#fff', stroke:'#14303d', 'stroke-width':1}, g);
+    } else if (hash(t.id) % 2 && (st === 'office' || st === 'tower')){
+      var r2 = footprint(t, .2), rh = h + 6 + (hash(t.id) % 3) * 3;
+      el('polygon', {points:pts([F(r2.Lp, h), F(r2.B, h), F(r2.B, rh), F(r2.Lp, rh)]), fill:mix(z.color, '#14303d', .3)}, g);
+      el('polygon', {points:pts([F(r2.B, h), F(r2.R, h), F(r2.R, rh), F(r2.B, rh)]), fill:mix(z.color, '#ffffff', .25)}, g);
+      el('polygon', {points:pts([F(r2.T, rh), F(r2.R, rh), F(r2.B, rh), F(r2.Lp, rh)]), fill:'#fff', opacity:.9}, g);
+    }
   }
   t.flagG = el('g', {opacity:0}, g);
-  var ft = up(c, h + 2);
+  var ft = F(c, top + 2);
   el('line', {x1:ft[0]+10, y1:ft[1], x2:ft[0]+10, y2:ft[1]-24, stroke:'#14303d', 'stroke-width':1.6}, t.flagG);
   el('polygon', {points:pts([[ft[0]+10, ft[1]-24], [ft[0]+24, ft[1]-19], [ft[0]+10, ft[1]-14]]), fill:'var(--coral)'}, t.flagG);
-  el('polygon', {class:'hit', points:pts([f.T, f.R, f.B, f.Lp].map(function(p){ return p; }).concat([up(f.Lp, h+8), up(f.T, h+8), up(f.R, h+8)]))}, g);
+  el('polygon', {class:'hit', points:pts([F(f.Lp), F(f.B), F(f.R), F(f.R, top + 8), F(f.T, top + 8), F(f.Lp, top + 8)])}, g);
   t.g = g;
 }
 
 function drawWindows(t, g, lit, frame){
-  var f = footprint(t, .46), rows = Math.max(1, Math.floor((t.h - 8) / 13));
-  [[f.Lp, f.B], [f.B, f.R]].forEach(function(face){
+  var st = t.style;
+  if (st === 'civic' || st === 'lighthouse') return;
+  var f = footprint(t, t.s), e = t.elev;
+  var rows = st === 'house' || st === 'pavilion' || st === 'warehouse' ? 1 : Math.max(1, Math.floor((t.h - 8) / 13));
+  var z0 = st === 'shop' ? 16 : st === 'warehouse' ? 13 : st === 'pavilion' ? 4 : 7;
+  if (st === 'shop') rows = Math.max(1, Math.floor((t.h - 16) / 10));
+  var cols = st === 'school' ? [[.1,.28],[.38,.56],[.68,.86]] : [[.18,.42],[.58,.82]];
+  [[f.Lp, f.B], [f.B, f.R]].forEach(function(face, fi){
     var A = face[0], B = face[1], u = [B[0]-A[0], B[1]-A[1]];
-    [[.18,.42],[.58,.82]].forEach(function(col){
+    cols.forEach(function(col){
+      if (st === 'warehouse' && fi === 1) return;
       for (var r = 0; r < rows; r++){
-        var z1 = 7 + r * 13, z2 = z1 + 7;
-        var P = function(a, z){ return [A[0] + u[0]*a, A[1] + u[1]*a - z]; };
+        var z1 = z0 + r * 13, z2 = z1 + (st === 'pavilion' ? 5 : 7);
+        if (z2 > t.h - 2) break;
+        var P = function(a, zz){ return [A[0] + u[0]*a, A[1] + u[1]*a - e - zz]; };
         el('polygon', {points:pts([P(col[0], z1), P(col[1], z1), P(col[1], z2), P(col[0], z2)]), fill:lit, stroke:frame || 'none', 'stroke-width':frame ? .6 : 0}, g);
       }
     });
@@ -792,7 +1007,7 @@ function drawWindows(t, g, lit, frame){
 
 function edgePath(e){
   var a = toolById[e.a], b = toolById[e.b];
-  var p = up(iso(a.gx, a.gy), a.h + 4), q = up(iso(b.gx, b.gy), b.h + 4);
+  var p = up(iso(a.gx, a.gy), a.top + 4), q = up(iso(b.gx, b.gy), b.top + 4);
   var d = Math.hypot(q[0]-p[0], q[1]-p[1]);
   var mx = (p[0]+q[0])/2, my = (p[1]+q[1])/2 - Math.min(90, 24 + d * .22);
   return 'M'+p[0].toFixed(1)+' '+p[1].toFixed(1)+' Q'+mx.toFixed(1)+' '+my.toFixed(1)+' '+q[0].toFixed(1)+' '+q[1].toFixed(1);
@@ -805,7 +1020,7 @@ function drawLinks(){
     var touches = state.sel && (e.a === state.sel || e.b === state.sel);
     var cls = 'link-path' + (state.sel ? (touches ? ' hot' : ' fade') : '');
     el('path', {d:edgePath(e), class:cls, stroke:rel[e.rel].color}, L.links);
-    var q = toolById[e.b], end = up(iso(q.gx, q.gy), q.h + 4);
+    var q = toolById[e.b], end = up(iso(q.gx, q.gy), q.top + 4);
     el('circle', {cx:end[0], cy:end[1], r:3.5, fill:rel[e.rel].color, class:state.sel && !touches ? 'link-path fade' : ''}, L.links);
   });
   svg.classList.toggle('hide-links', !state.links);
@@ -824,7 +1039,7 @@ function buildMascot(){
   var lab = el('text', {x:0, y:-38, 'text-anchor':'middle', 'font-size':10.5, 'font-weight':700, fill:'#fff', stroke:'#14303d', 'stroke-width':3, 'paint-order':'stroke'}, L.mascot);
   lab.textContent = '小創';
 }
-var boats = [{a:0, r:10.6, s:.035}, {a:2.3, r:11.4, s:-.025}, {a:4.4, r:10.9, s:.03}];
+var boats = [{a:0, r:14.4, s:.03}, {a:2.3, r:15.2, s:-.022}, {a:4.4, r:14.8, s:.026}];
 function buildBoats(){
   L.boats.innerHTML = '';
   boats.forEach(function(b){
@@ -846,11 +1061,12 @@ function tick(ts){
     }
     boats.forEach(function(b){ b.a += b.s * dt; });
   }
+  stepWalker(dt, ts);
   var A = zoneById[mascot.from], B = zoneById[mascot.to], e = mascot.t < .5 ? 2*mascot.t*mascot.t : 1 - Math.pow(-2*mascot.t + 2, 2)/2;
   var mp = iso(A.cx + (B.cx - A.cx)*e, A.cy + (B.cy - A.cy)*e), hop = Math.abs(Math.sin(elapsed * 9)) * 3;
   L.mascot.setAttribute('transform', 'translate('+mp[0].toFixed(1)+','+(mp[1]-hop).toFixed(1)+')');
   boats.forEach(function(b){
-    var p = iso(7.2 + Math.cos(b.a)*b.r, 7.4 + Math.sin(b.a)*b.r), bob = Math.sin(elapsed*2 + b.a*5) * 1.5;
+    var p = iso(C[0] + Math.cos(b.a)*b.r, C[1] + Math.sin(b.a)*b.r), bob = Math.sin(elapsed*2 + b.a*5) * 1.5;
     b.g.setAttribute('transform', 'translate('+p[0].toFixed(1)+','+(p[1]+bob).toFixed(1)+')' + (b.s < 0 ? ' scale(-1,1)' : ''));
   });
   Array.prototype.forEach.call(L.clouds.children, function(cg, i){
@@ -860,12 +1076,170 @@ function tick(ts){
   requestAnimationFrame(tick);
 }
 
+/* ---------- 訪客角色：每位訪客一個人物，跟著滑鼠「走路」過去 ---------- */
+var KEY_AVATAR = 'startupIslandAvatar';
+var NAME_A = ['熱血','冷靜','好奇','勇敢','細心','樂觀','愛笑','認真','點子很多的','行動派','精打細算的','愛喝咖啡的'];
+var NAME_B = ['店長','老闆','創辦人','企劃','設計師','工程師','行銷人','小編','業務','顧問'];
+var NAME_C = ['小安','阿哲','小魚','阿凱','小晴','阿寶','小樹','阿福','小米','阿德','小芸','阿豪','小橘','阿翔','小柚','阿誠'];
+var SHIRTS = ['#ff6f59','#4f9dff','#f4b942','#6bbf59','#9d8cf2','#ef6b8a','#2ec4b6','#f08a4b'];
+var HAIRS = ['#3b2a20','#14303d','#6b4226','#a0522d','#2b2b2b'];
+function pick(a){ return a[Math.floor(Math.random() * a.length)]; }
+function newAvatar(){ return {name:pick(NAME_A) + pick(NAME_B) + pick(NAME_C), shirt:pick(SHIRTS), hair:pick(HAIRS)}; }
+var me = lsGet(KEY_AVATAR, null), firstVisit = false;
+if (!me || !me.name){ me = newAvatar(); lsSet(KEY_AVATAR, me); firstVisit = true; }
+
+// 可走格子：0.5 格一格；海、河（橋除外）、建築、池塘與噴水池不能走
+var WG = {x0:-4, y0:-4, step:.5, n:60}, walkCells = null;
+function cellOf(gx, gy){ return [Math.round((gx - WG.x0) / WG.step), Math.round((gy - WG.y0) / WG.step)]; }
+function cellPos(i, j){ return [WG.x0 + i * WG.step, WG.y0 + j * WG.step]; }
+function canWalk(i, j){ return i >= 0 && j >= 0 && i < WG.n && j < WG.n && walkCells[j * WG.n + i] === 1; }
+function walkableAt(gx, gy){
+  var a = Math.atan2(gy - C[1], gx - C[0]);
+  if (Math.hypot(gx - C[0], gy - C[1]) > islandR(a) - .35) return false;
+  if (riverDist(gx, gy) < .62 && minDist(BRIDGE_S, gx, gy) > .45) return false;
+  for (var i = 0; i < TOOLS.length; i++){ var t = TOOLS[i]; if (Math.abs(gx - t.gx) < t.s + .12 && Math.abs(gy - t.gy) < t.s + .12) return false; }
+  return !WATERS.some(function(w){ return Math.hypot(gx - w.at[0], gy - w.at[1]) < w.r + .1; });
+}
+function buildWalk(){
+  walkCells = new Uint8Array(WG.n * WG.n);
+  for (var j = 0; j < WG.n; j++) for (var i = 0; i < WG.n; i++){ var p = cellPos(i, j); walkCells[j * WG.n + i] = walkableAt(p[0], p[1]) ? 1 : 0; }
+}
+function nearestCell(gx, gy){
+  var c = cellOf(gx, gy);
+  if (canWalk(c[0], c[1])) return c;
+  for (var r = 1; r < 14; r++){
+    var best = null, bd = 1e9;
+    for (var di = -r; di <= r; di++) for (var dj = -r; dj <= r; dj++){
+      if (Math.max(Math.abs(di), Math.abs(dj)) !== r || !canWalk(c[0] + di, c[1] + dj)) continue;
+      var d = di*di + dj*dj; if (d < bd){ bd = d; best = [c[0] + di, c[1] + dj]; }
+    }
+    if (best) return best;
+  }
+  return null;
+}
+function findPath(a, b){                       // A*，8 方向，不切牆角
+  var n = WG.n, start = a[1] * n + a[0], goal = b[1] * n + b[0];
+  if (start === goal) return [];
+  var gS = new Float32Array(n * n).fill(Infinity), from = new Int32Array(n * n).fill(-1), closed = new Uint8Array(n * n), heap = [];
+  function push(it){ heap.push(it); var i = heap.length - 1; while (i > 0){ var p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; var tmp = heap[p]; heap[p] = heap[i]; heap[i] = tmp; i = p; } }
+  function pop(){
+    var top = heap[0], last = heap.pop();
+    if (heap.length){ heap[0] = last; var i = 0; for (;;){ var l = 2*i + 1, r = l + 1, m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; var tmp = heap[m]; heap[m] = heap[i]; heap[i] = tmp; i = m; } }
+    return top;
+  }
+  gS[start] = 0; push([0, start]);
+  while (heap.length){
+    var cur = pop()[1];
+    if (cur === goal) break;
+    if (closed[cur]) continue; closed[cur] = 1;
+    var cx = cur % n, cy = (cur / n) | 0;
+    for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++){
+      if (!dx && !dy) continue;
+      var nx = cx + dx, ny = cy + dy;
+      if (!canWalk(nx, ny) || (dx && dy && (!canWalk(cx + dx, cy) || !canWalk(cx, cy + dy)))) continue;
+      var ni = ny * n + nx, cost = gS[cur] + (dx && dy ? 1.414 : 1);
+      if (cost < gS[ni]){ gS[ni] = cost; from[ni] = cur; push([cost + Math.hypot(b[0] - nx, b[1] - ny), ni]); }
+    }
+  }
+  if (from[goal] < 0) return null;
+  var out = [], k = goal;
+  while (k !== start){ out.push(cellPos(k % n, (k / n) | 0)); k = from[k]; }
+  return out.reverse();
+}
+function los(p, q){
+  var d = Math.hypot(q[0] - p[0], q[1] - p[1]), steps = Math.ceil(d / .2);
+  for (var i = 1; i < steps; i++){ var c = cellOf(p[0] + (q[0] - p[0]) * i / steps, p[1] + (q[1] - p[1]) * i / steps); if (!canWalk(c[0], c[1])) return false; }
+  return true;
+}
+function straighten(pos, path){                // 能直走就直走，不要一格一格鋸齒
+  var list = [pos].concat(path), out = [], i = 0;
+  while (i < list.length - 1){ var j = list.length - 1; while (j > i + 1 && !los(list[i], list[j])) j--; out.push(list[j]); i = j; }
+  return out;
+}
+var walker = {gx:11.7, gy:9.1, elev:0, path:[], phase:0, face:1, goal:null, pending:null, lastPlan:0, zone:null, follow:true};
+function walkTo(gx, gy){
+  var goal = nearestCell(gx, gy); if (!goal) return;
+  if (walker.goal && walker.goal[0] === goal[0] && walker.goal[1] === goal[1]) return;
+  var start = nearestCell(walker.gx, walker.gy); if (!start) return;
+  var p = findPath(start, goal); if (!p) return;
+  walker.goal = goal;
+  walker.path = straighten([walker.gx, walker.gy], p.length ? p : [cellPos(goal[0], goal[1])]);
+}
+function clientToGrid(cx, cy){ var p = clientToSvg(cx, cy); return [(p.x / HW + p.y / HH) / 2, (p.y / HH - p.x / HW) / 2]; }
+function buildAvatar(){
+  var g = el('g', {'pointer-events':'none', class:'avatar'}, L.blds);
+  L.avatar = g;
+  el('ellipse', {cx:0, cy:0, rx:8, ry:3.5, fill:'rgba(0,0,0,.2)'}, g);
+  var body = el('g', {}, g); L.avBody = body;
+  L.legL = el('line', {x1:-2.5, y1:-10, x2:-2.5, y2:0, stroke:'#2b3a44', 'stroke-width':3, 'stroke-linecap':'round'}, body);
+  L.legR = el('line', {x1:2.5, y1:-10, x2:2.5, y2:0, stroke:'#2b3a44', 'stroke-width':3, 'stroke-linecap':'round'}, body);
+  L.armB = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f2c9a6', 'stroke-width':2.6, 'stroke-linecap':'round'}, body);
+  el('rect', {x:-5.5, y:-21, width:11, height:12, rx:4, fill:me.shirt, class:'av-shirt'}, body);
+  L.armF = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f6d3b3', 'stroke-width':2.6, 'stroke-linecap':'round'}, body);
+  el('circle', {cx:0, cy:-27, r:6.2, fill:'#f6d3b3'}, body);
+  el('path', {d:'M-6.4 -27 A6.4 6.4 0 0 1 6.4 -27 L6.4 -29 Q2 -31 -6.4 -26 Z', fill:me.hair, class:'av-hair'}, body);
+  el('circle', {cx:2.6, cy:-27, r:1, fill:'#14303d'}, body);
+  var tag = el('g', {transform:'translate(0,-44)'}, g); L.avTag = tag;
+  renderAvatarName();
+}
+function renderAvatarName(){
+  var tag = L.avTag; tag.innerHTML = '';
+  var w = 0; for (var i = 0; i < me.name.length; i++) w += me.name.charCodeAt(i) > 255 ? 12 : 7; w += 18;
+  el('rect', {x:-w/2, y:-11, width:w, height:20, rx:10, fill:me.shirt, stroke:'#fff', 'stroke-width':1.5}, tag);
+  el('path', {d:'M-4 9 L0 14 L4 9 Z', fill:me.shirt}, tag);
+  el('text', {x:0, y:4, 'text-anchor':'middle', 'font-size':12, 'font-weight':700, fill:'#fff', 'font-family':'var(--f-body)'}, tag).textContent = me.name;
+  var shirt = L.avatar.querySelector('.av-shirt'), hair = L.avatar.querySelector('.av-hair');
+  if (shirt) shirt.setAttribute('fill', me.shirt);
+  if (hair) hair.setAttribute('fill', me.hair);
+  if ($('meName')) $('meName').textContent = me.name;
+}
+function placeAvatarDepth(){
+  var d = walker.gx + walker.gy, node = L.avatar, kids = L.blds.children, ref = null;
+  for (var i = 0; i < kids.length; i++){ var k = kids[i]; if (k !== node && k._d > d) { ref = k; break; } }
+  if (node.nextSibling !== ref) L.blds.insertBefore(node, ref);
+}
+function zoneAt(gx, gy){
+  for (var i = 0; i < ZONES.length; i++){ var b = ZONES[i].box; if (gx >= b[0] && gx <= b[2] && gy >= b[1] && gy <= b[3]) return ZONES[i]; }
+  return null;
+}
+function stepWalker(dt, now){
+  if (walker.pending && now - walker.lastPlan > 140){ walker.lastPlan = now; var q = walker.pending; walker.pending = null; walkTo(q[0], q[1]); }
+  var moving = false;
+  if (walker.path.length){
+    var nx = walker.path[0], dx = nx[0] - walker.gx, dy = nx[1] - walker.gy, d = Math.hypot(dx, dy), step = 2.1 * dt;
+    if (d <= step){ walker.gx = nx[0]; walker.gy = nx[1]; walker.path.shift(); if (!walker.path.length) walker.goal = null; }
+    else { walker.gx += dx / d * step; walker.gy += dy / d * step; }
+    var sx = dx - dy; if (Math.abs(sx) > .01) walker.face = sx > 0 ? 1 : -1;
+    moving = true;
+  }
+  walker.phase = moving ? walker.phase + dt * 11 : walker.phase * .8;
+  walker.elev += (groundAt(walker.gx, walker.gy) - walker.elev) * Math.min(1, dt * 12);
+  var sw = Math.sin(walker.phase) * (moving ? 28 : 0), bob = moving ? Math.abs(Math.sin(walker.phase)) * 1.6 : 0;
+  var p = up(iso(walker.gx, walker.gy), walker.elev);
+  L.avatar.setAttribute('transform', 'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')');
+  L.avBody.setAttribute('transform', 'translate(0,' + (-bob).toFixed(1) + ') scale(' + walker.face + ',1)');
+  L.legL.setAttribute('transform', 'rotate(' + sw.toFixed(1) + ' -2.5 -10)');
+  L.legR.setAttribute('transform', 'rotate(' + (-sw).toFixed(1) + ' 2.5 -10)');
+  L.armF.setAttribute('transform', 'rotate(' + (-sw * .8).toFixed(1) + ' 0 -19)');
+  L.armB.setAttribute('transform', 'rotate(' + (sw * .8).toFixed(1) + ' 0 -19)');
+  if (moving){
+    placeAvatarDepth();
+    var z = zoneAt(walker.gx, walker.gy);
+    if (z && z !== walker.zone) addLog(me.name + ' 走進了' + z.name);
+    walker.zone = z;
+  }
+}
+function rerollName(){
+  var old = me.name; me = newAvatar(); lsSet(KEY_AVATAR, me); renderAvatarName();
+  addLog(old + ' 改名為 ' + me.name);
+}
+
 /* ---------- 鏡頭：縮放／拖曳／聚焦 ---------- */
 var vb = {x:0, y:0, w:100, h:100}, home = null, anim = null;
 function setVB(){ svg.setAttribute('viewBox', vb.x.toFixed(1)+' '+vb.y.toFixed(1)+' '+vb.w.toFixed(1)+' '+vb.h.toFixed(1)); }
 function islandBox(){
   var xs = [], ys = [];
-  for (var a = 0; a < Math.PI*2; a += .2){ var p = iso(7.2 + Math.cos(a)*10, 7.4 + Math.sin(a)*10); xs.push(p[0]); ys.push(p[1]); }
+  for (var a = 0; a < Math.PI*2; a += .2){ var p = iso(C[0] + Math.cos(a)*13.2, C[1] + Math.sin(a)*13.2); xs.push(p[0]); ys.push(p[1]); }
   return {x:Math.min.apply(null, xs), y:Math.min.apply(null, ys) - 40, w:Math.max.apply(null, xs) - Math.min.apply(null, xs), h:Math.max.apply(null, ys) - Math.min.apply(null, ys) + 50};
 }
 function padBox(b){
@@ -923,7 +1297,7 @@ svg.addEventListener('pointerdown', function(e){
   if (ids.length === 2){ var a = pointers[ids[0]], b = pointers[ids[1]]; drag = {pinch:Math.hypot(a.x-b.x, a.y-b.y)}; }
 });
 svg.addEventListener('pointermove', function(e){
-  if (!(e.pointerId in pointers)) { hoverTip(e); return; }
+  if (!(e.pointerId in pointers)) { hoverTip(e); if (walker.follow && e.pointerType !== 'touch') walker.pending = clientToGrid(e.clientX, e.clientY); return; }
   pointers[e.pointerId] = {x:e.clientX, y:e.clientY};
   var ids = Object.keys(pointers);
   if (ids.length === 2 && drag && drag.pinch){
@@ -948,6 +1322,7 @@ svg.addEventListener('click', function(e){
   if (moved){ moved = false; return; }
   var g = e.target.closest && e.target.closest('.bld');
   if (g) openTool(g.getAttribute('data-id'));
+  else { var q = clientToGrid(e.clientX, e.clientY); walker.goal = null; walkTo(q[0], q[1]); }
 });
 svg.addEventListener('keydown', function(e){
   var g = e.target.closest && e.target.closest('.bld');
@@ -1081,6 +1456,7 @@ function openTool(id){
     '<a class="go" href="' + toolUrl(t) + '" target="_blank" rel="noopener">前往工具 ↗</a>' +
     (rels ? '<p class="rel-h">接力線（點一下飛到下一棟）</p>' + rels : '');
   openDrawer('detail');
+  walker.goal = null; walkTo(t.gx + t.s + .5, t.gy + t.s + .5);
   if (!state.seen[id]){ state.seen[id] = Date.now(); lsSet(KEY_SEEN, state.seen); }
   addLog('造訪 ' + z.name + '・' + t.name);
   renderSeen();
@@ -1149,6 +1525,9 @@ $('tbPan').addEventListener('click', function(){
   state.pan = !state.pan; this.setAttribute('aria-pressed', String(state.pan)); svg.classList.toggle('pan', state.pan);
 });
 $('tbPause').addEventListener('click', function(){ setPaused(!state.paused); });
+$('tbWalk').addEventListener('click', function(){ walker.follow = !walker.follow; this.setAttribute('aria-pressed', String(walker.follow)); if (!walker.follow) walker.pending = null; });
+$('reroll').addEventListener('click', rerollName);
+$('rerollLog').addEventListener('click', rerollName);
 $('tbBird').addEventListener('click', function(){ if (state.view === 'list') setView('map'); else birdview(); });
 $('tbLog').addEventListener('click', function(){
   if ($('logDrawer').classList.contains('open')) closeDrawer('logDrawer');
@@ -1202,7 +1581,7 @@ function showStep(){
   $('sCount').textContent = pad2(storyI + 1) + ' / ' + pad2(STORY.length);
   $('sChap').textContent = s.chap;
   $('sTitle').textContent = s.title;
-  $('sBody').textContent = s.body;
+  $('sBody').textContent = s.body.replace('{name}', me.name);
   $('sBar').style.width = ((storyI + 1) / STORY.length * 100) + '%';
   $('sPrev').style.visibility = storyI ? 'visible' : 'hidden';
   $('sNext').textContent = storyI === STORY.length - 1 ? '開始探索' : '下一步';
@@ -1215,10 +1594,15 @@ $('sSkip').addEventListener('click', function(){ endStory(); setView('map'); bir
 
 /* ---------- 啟動 ---------- */
 $('stTools').textContent = TOOLS.length;
+$('stZones').textContent = ZONES.length;
 $('stLinks').textContent = LINKS.length;
 $('stLic').textContent = TOOLS.filter(function(t){ return t.lic; }).length;
 buildMap();
 buildBoats();
+buildWalk();
+(function(){ var c = nearestCell(walker.gx, walker.gy); if (c){ var p = cellPos(c[0], c[1]); walker.gx = p[0]; walker.gy = p[1]; } })();
+placeAvatarDepth();
+if (firstVisit) addLog(me.name + ' 登上了創業島');
 renderRelList();
 setTags(state.tags);
 setPaused(state.paused);
