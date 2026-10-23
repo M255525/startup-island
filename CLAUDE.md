@@ -28,7 +28,7 @@
 - ✅ PWA（manifest＋service-worker＋icons，圖示用 PIL 自畫等角小島）
 - ✅ `manual.html`、使用警語、創作者資訊
 - ❌ 序號授權（導覽入口，不需要）
-- ⏳ 訪客計數器、GitHub Pages workflow：**尚未上線**，等使用者同意部署時再加（memory：實驗性新工具部署前先確認）。
+- ✅ 訪客計數器（visitor-badge，`page_id=m255525.startupisland`）、GitHub Pages（Actions workflow）
 
 ## Port／測試
 - port **8834**（`.claude/launch.json` 的 `startup-island`）；程式牆 `LOCAL_APPS` 也有一筆 static。
@@ -48,4 +48,11 @@
 - **協定**：client→`hello`/`move`（移動中每 180ms，位移 >0.03 格才送）/`look`（換名字）/`ping`（25s）；server→`snapshot`/`join`/`move`/`look`/`leave`。
 - **前端**：`PRESENCE_URL` 預設 `wss://startup-island-presence.content-workflow.workers.dev/ws`；網址加 `?presence=ws://127.0.0.1:8787/ws` 可改連本機。id 每次載入頁面隨機產生（不用 sessionStorage，複製分頁會撞號互踢）。其他訪客用同一個 `makeAvatar()` 畫，收到位置後以走路速度（落後 >1.5 格時加倍、>8 格直接就位）走過去，`placeDepth()` 處理前後遮擋；自己的名牌加「（你）」。斷線指數退避重連（1.5s→30s），連不上就只剩自己，其他功能不受影響。
 - **本機測試**：這台 `wrangler dev` 在沙箱內會 `spawn UNKNOWN`（workerd 被擋），改用 Python 模擬轉播站（同協定，`websockets` 套件裝在暫存目錄）開兩個分頁驗證：互相看見、即時走動、換名字同步、關分頁另一邊顯示「離開了島」。Worker 本身需部署後再驗證。
-- **部署**（需使用者同意）：`cd presence-worker && npx wrangler deploy`（會在帳號 `content-workflow` 子網域建立 `startup-island-presence`）。`.gitignore` 已排除 `.wrangler/`、`node_modules/`。
+- **部署**：`cd presence-worker && npx -y wrangler@4 deploy`（`wrangler deploy` 在沙箱內可正常執行，只有 `wrangler dev` 會被擋）。`.gitignore` 已排除 `.wrangler/`、`node_modules/`，Pages 上 `presence-worker/.wrangler/` 確認 404。
+- **人物名牌**放在獨立最上層 `L.ptags`（`av.tagWrap`），身體留在 `L.blds` 做前後遮擋——走到建築後面身體會被擋住，但名字一定看得到。
+
+## 部署（2026-10-23 使用者同意上線）
+- 網頁：公開 repo <https://github.com/M255525/startup-island>，GitHub Pages <https://m255525.github.io/startup-island/>（`master` 分支、`.github/workflows/deploy-pages.yml`；先 push 再 `gh api .../pages -X POST -f build_type=workflow`，第一次 push 觸發的 run 也成功）。
+- 轉播：Cloudflare Worker <https://startup-island-presence.content-workflow.workers.dev>（`/` 回 ok；`/ws` 對非白名單 Origin 回 403、`m255525.github.io` 回 101）。
+- 已用兩個瀏覽器分頁對正式網址驗證：互相看見、換名字同步、走動同步、人數 2。
+- 程式牆：從 `LOCAL_APPS` 移除、改加 `REPO_META`（github-dashboard 同步補一行）。
