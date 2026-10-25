@@ -112,7 +112,7 @@
 
 ## 創業看板（2026-10-25）
 使用者要求「損益看板要特別標註在地圖中，文字內容可以編輯，後台在 Google 試算表」。
-- 試算表「創業島的看板」`1h7s_0UlzJ7E1Cya-JMiV-AdLWS7eitoVS5mwS616lYI`（使用者已設成知道連結的人可檢視）。**格式：A 欄＝欄位名稱、B 欄＝內容**，第 1 列標題列「欄位｜內容｜字數上限｜說明」（C、D 欄只是給編輯者看的說明，程式不讀）。欄位與字數上限在 `BOARD_FIELDS`：標題 8、副標 16、內容1～3 各 14、底部 20、詳細說明 300、連結（只收 https）、連結文字 10、主色 #RRGGBB。範本 `docs/board-template.csv`。
+- 試算表 **「board-template」`1reL32KcSUL-YNh4ICVxm-fROcjBzRiKVLjy05t7q_bs`**（使用者把範本 CSV 上傳成這份、設成知道連結的人可檢視；原本空白的「創業島的看板」`1h7s_0…` 已不使用）。Excel 會把「＝」開頭的格子當公式變成 `#NAME?`，上傳後又可能包上引號，`cleanBoard()` 會去掉頭尾成對引號。**格式：A 欄＝欄位名稱、B 欄＝內容**，第 1 列標題列「欄位｜內容｜字數上限｜說明」（C、D 欄只是給編輯者看的說明，程式不讀）。欄位與字數上限在 `BOARD_FIELDS`：標題 8、副標 16、內容1～3 各 14、底部 20、詳細說明 300、連結（只收 https）、連結文字 10、主色 #RRGGBB。範本 `docs/board-template.csv`。
 - 讀法：gviz JSONP（`gviz/tq?tqx=out:json;responseHandler:cb&headers=1`），不用 Apps Script、不受 CORS 限制；試算表沒公開時 Google 回 HTML，script 會載入失敗（console 有一則錯誤），就用上次快取 `startupIslandBoard` 或 `BOARD_DEFAULT`。載入時讀一次、之後每 10 分鐘一次。`cleanBoard()` 去控制字元、超過字數截斷、擋非 https 連結與錯誤色碼；抽屜內容一律 `escHtml()`。
 - 位置固定 `BOARD_AT=[18.55,5.6]`（試算商辦區東南邊空地），平面、立體、小地圖共用；`blockArea()` 讓角色繞開。
 - 平面：`drawBoard2D()` 畫柱子＋看板（主色標題列＋小長條圖）＋上下浮動的黃色「📋 看板」標籤＋脈動黃圈，點了 `openBoard()`（右側抽屜顯示全部內容與連結按鈕，並走到看板前）。

@@ -736,9 +736,9 @@ var HILLS = [
   {id:'strategy', at:[3.8,3.8], layers:[[3.1,13],[2.5,26]]},            // [半徑, 高度 px]
   {id:'lookout', at:[15.3,6.9], layers:[[1.4,10],[.85,20]], name:'觀景小山', en:'LOOKOUT HILL', label:[16.9,5.9]}
 ];
-// 創業看板：試算商辦區旁的大看板，文字由管理者在 Google 試算表「創業島的看板」編輯
+// 創業看板：試算商辦區旁的大看板，文字由管理者在 Google 試算表「board-template」編輯（2026-10-25 由 CSV 上傳建立）
 // 試算表要設成「知道連結的任何人可以檢視」；讀不到時用 BOARD_DEFAULT，並沿用上次成功讀到的內容（localStorage）
-var BOARD_SHEET = '1h7s_0UlzJ7E1Cya-JMiV-AdLWS7eitoVS5mwS616lYI', KEY_BOARD = 'startupIslandBoard';
+var BOARD_SHEET = '1reL32KcSUL-YNh4ICVxm-fROcjBzRiKVLjy05t7q_bs', KEY_BOARD = 'startupIslandBoard';
 var BOARD_AT = [18.55, 5.6];
 var BOARD_FIELDS = [   // [程式用 key, 試算表 A 欄名稱, 字數上限]
   ['title', '標題', 8], ['sub', '副標', 16], ['l1', '內容1', 14], ['l2', '內容2', 14], ['l3', '內容3', 14],
@@ -753,6 +753,7 @@ function cleanBoard(raw){
   BOARD_FIELDS.forEach(function(f){
     var v = raw[f[0]]; if (v == null) return;
     v = String(v).replace(/[\u0000-\u001f]/g, f[0] === 'detail' ? function(c){ return c === '\n' ? '\n' : ''; } : '').trim();
+    v = v.replace(/^["“「](.*)["”」]$/, '$1').trim();                         // CSV／Excel 常把內容包上引號，去掉頭尾成對的引號
     if (!v) return;
     if (f[0] === 'link' && !/^https:\/\/[^\s<>"]+$/.test(v)) return;           // 只接受 https 連結
     if (f[0] === 'color' && !/^#[0-9a-fA-F]{6}$/.test(v)) return;
