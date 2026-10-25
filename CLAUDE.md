@@ -127,3 +127,4 @@
 - **對話泡泡**：共用 `BUBBLES`（id→{text, until}，自己是 `'me'`，顯示 4.5 秒＋每字 0.12 秒，最多再加 4 秒）。平面：`showBubble()` 畫在 `av.tagWrap` 裡 `translate(0,-84)`（名牌上方、最上層），12 個全形字換行、最多 3 行。立體：`makeAv()` 多一個 `.bub3` div，`placeLabels()` 跟名牌同位置（CSS `margin-top:-30px` 往上推），名牌被隱藏時泡泡也藏。
 - **本機測試**：`wrangler dev` 在沙箱跑不起來，改用 node 包真正的 `index.js`（把 `cloudflare:workers` 換成假的 `DurableObject` 類別、`badwords.js` 複製成 `.mjs`、`ws@8.18.0` 當伺服器，依 `room` 參數分不同 Island 實例），網頁加 `?presence=ws://127.0.0.1:8849/ws`。驗證：兩分頁互傳、遮罩（「幹你」→`**`）、網址移除、冷卻提示、進 CLASS1 後公開島人數各自變 1、邀請連結進同房間後互相看到訊息、重新整理看得到最近訊息、立體泡泡、375px 無橫向溢出、無 console 錯誤。
 - **部署順序**：先 `cd presence-worker && npx -y wrangler@4 deploy`，再 push 網頁。反過來的話舊轉播站會忽略 `chat` 與 `room`——訊息送不出去，**而且大家其實都在公開島卻以為在房間裡**。
+- **已上線**（2026-10-25）：使用者執行 `wrangler deploy`（Version 3633a54d）後，用 node 對正式轉播站的測試房間 `ZZTEST9Q` 驗證 snapshot 帶 chat、遮罩／去網址、chatSlow 皆正確，再 push 網頁（commit 6d6ccd7）。
