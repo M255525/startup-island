@@ -79,3 +79,12 @@
 - localStorage：`startupIslandView`（記住上次是地圖或立體，導覽看完才套用）、`startupIsland3d`（`{sky, sound, hint}`）。導覽多一步「走進立體島」（共 11 步）。
 - 沒有 WebGL 或 CDN 載入失敗 → 顯示訊息後自動回到地圖。
 - 驗證（2026-10-25，Playwright 1366×800 與 375×740）：載入無 console 錯誤、夜景／鳥瞰／接力線截圖正常、WASD 可走、切換地圖↔時間軸↔立體正常、375px `scrollWidth===clientWidth`。
+
+## 日本動畫風（2026-10-25）
+使用者要求「人物與景物更卡通化、更可愛、像日本動畫的畫面」。
+- **卡通著色**：`std()` 改回傳 `MeshToonMaterial`＋三段色階 `toonGrad()`（120/200/255，NearestFilter），自動丟掉 roughness／metalness／flatShading 參數；地形、水面也用 toon。`renderer.toneMapping = NoToneMapping`（ACES 會讓卡通色變灰）。
+- **描邊**：背面外推法 `inkAll(group, 粗細)`／`inkMesh()`，外推方向用 `ensureOnrm()` 算的「同位置平均法線」（存成 `onrm` attribute），方塊轉角才不會裂。描邊網格 `userData.ink`、不參與點選與陰影；InstancedMesh 的描邊共用 `instanceMatrix`。眼睛、腮紅、旗子、燈塔光束等設 `userData.noInk`。建築變透明時描邊直接隱藏（`b.lines`）。
+- **天空**：漸層天球 `O.dome`（ShaderMaterial，天頂深藍→地平線淡藍，跟著鏡頭），霧色＝地平線色；地平線一圈 11 朵積雨雲（`fog:false`）。黃昏偏粉橘，夜晚深藍。
+- **人物 Q 版**：大頭（r .14）、瀏海＋後髮、大眼（含白色高光）、腮紅、微笑、手腳短；走路一蹦一蹦、晃頭，站著會呼吸、隨機眨眼。平面地圖的 SVG 小人也同步改成大頭、雙眼高光、腮紅、笑嘴，名牌上移到 `translate(0,-50)`。
+- **樹與花**：圓樹＝4 顆球合併（`mergeGeo`），松樹＝兩層圓錐，約 1/11 是櫻花粉；草地撒 520 朵小花（避開路、河、場地、建築）。擋在鏡頭與自己之間的樹 `hideTrees()` 暫時縮成 0。
+- 測試時加 `?presence=ws://127.0.0.1:1/ws` 讓多人連線刻意失敗（`?presence=` 空值不會生效，仍會連正式轉播站，測試角色會被其他訪客看到）。

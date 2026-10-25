@@ -1279,16 +1279,22 @@ function makeAvatar(data, mine){
   av.armB = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f2c9a6', 'stroke-width':2.6, 'stroke-linecap':'round'}, av.body);
   av.shirt = el('rect', {x:-5.5, y:-21, width:11, height:12, rx:4}, av.body);
   av.armF = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f6d3b3', 'stroke-width':2.6, 'stroke-linecap':'round'}, av.body);
-  el('circle', {cx:0, cy:-27, r:6.2, fill:'#f6d3b3'}, av.body);
-  av.hair = el('path', {d:'M-6.4 -27 A6.4 6.4 0 0 1 6.4 -27 L6.4 -29 Q2 -31 -6.4 -26 Z'}, av.body);
-  el('circle', {cx:2.6, cy:-27, r:1, fill:'#14303d'}, av.body);
+  el('circle', {cx:0, cy:-29, r:8.4, fill:'#ffe0c7', stroke:'#3b2f3a', 'stroke-width':.9}, av.body);   // Q 版大頭
+  av.hair = el('path', {d:'M-8.6 -28 A8.6 8.6 0 0 1 8.6 -29.5 Q5 -33.5 1 -31.5 Q-2 -34 -5 -31 Q-7 -30 -8.6 -28 Z', stroke:'#3b2f3a', 'stroke-width':.9, 'stroke-linejoin':'round'}, av.body);
+  [1.4, 5.4].forEach(function(x){
+    el('ellipse', {cx:x, cy:-27.6, rx:1.35, ry:1.9, fill:'#2b2140'}, av.body);
+    el('circle', {cx:x + .45, cy:-28.4, r:.55, fill:'#fff'}, av.body);
+  });
+  el('ellipse', {cx:6.4, cy:-24.6, rx:1.7, ry:1, fill:'#ff8fa8', opacity:.6}, av.body);
+  el('ellipse', {cx:-.4, cy:-24.6, rx:1.5, ry:.9, fill:'#ff8fa8', opacity:.6}, av.body);
+  el('path', {d:'M2.4 -24.2 Q3.4 -23 4.4 -24.2', fill:'none', stroke:'#a24a52', 'stroke-width':.8, 'stroke-linecap':'round'}, av.body);
   av.tagWrap = el('g', {}, L.ptags);
   if (mine){                                  // 點自己的名牌就能改名字
     av.tagWrap.style.pointerEvents = 'auto'; av.tagWrap.style.cursor = 'pointer';
     av.tagWrap.addEventListener('click', function(e){ e.stopPropagation(); openNamePop(); });
     av.tagWrap.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
   }
-  av.tag = el('g', {transform:'translate(0,-44)'}, av.tagWrap);
+  av.tag = el('g', {transform:'translate(0,-50)'}, av.tagWrap);
   setAvatarLook(av, data);
   return av;
 }

@@ -16,9 +16,10 @@ var cam = {yaw:Math.PI / 4, pitch:.55, dist:8.5, tx:0, ty:0, tz:0, overview:fals
 var O = {blds:{}, pick:[], tags:[], zoneTags:[], avs:{}, lamps:[], anim:[]};
 var keys = {}, lastT = 0, rafId = 0, sky = {dk:-1}, lastZone = null, bannerT = 0;
 
-var PAL = {grass:'#a6d17c', grass2:'#8fc267', sand:'#f0d79b', wet:'#c9ae78', deep:'#1d5f78', shallow:'#5fb3b8',
-  park:'#7cc35f', lawn:'#b3db8b', yard:'#e6d3a1', paving:'#dad5c9', wood:'#d8b588', road:'#ebe6d8',
-  hilltop:'#a9d47c', hillside:'#78a94f', rim:'#cdb27a'};
+var PAL = {grass:'#9edb6f', grass2:'#8ad062', sand:'#f7e4ab', wet:'#d9c08a', deep:'#2a86a8', shallow:'#6fd0d8',
+  park:'#7fd35e', lawn:'#b8e58f', yard:'#f0dca8', paving:'#e4ded0', wood:'#e0bd8c', road:'#f5eedb',
+  hilltop:'#aee07f', hillside:'#76b850', rim:'#e2c98e'};
+var INK = '#3b2f3a';                                              // 描邊色：深褐紫，比純黑柔和
 var CREAM = {house:1, pavilion:1, school:1, civic:1, lighthouse:1};
 
 function smooth(a, b, x){ var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
@@ -70,7 +71,61 @@ function terrainColor(gx, gy, y, n){
 }
 
 /* ---------- 建場景 ---------- */
-function std(c, o){ o = o || {}; o.color = c; if (o.roughness == null) o.roughness = .82; return new T3.MeshStandardMaterial(o); }
+// 卡通著色：三段色階的 MeshToonMaterial（亮面／陰影面分明，像動畫賽璐璐上色）
+var GRAD = null;
+function toonGrad(){
+  if (GRAD) return GRAD;
+  GRAD = new T3.DataTexture(new Uint8Array([120, 200, 255]), 3, 1, T3.RedFormat);
+  GRAD.minFilter = GRAD.magFilter = T3.NearestFilter; GRAD.generateMipmaps = false; GRAD.needsUpdate = true;
+  return GRAD;
+}
+function std(c, o){
+  o = o || {}; o.color = c; delete o.roughness; delete o.metalness; delete o.flatShading;
+  o.gradientMap = toonGrad();
+  return new T3.MeshToonMaterial(o);
+}
+// 描邊：背面外推法（inverted hull）。外推方向用「同一位置的平均法線」，方塊轉角才不會裂開
+var INK_MATS = {};
+function inkMat(th){
+  var k = th.toFixed(4);
+  if (INK_MATS[k]) return INK_MATS[k];
+  var m = new T3.MeshBasicMaterial({color:INK, side:T3.BackSide});
+  m.onBeforeCompile = function(sh){
+    sh.vertexShader = 'attribute vec3 onrm;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed += normalize(onrm) * ' + k + ';');
+  };
+  m.customProgramCacheKey = function(){ return 'ink' + k; };
+  return (INK_MATS[k] = m);
+}
+function ensureOnrm(g){
+  if (g.attributes.onrm) return;
+  if (!g.attributes.normal) g.computeVertexNormals();
+  var p = g.attributes.position, n = g.attributes.normal, acc = {}, out = new Float32Array(p.count * 3), i, key, a;
+  for (i = 0; i < p.count; i++){
+    key = Math.round(p.getX(i) * 1e3) + ',' + Math.round(p.getY(i) * 1e3) + ',' + Math.round(p.getZ(i) * 1e3);
+    a = acc[key] || (acc[key] = [0, 0, 0]); a[0] += n.getX(i); a[1] += n.getY(i); a[2] += n.getZ(i);
+  }
+  for (i = 0; i < p.count; i++){
+    key = Math.round(p.getX(i) * 1e3) + ',' + Math.round(p.getY(i) * 1e3) + ',' + Math.round(p.getZ(i) * 1e3);
+    a = acc[key]; var l = Math.hypot(a[0], a[1], a[2]) || 1; out[i * 3] = a[0] / l; out[i * 3 + 1] = a[1] / l; out[i * 3 + 2] = a[2] / l;
+  }
+  g.setAttribute('onrm', new T3.BufferAttribute(out, 3));
+}
+function noPick(){}
+function inkMesh(m, th){
+  ensureOnrm(m.geometry);
+  var o = m.isInstancedMesh ? new T3.InstancedMesh(m.geometry, inkMat(th), m.count) : new T3.Mesh(m.geometry, inkMat(th));
+  if (m.isInstancedMesh){ o.instanceMatrix = m.instanceMatrix; o.frustumCulled = false; m.parent.add(o); }
+  else m.add(o);
+  o.raycast = noPick; o.userData.ink = true; o.castShadow = false; o.receiveShadow = false;
+  return o;
+}
+function inkAll(g, th){
+  var list = [], out = [];
+  g.traverse(function(m){ if (m.isMesh && !m.userData.ink && !m.userData.noInk) list.push(m); });
+  list.forEach(function(m){ out.push(inkMesh(m, th)); });
+  g.userData.inks = out;
+  return g;
+}
 function shadowAll(g){ g.traverse(function(m){ if (m.isMesh){ m.castShadow = true; m.receiveShadow = true; } }); return g; }
 
 function buildTerrain(){
@@ -88,7 +143,7 @@ function buildTerrain(){
   g.setAttribute('position', new T3.BufferAttribute(pos, 3));
   g.setAttribute('color', new T3.BufferAttribute(cols, 3));
   g.setIndex(idx); g.computeVertexNormals();
-  var m = new T3.Mesh(g, new T3.MeshStandardMaterial({vertexColors:true, roughness:.95}));
+  var m = new T3.Mesh(g, new T3.MeshToonMaterial({vertexColors:true, gradientMap:toonGrad()}));
   m.receiveShadow = true; m.name = 'terrain';
   var bed = new T3.Mesh(new T3.PlaneGeometry(160, 160), std(PAL.deep, {roughness:1})); bed.rotation.x = -Math.PI / 2; bed.position.set(C[0], -1.72, C[1]); scene.add(bed);
   scene.add(m); O.terrain = m;
@@ -96,7 +151,7 @@ function buildTerrain(){
 
 function buildWater(){
   var g = new T3.PlaneGeometry(120, 120, 90, 90); g.rotateX(-Math.PI / 2); g.translate(C[0], SEA, C[1]);
-  var m = new T3.Mesh(g, new T3.MeshStandardMaterial({color:'#3ea3c4', transparent:true, opacity:.78, roughness:.18, metalness:.08}));
+  var m = new T3.Mesh(g, new T3.MeshToonMaterial({color:'#47c6e6', transparent:true, opacity:.82, gradientMap:toonGrad()}));
   m.receiveShadow = true; scene.add(m);
   O.water = m; O.waterBase = Float32Array.from(g.attributes.position.array);
   // 浪花：沿海岸一圈
@@ -142,7 +197,7 @@ function buildRoads(){
         for (var z = -len / 2 + .1; z <= len / 2; z += .35){ var post = new T3.Mesh(new T3.BoxGeometry(.05, .2, .05), beam); post.position.set(x, .1, z); g.add(post); }
       });
       var arch = new T3.Mesh(new T3.BoxGeometry(.5, .5, .12), beam); arch.position.set(0, -.3, 0); g.add(arch);
-      scene.add(shadowAll(g));
+      scene.add(inkAll(shadowAll(g), .014));
     });
     // 路燈
     road.forEach(function(q, i){
@@ -208,7 +263,7 @@ function buildBuilding(t){
     var lamp = new T3.Mesh(new T3.CylinderGeometry(.15, .15, .2, 12), lampM); lamp.position.y = h + .1; g.add(lamp);
     var cap = new T3.Mesh(new T3.ConeGeometry(.2, rh + .1, 12), std('#e05a47')); cap.position.y = h + .2 + (rh + .1) / 2; g.add(cap);
     var beam = new T3.Mesh(new T3.ConeGeometry(.9, 6, 20, 1, true), new T3.MeshBasicMaterial({color:'#ffe9a3', transparent:true, opacity:0, depthWrite:false, side:T3.DoubleSide, blending:T3.AdditiveBlending}));
-    beam.geometry.translate(0, -3, 0); beam.rotation.z = Math.PI / 2;
+    beam.geometry.translate(0, -3, 0); beam.rotation.z = Math.PI / 2; beam.userData.noInk = true;
     var pivot = new T3.Group(); pivot.position.y = h + .1; pivot.add(beam); g.add(pivot);
     O.beam = {pivot:pivot, mat:beam.material}; t.emis = [lampM]; top = h + rh + .3;
   } else {
@@ -222,7 +277,7 @@ function buildBuilding(t){
     } else if (st === 'school'){
       var slab = new T3.Mesh(new T3.BoxGeometry(w + .1, .07, w + .1), roofM); slab.position.y = h + .035; g.add(slab);
       var pole = new T3.Mesh(new T3.CylinderGeometry(.015, .015, .8, 6), std('#3c4a52')); pole.position.set(-w / 2 + .08, h + .4, -w / 2 + .08); g.add(pole);
-      var flag = new T3.Mesh(new T3.PlaneGeometry(.32, .2), std(z.color, {side:T3.DoubleSide})); flag.position.set(-w / 2 + .25, h + .68, -w / 2 + .08); g.add(flag);
+      var flag = new T3.Mesh(new T3.PlaneGeometry(.32, .2), std(z.color, {side:T3.DoubleSide})); flag.position.set(-w / 2 + .25, h + .68, -w / 2 + .08); flag.userData.noInk = true; g.add(flag);
       O.anim.push(function(tm){ flag.rotation.y = Math.sin(tm * 3 + hv) * .25; });
       var clockM = new T3.Mesh(new T3.CylinderGeometry(.11, .11, .02, 20), std('#ffffff')); clockM.rotation.x = Math.PI / 2; clockM.position.set(0, h - .2, w / 2 + .012); g.add(clockM);
       top = h + .9;
@@ -269,14 +324,15 @@ function buildBuilding(t){
   // 探索過的小旗
   var fl = new T3.Group(); fl.position.set(w * .3, top + .02, w * .3);
   var fp = new T3.Mesh(new T3.CylinderGeometry(.01, .01, .45, 5), std('#14303d')); fp.position.y = .22; fl.add(fp);
-  var ff = new T3.Mesh(new T3.PlaneGeometry(.22, .13), std('#ff6f59', {side:T3.DoubleSide})); ff.position.set(.11, .38, 0); fl.add(ff);
+  var ff = new T3.Mesh(new T3.PlaneGeometry(.22, .13), std('#ff6f59', {side:T3.DoubleSide})); ff.position.set(.11, .38, 0); ff.userData.noInk = true; fl.add(ff);
   fl.visible = false; g.add(fl);
   shadowAll(g);
   g.traverse(function(m){ if (m.isMesh){ m.userData.id = t.id; O.pick.push(m); } });
   scene.add(g);
   var mats = [];
   g.traverse(function(m){ if (m.isMesh) (Array.isArray(m.material) ? m.material : [m.material]).forEach(function(mt){ if (mats.indexOf(mt) < 0){ mt.userData.op = mt.opacity; mats.push(mt); } }); });
-  O.blds[t.id] = {t:t, g:g, flag:fl, base:base, top:base + top, mats:mats, fade:1, box:new T3.Box3().setFromObject(g)};
+  inkAll(g, .016);
+  O.blds[t.id] = {t:t, g:g, flag:fl, base:base, top:base + top, mats:mats, lines:g.userData.inks, fade:1, box:new T3.Box3().setFromObject(g)};
 }
 
 function buildDecor(){
@@ -311,7 +367,7 @@ function buildDecor(){
   var pier = new T3.Group(); pier.position.set(14.07, DECK - .05, 16.52);
   pier.add(new T3.Mesh(new T3.BoxGeometry(1.55, .06, .65), std('#d0a46e')));
   [-.7, 0, .7].forEach(function(x){ [-.28, .28].forEach(function(zz){ var p = new T3.Mesh(new T3.CylinderGeometry(.03, .03, .8, 6), std('#7d5530')); p.position.set(x, -.38, zz); pier.add(p); }); });
-  scene.add(shadowAll(pier));
+  scene.add(inkAll(shadowAll(pier), .014));
   // 場地邊框旗桿＋地塊外框淡淡的彩色緣石
   ZONES.forEach(function(z){
     if (z.id === 'strategy') return;
@@ -325,33 +381,76 @@ function buildDecor(){
   });
 }
 
+function mergeGeo(list){                          // 簡易合併（全部轉成非索引）
+  var pos = [], nor = [];
+  list.forEach(function(g){ g = g.index ? g.toNonIndexed() : g; pos.push.apply(pos, g.attributes.position.array); nor.push.apply(nor, g.attributes.normal.array); });
+  var out = new T3.BufferGeometry(); out.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); out.setAttribute('normal', new T3.Float32BufferAttribute(nor, 3));
+  return out;
+}
+function blob(r, x, y, z){ var g = new T3.IcosahedronGeometry(r, 2); g.translate(x, y, z); return g; }
 function buildTrees(){
   var list = (L.trees || []).filter(function(t){ return landY(t.gx, t.gy) > SEA + .15; });
-  var trunkG = new T3.CylinderGeometry(.03, .045, .26, 6); trunkG.translate(0, .13, 0);
-  var pineG = new T3.ConeGeometry(.2, .55, 7); pineG.translate(0, .52, 0);
-  var roundG = new T3.IcosahedronGeometry(.22, 1); roundG.translate(0, .45, 0);
-  var trunk = new T3.InstancedMesh(trunkG, std('#8a6239'), list.length);
-  var pines = list.filter(function(t, i){ return hash(t.gx.toFixed(2) + t.gy.toFixed(2)) % 3 === 0; }), rounds = list.filter(function(t){ return pines.indexOf(t) < 0; });
-  var pineM = new T3.InstancedMesh(pineG, std('#ffffff', {flatShading:true}), pines.length);
-  var roundM = new T3.InstancedMesh(roundG, std('#ffffff', {flatShading:true, roughness:.9}), rounds.length);
+  var trunkG = new T3.CylinderGeometry(.035, .05, .26, 7); trunkG.translate(0, .13, 0);
+  var roundG = mergeGeo([blob(.2, 0, .44, 0), blob(.15, .13, .36, .04), blob(.14, -.12, .37, -.03), blob(.13, .02, .6, -.02)]);
+  var c1 = new T3.ConeGeometry(.22, .36, 9); c1.translate(0, .38, 0);
+  var c2 = new T3.ConeGeometry(.16, .3, 9); c2.translate(0, .6, 0);
+  var pineG = mergeGeo([c1, c2]);
+  var pines = list.filter(function(t){ return hash(t.gx.toFixed(2) + t.gy.toFixed(2)) % 3 === 0; }), rounds = list.filter(function(t){ return pines.indexOf(t) < 0; });
+  var trunk = new T3.InstancedMesh(trunkG, std('#9a6a3f'), list.length);
+  var pineM = new T3.InstancedMesh(pineG, std('#ffffff'), pines.length);
+  var roundM = new T3.InstancedMesh(roundG, std('#ffffff'), rounds.length);
   var m = new T3.Matrix4(), q = new T3.Quaternion(), s = new T3.Vector3(), p = new T3.Vector3(), c = new T3.Color(), e = new T3.Euler();
   function place(t, k){ var sc = (t.big ? 1.3 : 1) * k; e.set(0, (t.gx * 7 + t.gy * 3) % 6.28, 0); q.setFromEuler(e); s.set(sc, sc, sc); p.set(t.gx, landY(t.gx, t.gy) - .02, t.gy); m.compose(p, q, s); return m; }
   list.forEach(function(t, i){ trunk.setMatrixAt(i, place(t, 1)); });
-  var GREENS_ = ['#4f9a5a', '#3f8550', '#5aa95c', '#6bb35a', '#45905a'];
-  pines.forEach(function(t, i){ pineM.setMatrixAt(i, place(t, 1)); pineM.setColorAt(i, c.set(GREENS_[hash(i + 'p') % 5])); });
-  rounds.forEach(function(t, i){ roundM.setMatrixAt(i, place(t, .95)); roundM.setColorAt(i, c.set(GREENS_[hash(i + 'r') % 5])); });
-  [trunk, pineM, roundM].forEach(function(o){ o.castShadow = true; o.receiveShadow = true; scene.add(o); });
+  var LEAF = ['#5cc45a', '#48b354', '#7ed35f', '#3fa65c', '#93db6a', '#f2a7c3'];   // 偶爾一棵櫻花
+  pines.forEach(function(t, i){ pineM.setMatrixAt(i, place(t, 1)); pineM.setColorAt(i, c.set(LEAF[hash(i + 'p') % 4])); });
+  rounds.forEach(function(t, i){ roundM.setMatrixAt(i, place(t, .95)); roundM.setColorAt(i, c.set(LEAF[hash(i + 'r') % 11 === 0 ? 5 : hash(i + 'r') % 5])); });
+  [trunk, pineM, roundM].forEach(function(o){ o.castShadow = true; o.receiveShadow = true; scene.add(o); inkMesh(o, .014); });
+  // 記下每棵樹在哪個 InstancedMesh 的第幾個，擋到視線時暫時縮成 0
+  O.trees = list.map(function(t, i){
+    var isPine = pines.indexOf(t) >= 0, mesh = isPine ? pineM : roundM, k = isPine ? pines.indexOf(t) : rounds.indexOf(t);
+    var a = new T3.Matrix4(), b = new T3.Matrix4(); trunk.getMatrixAt(i, a); mesh.getMatrixAt(k, b);
+    return {gx:t.gx, gy:t.gy, y:landY(t.gx, t.gy), parts:[[trunk, i, a], [mesh, k, b]], hidden:false};
+  });
 }
-
+function buildFlowers(){
+  var pts = [], r = rng(7), tries = 0;
+  while (pts.length < 520 && tries++ < 9000){
+    var a = r() * Math.PI * 2, d = Math.sqrt(r()) * 12, gx = C[0] + Math.cos(a) * d, gy = C[1] + Math.sin(a) * d;
+    if (edgeD(gx, gy) > -.8 || landY(gx, gy) < LAND - .05 || riverDist(gx, gy) < 1.0 || minDist(ROAD_S, gx, gy) < .35) continue;
+    var z = zoneOfPoint(gx, gy); if (z && z.id !== 'idea') continue;
+    if (TOOLS.some(function(t){ return Math.abs(gx - t.gx) < t.s + .2 && Math.abs(gy - t.gy) < t.s + .2; })) continue;
+    pts.push([gx, gy]);
+  }
+  var g = new T3.IcosahedronGeometry(.02, 0), mesh = new T3.InstancedMesh(g, new T3.MeshBasicMaterial({color:'#ffffff'}), pts.length);
+  var stem = new T3.Matrix4(), c = new T3.Color(), FL = ['#ff9ec4', '#ffe066', '#ffffff', '#c7a6ff', '#ff8f8f', '#ffd1e3'];
+  pts.forEach(function(q, i){ stem.makeTranslation(q[0], landY(q[0], q[1]) + .018, q[1]); mesh.setMatrixAt(i, stem); mesh.setColorAt(i, c.set(FL[i % FL.length])); });
+  scene.add(mesh);
+}
 function buildSkyStuff(){
   // 雲
   O.clouds = [];
   for (var i = 0; i < 7; i++){
-    var g = new T3.Group(), cm = std('#ffffff', {roughness:1, flatShading:true, transparent:true, opacity:.92});
-    for (var k = 0; k < 5; k++){ var b = new T3.Mesh(new T3.IcosahedronGeometry(.5 + (k % 3) * .25, 1), cm); b.position.set((k - 2) * .55, Math.sin(k * 2.1) * .15, Math.cos(k * 1.7) * .3); b.scale.y = .65; b.castShadow = true; g.add(b); }
+    var g = new T3.Group(), cm = std('#ffffff', {transparent:true, opacity:.96});
+    for (var k = 0; k < 7; k++){ var b = new T3.Mesh(new T3.IcosahedronGeometry(.45 + (k % 3) * .22, 2), cm); b.position.set((k - 3) * .45, Math.abs(3 - k) < 2 ? .25 : 0, Math.cos(k * 1.7) * .3); b.scale.y = .78; b.castShadow = true; g.add(b); }
     g.position.set(-8 + i * 5, 9 + (i % 3) * .9, -2 + ((i * 7) % 22));
     g.userData.sp = .25 + (i % 3) * .1; scene.add(g); O.clouds.push(g);
   }
+  // 地平線的積雨雲（入道雲）：不受霧影響，遠遠就看得到
+  O.farClouds = [];
+  var fm = std('#ffffff', {fog:false});
+  for (var fc = 0; fc < 11; fc++){
+    var fgp = new T3.Group(), ang = fc / 11 * Math.PI * 2 + .3, rad = 72 + (fc % 3) * 8;
+    for (var kk = 0; kk < 9; kk++){
+      var bb = new T3.Mesh(new T3.IcosahedronGeometry(1, 2), fm), up = kk < 3 ? 0 : kk < 6 ? 1 : 2;
+      var sz = (3.2 - up * .7) * (1 + (fc % 2) * .3);
+      bb.scale.set(sz, sz * .85, sz); bb.position.set((kk % 3 - 1) * sz * 1.1 + up * .6, up * sz * 1.25, (kk % 2) * 1.2);
+      fgp.add(bb);
+    }
+    fgp.position.set(C[0] + Math.cos(ang) * rad, -1.5, C[1] + Math.sin(ang) * rad); fgp.lookAt(C[0], -1.5, C[1]);
+    scene.add(fgp); O.farClouds.push(fgp);
+  }
+  O.farMat = fm;
   // 星星
   var N = 500, sp = new Float32Array(N * 3);
   for (var j = 0; j < N; j++){ var a = Math.random() * Math.PI * 2, el2 = Math.random() * 1.3 + .1, r = 80; sp[j * 3] = C[0] + Math.cos(a) * Math.cos(el2) * r; sp[j * 3 + 1] = Math.sin(el2) * r; sp[j * 3 + 2] = C[1] + Math.sin(a) * Math.cos(el2) * r; }
@@ -373,7 +472,7 @@ function buildSkyStuff(){
   O.boats = [{a:0, r:14.4, s:.03}, {a:2.3, r:15.2, s:-.022}, {a:4.4, r:14.8, s:.026}].map(function(b){
     var g = new T3.Group(), hull = new T3.Mesh(new T3.BoxGeometry(.9, .2, .34), std('#ffffff')); hull.position.y = .1; g.add(hull);
     var sail = new T3.Mesh(new T3.ConeGeometry(.28, .8, 3), std('#ff6f59', {flatShading:true})); sail.scale.z = .15; sail.position.set(.05, .6, 0); g.add(sail);
-    b.g = shadowAll(g); scene.add(g); return b;
+    b.g = inkAll(shadowAll(g), .014); scene.add(g); return b;
   });
   // 海鷗
   O.birds = [];
@@ -410,21 +509,42 @@ function buildLinks(){
 
 /* ---------- 人物 ---------- */
 function makeAv(data, mine){
-  var g = new T3.Group(), skin = std('#f6d3b3'), shirtM = std(data.shirt || '#ff6f59'), hairM = std(data.hair || '#3b2a20'), pants = std('#2b3a44');
-  var hip = new T3.Group(); hip.position.y = .2; g.add(hip);
-  function limb(len, r, mat, x, y){ var p = new T3.Group(); p.position.set(x, y, 0); var m = new T3.Mesh(new T3.CapsuleGeometry(r, len, 3, 8), mat); m.position.y = -len / 2; p.add(m); return p; }
-  var legL = limb(.14, .035, pants, -.05, .2), legR = limb(.14, .035, pants, .05, .2);
+  var g = new T3.Group(), skin = std('#ffe0c7'), shirtM = std(data.shirt || '#ff6f59'), hairM = std(data.hair || '#3b2a20'), pants = std('#4a5a78'), shoe = std('#5a3b30');
+  function limb(len, r, mat, x, y, end){
+    var p = new T3.Group(); p.position.set(x, y, 0);
+    var m = new T3.Mesh(new T3.CapsuleGeometry(r, len, 4, 10), mat); m.position.y = -len / 2 - r * .3; p.add(m);
+    if (end){ var e = new T3.Mesh(new T3.SphereGeometry(end[0], 12, 10), end[1]); e.position.set(0, -len - r * .6, end[2] || 0); e.scale.set(1, .8, end[2] ? 1.35 : 1); p.add(e); }
+    return p;
+  }
+  var legL = limb(.05, .033, pants, -.045, .12, [.04, shoe, .015]), legR = limb(.05, .033, pants, .045, .12, [.04, shoe, .015]);
   g.add(legL); g.add(legR);
-  var torso = new T3.Mesh(new T3.CapsuleGeometry(.075, .12, 4, 10), shirtM); torso.position.y = .31; g.add(torso);
-  var armL = limb(.12, .025, skin, -.105, .38), armR = limb(.12, .025, skin, .105, .38); g.add(armL); g.add(armR);
-  var head = new T3.Mesh(new T3.SphereGeometry(.085, 16, 12), skin); head.position.y = .5; g.add(head);
-  var hair = new T3.Mesh(new T3.SphereGeometry(.09, 16, 10, 0, Math.PI * 2, 0, Math.PI * .55), hairM); hair.position.y = .515; hair.rotation.x = -.25; g.add(hair);
-  [-.03, .03].forEach(function(x){ var eye = new T3.Mesh(new T3.SphereGeometry(.011, 6, 6), std('#14303d')); eye.position.set(x, .5, .08); g.add(eye); });
-  shadowAll(g); scene.add(g);
+  var torso = new T3.Mesh(new T3.CapsuleGeometry(.075, .05, 6, 14), shirtM); torso.position.y = .19; torso.scale.set(1, 1, .9); g.add(torso);
+  var armL = limb(.06, .022, shirtM, -.095, .245, [.03, skin]), armR = limb(.06, .022, shirtM, .095, .245, [.03, skin]);
+  armL.rotation.z = -.25; armR.rotation.z = .25; g.add(armL); g.add(armR);
+  var head = new T3.Group(); head.position.y = .39; g.add(head);
+  var face = new T3.Mesh(new T3.SphereGeometry(.14, 24, 18), skin); face.scale.set(1, .94, .96); head.add(face);
+  var cap = new T3.Mesh(new T3.SphereGeometry(.152, 24, 14, 0, Math.PI * 2, 0, Math.PI * .5), hairM); cap.rotation.x = -.42; cap.position.y = .012; head.add(cap);
+  [[-.07, .06], [0, .085], [.07, .06]].forEach(function(b){ var bang = new T3.Mesh(new T3.SphereGeometry(.055, 14, 10), hairM); bang.position.set(b[0], b[1], .1); bang.scale.set(1, .7, .55); head.add(bang); });
+  var tail = new T3.Mesh(new T3.SphereGeometry(.06, 14, 10), hairM); tail.position.set(0, -.02, -.14); head.add(tail);
+  var noInk = [], eyes = [];
+  [-.052, .052].forEach(function(x){
+    var eye = new T3.Mesh(new T3.SphereGeometry(.028, 14, 12), new T3.MeshBasicMaterial({color:'#2b2140'}));
+    eye.position.set(x, -.012, .124); eye.scale.set(.82, 1.25, .5); head.add(eye); eyes.push(eye); noInk.push(eye);
+    var hl = new T3.Mesh(new T3.SphereGeometry(.011, 8, 6), new T3.MeshBasicMaterial({color:'#ffffff'}));
+    hl.position.set(.3, .4, 1.15); hl.scale.set(1.2, .8, 2); eye.add(hl); noInk.push(hl);
+    var blush = new T3.Mesh(new T3.SphereGeometry(.024, 12, 8), new T3.MeshBasicMaterial({color:'#ff8fa8', transparent:true, opacity:.55, depthWrite:false}));
+    blush.position.set(x * 1.45, -.052, .112); blush.scale.set(1.1, .5, .35); head.add(blush); noInk.push(blush);
+  });
+  var mouth = new T3.Mesh(new T3.TorusGeometry(.016, .0045, 6, 12, Math.PI), new T3.MeshBasicMaterial({color:'#a24a52'}));
+  mouth.position.set(0, -.055, .132); mouth.rotation.z = Math.PI; head.add(mouth); noInk.push(mouth);
+  noInk.forEach(function(m){ m.userData.noInk = true; });
+  g.scale.setScalar(1.05);
+  shadowAll(g); noInk.forEach(function(m){ m.castShadow = false; });
+  inkAll(g, .009); scene.add(g);
   var tag = document.createElement('div'); tag.className = 'av3' + (mine ? ' mine' : '');
   if (mine){ tag.title = '點一下改名字'; tag.addEventListener('click', function(e){ e.stopPropagation(); openNamePop(); }); tag.addEventListener('pointerdown', function(e){ e.stopPropagation(); }); }
   labRoot.appendChild(tag);
-  return {g:g, legL:legL, legR:legR, armL:armL, armR:armR, shirt:shirtM, hair:hairM, tag:tag, last:'', px:null, pz:null, yaw:0};
+  return {g:g, head:head, eyes:eyes, legL:legL, legR:legR, armL:armL, armR:armR, shirt:shirtM, hair:hairM, tag:tag, last:'', px:null, pz:null, yaw:0, blink:2 + Math.random() * 3, t:0};
 }
 function poseAv(a, o, name, shirt, hair, dt){
   var x = o.gx, z = o.gy, moving = false;
@@ -432,9 +552,14 @@ function poseAv(a, o, name, shirt, hair, dt){
   a.px = x; a.pz = z;
   a.g.position.set(x, standY(x, z), z); a.g.rotation.y = a.yaw;
   var sw = moving ? Math.sin(o.phase) * .7 : 0;
-  a.legL.rotation.x = sw; a.legR.rotation.x = -sw; a.armL.rotation.x = -sw * .8; a.armR.rotation.x = sw * .8;
-  a.g.children[0].position.y = .2;
-  a.g.position.y += moving ? Math.abs(Math.sin(o.phase)) * .025 : 0;
+  a.legL.rotation.x = sw; a.legR.rotation.x = -sw; a.armL.rotation.x = -sw * 1.1; a.armR.rotation.x = sw * 1.1;
+  a.t += dt;
+  a.g.position.y += moving ? Math.abs(Math.sin(o.phase)) * .04 : 0;                     // 走路一蹦一蹦
+  a.head.rotation.z = moving ? Math.sin(o.phase) * .07 : Math.sin(a.t * 1.6) * .04;   // 走路晃頭、站著輕輕搖
+  a.head.position.y = .39 + (moving ? 0 : Math.sin(a.t * 2.4) * .006);                // 站著時的呼吸
+  a.blink -= dt;
+  var lid = a.blink < 0 ? .12 : 1.25; if (a.blink < -.12) a.blink = 2 + Math.random() * 3.5;
+  a.eyes.forEach(function(e){ e.scale.y = lid; });
   var label = (hasBadWord(name) ? '旅人' : name) + (a.tag.classList.contains('mine') ? '（你）✎' : '');
   if (label !== a.last){ a.tag.textContent = label; a.last = label; }
   if (shirt && a.shirtHex !== shirt){ a.shirt.color.set(shirt); a.tag.style.background = shirt; a.shirtHex = shirt; }
@@ -498,7 +623,7 @@ function placeLabels(){
     o.el.classList.toggle('sel', state.sel === o.b.t.id); o.el.classList.toggle('dim', !!dim);
   });
   O.zoneTags.forEach(function(o){ put(o.el, o.x, o.y, o.z, 30, 60, .7); });
-  Object.keys(O.avs).forEach(function(id){ var a = O.avs[id]; put(a.tag, a.g.position.x, a.g.position.y + .75, a.g.position.z, 18, 40, .6); });
+  Object.keys(O.avs).forEach(function(id){ var a = O.avs[id]; put(a.tag, a.g.position.x, a.g.position.y + .7, a.g.position.z, 18, 40, .6); });
 }
 
 /* ---------- 天色：跟本機時間同步，或手動切白天／黃昏／夜晚 ---------- */
@@ -509,22 +634,25 @@ function updateSky(force){
   if (!force && Math.abs(dk - sky.dk) < .002 && sky.h === Math.floor(h * 4)) return;
   sky.dk = dk; sky.h = Math.floor(h * 4);
   var dusk = dk > 0 && dk < 1 ? 1 - Math.abs(dk - .5) * 2 : 0;
-  var bg = col('#9dd6ee').lerp(col('#0b1830'), dk).lerp(col('#f4a876'), dusk * .55);
-  scene.background = bg; scene.fog.color.copy(bg);
+  var topC = col('#2f86e0').lerp(col('#060c26'), dk).lerp(col('#5b5fb0'), dusk * .7);
+  var horC = col('#c6ecfa').lerp(col('#1b2c58'), dk).lerp(col('#ffb48a'), dusk * .8);
+  O.dome.material.uniforms.top.value.copy(topC); O.dome.material.uniforms.hor.value.copy(horC);
+  scene.fog.color.copy(horC);
   var day = h >= 5 && h < 19.5, az = (h - 6) / 13.5 * Math.PI;
   var elev = day ? Math.max(.12, Math.sin(Math.max(.05, Math.min(Math.PI - .05, az)))) : .7;
   var dir = day ? Math.cos(Math.max(.05, Math.min(Math.PI - .05, az))) : -.4;
   sun.position.set(C[0] + dir * 18, 4 + elev * 20, C[1] - 10 + dir * 4);
   sun.target.position.set(C[0], 0, C[1]);
   sun.color.copy(col('#fff4e0').lerp(col('#ffb06b'), dusk).lerp(col('#9db8ff'), dk * (1 - dusk)));
-  sun.intensity = 2.6 * (1 - dk) + .7 * dk;
-  hemi.intensity = 1.05 * (1 - dk) + .55 * dk;
+  sun.intensity = 1.9 * (1 - dk) + .75 * dk;
+  hemi.intensity = 1.25 * (1 - dk) + .7 * dk;
   hemi.color.copy(col('#dff3ff').lerp(col('#3a4f88'), dk)); hemi.groundColor.copy(col('#8a9a6a').lerp(col('#1a2238'), dk));
-  O.water.material.color.copy(col('#3ea3c4').lerp(col('#123e5a'), dk));
+  O.water.material.color.copy(col('#47c6e6').lerp(col('#1d4f86'), dk).lerp(col('#f0a58f'), dusk * .35));
   O.stars.material.opacity = Math.max(0, dk - .25) * 1.2;
   O.flies.material.opacity = Math.max(0, dk - .4) * 1.4;
   O.bulbMat.emissiveIntensity = dk > .3 ? 2.2 * dk : 0;
   O.clouds.forEach(function(c){ c.children[0].material.color.copy(col('#ffffff').lerp(col('#5a6a8a'), dk).lerp(col('#ffd2b0'), dusk * .5)); });
+  O.farMat.color.copy(col('#ffffff').lerp(col('#2a3766'), dk).lerp(col('#ffc0a0'), dusk * .7));
   TOOLS.forEach(function(t){
     var on = h >= t.hour[0] && h < t.hour[1];
     var v = dk > .15 && on ? 1.6 * Math.min(1, dk * 1.5) : dk > .5 ? .12 : 0;
@@ -692,7 +820,9 @@ function frame(ts){
   TOOLS.forEach(function(t){ O.blds[t.id].flag.visible = !!state.seen[t.id]; });
   syncAvatars(dt);
   camApply(dt);
+  O.dome.position.copy(camera.position);
   fadeOccluders(dt);
+  hideTrees();
   updateSky(false);
   soundTick(tm);
   renderer.render(scene, camera);
@@ -713,8 +843,25 @@ function fadeOccluders(dt){
     if (Math.abs(b.fade - want) < .01) return;
     b.fade += (want - b.fade) * Math.min(1, dt * 8); if (Math.abs(b.fade - want) < .01) b.fade = want;
     b.mats.forEach(function(m){ var o = m.userData.op * b.fade; m.transparent = o < .999 || m.userData.op < 1; m.opacity = o; m.depthWrite = o > .9; m.needsUpdate = true; });
-    b.g.traverse(function(m){ if (m.isMesh) m.castShadow = b.fade > .9; });
+    b.g.traverse(function(m){ if (m.isMesh && !m.userData.ink) m.castShadow = b.fade > .9; });
+    b.lines.forEach(function(l){ l.visible = b.fade > .6; });
   });
+}
+var ZERO_M = null;
+function hideTrees(){
+  if (!ZERO_M) ZERO_M = new T3.Matrix4().makeScale(0, 0, 0);
+  var c = camera.position, me3 = O.avs.me.g.position, dx = me3.x - c.x, dz = me3.z - c.z, L2 = dx * dx + dz * dz, dirty = {};
+  O.trees.forEach(function(t){
+    var u = L2 ? ((t.gx - c.x) * dx + (t.gy - c.z) * dz) / L2 : 0, hide = false;
+    if (!cam.overview && u > 0 && u < 1.02){
+      var px = c.x + dx * u, pz = c.z + dz * u, py = c.y + (me3.y + .3 - c.y) * u;
+      hide = Math.hypot(t.gx - px, t.gy - pz) < .42 && py < t.y + 1;
+    }
+    if (hide === t.hidden) return;
+    t.hidden = hide;
+    t.parts.forEach(function(pt){ pt[0].setMatrixAt(pt[1], hide ? ZERO_M : pt[2]); dirty[pt[0].uuid] = pt[0]; });
+  });
+  Object.keys(dirty).forEach(function(k){ dirty[k].instanceMatrix.needsUpdate = true; });
 }
 function zoneBanner(ts){
   var z = zoneAt(walker.gx, walker.gy), el2 = $('zoneBanner');
@@ -732,9 +879,17 @@ function build(){
   var small = Math.min(window.innerWidth, window.innerHeight) < 600;
   renderer = new T3.WebGLRenderer({canvas:canvas, antialias:true, powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2));
-  renderer.outputColorSpace = T3.SRGBColorSpace; renderer.toneMapping = T3.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  renderer.outputColorSpace = T3.SRGBColorSpace; renderer.toneMapping = T3.NoToneMapping;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = T3.PCFSoftShadowMap;
-  scene = new T3.Scene(); scene.fog = new T3.Fog('#9dd6ee', 30, 75);
+  scene = new T3.Scene(); scene.fog = new T3.Fog('#c6ecfa', 34, 95);
+  O.dome = new T3.Mesh(new T3.SphereGeometry(160, 32, 16), new T3.ShaderMaterial({
+    side:T3.BackSide, depthWrite:false, fog:false,
+    uniforms:{top:{value:new T3.Color('#2f86e0')}, hor:{value:new T3.Color('#c6ecfa')}},
+    vertexShader:'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader:'uniform vec3 top; uniform vec3 hor; varying vec3 vP; void main(){ float h = clamp(vP.y, 0.0, 1.0); gl_FragColor = vec4(mix(hor, top, pow(h, 0.55)), 1.0);\n#include <colorspace_fragment>\n}'
+  }));
+  O.dome.renderOrder = -1; O.dome.raycast = noPick;
+  scene.add(O.dome);
   camera = new T3.PerspectiveCamera(48, 1, .05, 220);
   hemi = new T3.HemisphereLight('#dff3ff', '#8a9a6a', 1); scene.add(hemi);
   sun = new T3.DirectionalLight('#fff4e0', 2.6); sun.castShadow = true;
@@ -742,7 +897,7 @@ function build(){
   var sc = sun.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 70; sun.shadow.bias = -.0004; sun.shadow.normalBias = .02;
   scene.add(sun); scene.add(sun.target);
   raycaster = new T3.Raycaster(); ndc = new T3.Vector2(); V = new T3.Vector3();
-  buildTerrain(); buildWater(); buildRoads(); TOOLS.forEach(buildBuilding); buildDecor(); buildTrees(); buildSkyStuff(); buildLabels();
+  buildTerrain(); buildWater(); buildRoads(); TOOLS.forEach(buildBuilding); buildDecor(); buildTrees(); buildFlowers(); buildSkyStuff(); buildLabels();
   O.ring = new T3.Mesh(new T3.RingGeometry(.42, .5, 40), new T3.MeshBasicMaterial({color:'#ff6f59', transparent:true, opacity:.9, side:T3.DoubleSide, depthWrite:false}));
   O.ring.rotation.x = -Math.PI / 2; scene.add(O.ring);
   built = true;
@@ -800,6 +955,6 @@ document.addEventListener('visibilitychange', function(){ if (document.hidden) s
 window.Island3D = {
   enter:enter, leave:leave, links:buildLinks,
   overview:function(){ setOverview(!cam.overview); },
-  get active(){ return active; }, get built(){ return built; }, cam:cam, prefs:prefs
+  get active(){ return active; }, get built(){ return built; }, cam:cam, prefs:prefs, O:O
 };
 })();
