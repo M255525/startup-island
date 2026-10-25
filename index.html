@@ -78,6 +78,17 @@ a{color:inherit}
 #map.dragging{cursor:grabbing}
 .bld{cursor:pointer}
 .bld .hit{fill:transparent}
+.board{cursor:pointer}
+.board .hit{fill:transparent}
+.board:focus{outline:none}
+.board .ring{animation:ring 1.6s ease-in-out infinite}
+.board-flag{animation:bob 1.8s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translate(0,-74px)}50%{transform:translate(0,-79px)}}
+.paused .board .ring,.paused .board-flag{animation-play-state:paused}
+.board-lines{margin:0 0 12px;padding:12px 12px 12px 30px;background:var(--panel-2);border-radius:12px;font-size:14px;font-weight:500}
+.board-lines li{margin:3px 0}
+.board-detail{font-size:13.5px;line-height:1.75;margin:0 0 14px;color:var(--ink-dim)}
+.board-src{font-size:11.5px;color:var(--ink-faint);margin:0}
 .bld:hover .roof,.bld:focus .roof{filter:brightness(1.12)}
 .bld:focus{outline:none}
 .bld:focus .ring{opacity:1}
@@ -111,6 +122,7 @@ body.view-3d #map{display:none}
 .lab3d>*{position:absolute;left:0;top:0;transform-origin:50% 100%;will-change:transform}
 .tag3{pointer-events:auto;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:700 12px var(--f-body);padding:3px 10px;border-radius:999px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(12,48,64,.18)}
 .tag3:hover,.tag3.sel{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.tag3.board3{background:#ffd23f;color:#3b2f3a;border:2px solid #3b2f3a;font-size:14px;padding:4px 12px;box-shadow:0 0 0 4px rgba(255,210,63,.35),0 3px 10px rgba(12,48,64,.25)}
 .tag3.dim{filter:saturate(.3);opacity:.45!important}
 .zone3{text-align:center;color:#fff;white-space:nowrap;text-shadow:0 0 4px var(--zc,#2f5b3a),0 0 4px var(--zc,#2f5b3a),0 2px 6px rgba(0,0,0,.35)}
 .zone3 b{display:block;font:400 19px var(--f-display);letter-spacing:.06em}
@@ -724,6 +736,57 @@ var HILLS = [
   {id:'strategy', at:[3.8,3.8], layers:[[3.1,13],[2.5,26]]},            // [半徑, 高度 px]
   {id:'lookout', at:[15.3,6.9], layers:[[1.4,10],[.85,20]], name:'觀景小山', en:'LOOKOUT HILL', label:[16.9,5.9]}
 ];
+// 創業看板：試算商辦區旁的大看板，文字由管理者在 Google 試算表「創業島的看板」編輯
+// 試算表要設成「知道連結的任何人可以檢視」；讀不到時用 BOARD_DEFAULT，並沿用上次成功讀到的內容（localStorage）
+var BOARD_SHEET = '1h7s_0UlzJ7E1Cya-JMiV-AdLWS7eitoVS5mwS616lYI', KEY_BOARD = 'startupIslandBoard';
+var BOARD_AT = [18.55, 5.6];
+var BOARD_FIELDS = [   // [程式用 key, 試算表 A 欄名稱, 字數上限]
+  ['title', '標題', 8], ['sub', '副標', 16], ['l1', '內容1', 14], ['l2', '內容2', 14], ['l3', '內容3', 14],
+  ['foot', '底部', 20], ['detail', '詳細說明', 300], ['link', '連結', 300], ['linkText', '連結文字', 10], ['color', '主色', 7]
+];
+var BOARD_DEFAULT = {title:'損益兩平', sub:'開店前，先把數字算清楚', l1:'固定成本 ÷ 毛利率', l2:'＝每月至少要賣的營業額', l3:'不夠？先調價格或成本', foot:'點看板看完整說明',
+  detail:'損益兩平營業額＝每月固定成本（租金、薪資、水電、貸款利息）÷ 毛利率。算出來的數字就是每個月至少要做到的營業額；如果覺得做不到，先回頭調整價格、成本或店面大小，再決定要不要開店。',
+  link:'https://m255525.github.io/restaurant-feasibility-calculator/', linkText:'去試算看看', color:'#2ec4b6'};
+var board = Object.assign({}, BOARD_DEFAULT, lsGet(KEY_BOARD, {}), {src:'default'});
+function cleanBoard(raw){
+  var out = {};
+  BOARD_FIELDS.forEach(function(f){
+    var v = raw[f[0]]; if (v == null) return;
+    v = String(v).replace(/[\u0000-\u001f]/g, f[0] === 'detail' ? function(c){ return c === '\n' ? '\n' : ''; } : '').trim();
+    if (!v) return;
+    if (f[0] === 'link' && !/^https:\/\/[^\s<>"]+$/.test(v)) return;           // 只接受 https 連結
+    if (f[0] === 'color' && !/^#[0-9a-fA-F]{6}$/.test(v)) return;
+    out[f[0]] = Array.from(v).slice(0, f[2]).join('');                         // 超過字數就截斷
+  });
+  return out;
+}
+function boardFromSheet(res){                     // gviz JSON：A 欄＝欄位名稱、B 欄＝內容
+  var rows = (res && res.table && res.table.rows) || [], byName = {}, raw = {};
+  BOARD_FIELDS.forEach(function(f){ byName[f[1]] = f[0]; });
+  rows.forEach(function(r){
+    var c = r.c || [], k = c[0] && (c[0].f || c[0].v), v = c[1] && (c[1].f != null ? c[1].f : c[1].v);
+    k = String(k == null ? '' : k).trim();
+    if (byName[k] && v != null) raw[byName[k]] = v;
+  });
+  return cleanBoard(raw);
+}
+function applyBoard(data, src){
+  board = Object.assign({}, BOARD_DEFAULT, data, {src:src});
+  if (src === 'sheet') lsSet(KEY_BOARD, data);
+  drawBoard2D();
+  if (window.Island3D && Island3D.board) Island3D.board();
+  if (state.boardOpen) openBoard(true);
+}
+function loadBoard(){
+  var cb = '__islandBoard' + Date.now(), sc = document.createElement('script'), done = false;
+  function cleanup(){ try { delete window[cb]; } catch(e){ window[cb] = undefined; } sc.remove(); }
+  window[cb] = function(res){ done = true; cleanup(); if (res && res.status === 'ok') applyBoard(boardFromSheet(res), 'sheet'); };
+  sc.onerror = cleanup;
+  sc.src = 'https://docs.google.com/spreadsheets/d/' + BOARD_SHEET + '/gviz/tq?tqx=out:json;responseHandler:' + cb + '&headers=1&t=' + Date.now();
+  document.head.appendChild(sc);
+  setTimeout(function(){ if (!done) cleanup(); }, 15000);
+}
+function escHtml(v){ return String(v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]; }); }
 var GREENS = [{at:[6.5,9.5], r:1.25, name:'河畔綠地', en:'RIVERSIDE GREEN', label:[5.4,10.6]}];
 var WATERS = [{at:[.9,9.9], r:.75}, {at:[16.0,11.3], r:.5}];          // 公園池塘、廣場噴水池
 // 每個工具在島上的位置（格子座標）
@@ -975,6 +1038,8 @@ function buildMap(){
       el('line', {x1:0, y1:9, x2:0, y2:-dy - 2, stroke:'var(--ink-faint)', 'stroke-width':1, 'stroke-dasharray':'2 2'}, t.tagG).parentNode.insertBefore(t.tagG.lastChild, t.tagG.firstChild);
     }
   });
+  L.boardTag = el('g', {class:'board-tag'}, svg);
+  drawBoard2D();
   L.ptags = el('g', {'pointer-events':'none'}, svg);   // 人物名牌永遠在最上層，走到建築後面也看得到名字
   buildAvatar();
   L.clouds = el('g', {'pointer-events':'none', opacity:.4}, svg);
@@ -985,6 +1050,30 @@ function buildMap(){
   }
   svg.insertBefore(L.clouds, L.links);   // 雲在建築之上、接力線與標籤之下，不擋字
   drawLinks();
+}
+
+// 創業看板（平面）：兩根柱子＋看板，上方有醒目的「📋 看板」標籤；內容換了就重畫
+function drawBoard2D(){
+  if (!L.blds) return;
+  if (L.board) L.board.remove();
+  var p = up(iso(BOARD_AT[0], BOARD_AT[1]), groundAt(BOARD_AT[0], BOARD_AT[1])), c = board.color || '#2ec4b6';
+  var g = el('g', {class:'board', tabindex:0, role:'button', 'aria-label':'創業看板：' + board.title, transform:'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')'}, L.blds);
+  g._d = BOARD_AT[0] + BOARD_AT[1];
+  el('ellipse', {class:'ring', cx:0, cy:0, rx:34, ry:16, fill:'none', stroke:'#ffd23f', 'stroke-width':3}, g);
+  el('ellipse', {cx:4, cy:2, rx:26, ry:7, fill:'rgba(0,0,0,.15)'}, g);
+  [-20, 20].forEach(function(x){ el('rect', {x:x - 1.6, y:-30, width:3.2, height:30, fill:'#5b6770'}, g); });
+  el('rect', {x:-29, y:-62, width:58, height:36, rx:4, fill:'#ffffff', stroke:'#3b2f3a', 'stroke-width':1.6}, g);
+  el('rect', {x:-29, y:-62, width:58, height:12, rx:4, fill:c}, g);
+  el('text', {x:0, y:-53, 'text-anchor':'middle', 'font-size':8.5, 'font-weight':700, fill:'#fff', 'font-family':'var(--f-body)'}, g).textContent = Array.from(board.title).slice(0, 8).join('');
+  [[-22, 8], [-12, 12], [-2, 15], [8, 20]].forEach(function(b){ el('rect', {x:b[0], y:-28 - b[1], width:7, height:b[1], fill:mix(c, '#ffffff', .25)}, g); });
+  el('path', {d:'M-24 -32 L-8 -38 L4 -42 L22 -48', fill:'none', stroke:'#ff6f59', 'stroke-width':2, 'stroke-linecap':'round'}, g);
+  var tg = el('g', {class:'board-flag', transform:'translate(0,-74)'}, g);
+  el('rect', {x:-30, y:-11, width:60, height:20, rx:10, fill:'#ffd23f', stroke:'#3b2f3a', 'stroke-width':1.4}, tg);
+  el('path', {d:'M-4 9 L0 14 L4 9 Z', fill:'#ffd23f', stroke:'#3b2f3a', 'stroke-width':1.2}, tg);
+  el('text', {x:0, y:4, 'text-anchor':'middle', 'font-size':12, 'font-weight':700, fill:'#3b2f3a', 'font-family':'var(--f-body)'}, tg).textContent = '📋 看板';
+  el('polygon', {class:'hit', points:'-34,4 34,4 34,-88 -34,-88'}, g);
+  L.board = g;
+  placeDepth(g, g._d);
 }
 
 // 各場地的地面裝飾
@@ -1669,11 +1758,13 @@ svg.addEventListener('click', function(e){
   if (moved){ moved = false; return; }
   var g = e.target.closest && e.target.closest('.bld');
   if (g) openTool(g.getAttribute('data-id'));
+  else if (e.target.closest && e.target.closest('.board')) openBoard();
   else { var q = clientToGrid(e.clientX, e.clientY); walker.goal = null; walkTo(q[0], q[1]); }
 });
 svg.addEventListener('keydown', function(e){
   var g = e.target.closest && e.target.closest('.bld');
   if (g && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openTool(g.getAttribute('data-id')); }
+  if (!g && e.target.closest && e.target.closest('.board') && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openBoard(); }
 });
 svg.addEventListener('focusin', function(e){
   var g = e.target.closest && e.target.closest('.bld');
@@ -1682,8 +1773,15 @@ svg.addEventListener('focusin', function(e){
 svg.addEventListener('focusout', function(){ $('tip').classList.remove('show'); });
 function hoverTip(e){
   var g = e.target.closest && e.target.closest('.bld');
+  if (!g && e.target.closest && e.target.closest('.board')){ showBoardTip(e.clientX, e.clientY - 12); return; }
   if (!g){ $('tip').classList.remove('show'); return; }
   showTip(toolById[g.getAttribute('data-id')], e.clientX, e.clientY - 12);
+}
+function showBoardTip(x, y){
+  var tip = $('tip'); tip.textContent = '📋 創業看板：' + board.title;
+  tip.style.left = Math.min(window.innerWidth - tip.offsetWidth - 8, Math.max(8, x - tip.offsetWidth/2)) + 'px';
+  tip.style.top = Math.max(8, y - 34) + 'px';
+  tip.classList.add('show');
 }
 function showTip(t, x, y){
   var tip = $('tip'); tip.innerHTML = (t.lic ? '<i class="lic-dot"></i>' : '') + t.name + (t.lic ? '（需序號）' : '');
@@ -1786,6 +1884,7 @@ function relsOf(id){
 }
 function openTool(id){
   var t = toolById[id], z = zoneById[t.zone];
+  state.boardOpen = false;
   if (state.sel && toolById[state.sel]) toolById[state.sel].g.classList.remove('sel');
   state.sel = id; t.g.classList.add('sel');
   closeDrawer('logDrawer');
@@ -1827,9 +1926,31 @@ $('dBody').addEventListener('click', function(e){
   if (e.target.closest('.go')) addLog('前往 ' + toolById[state.sel].name);
 });
 function openDrawer(id){ $(id).classList.add('open'); if (id === 'logDrawer') $('tbLog').setAttribute('aria-pressed', 'true'); }
+function openBoard(refresh){
+  var c = board.color || '#2ec4b6';
+  if (!refresh){
+    if (state.sel && toolById[state.sel]) toolById[state.sel].g.classList.remove('sel');
+    state.sel = null; drawLinks(); closeDrawer('logDrawer');
+    walker.goal = null; walkTo(BOARD_AT[0] - .9, BOARD_AT[1] + .6);
+    addLog('看了創業看板：' + board.title);
+    if (state.view === 'map' || state.view === 'time'){ var bp = iso(BOARD_AT[0], BOARD_AT[1]); var box = padBox({x:bp[0] - 420, y:bp[1] - 340, w:840, h:560}); if (svg.getBoundingClientRect().width > 820) box.x += (200 * box.w / svg.getBoundingClientRect().width); animateTo(box); }
+  }
+  state.boardOpen = true;
+  $('dEyebrow').textContent = 'NOTICE BOARD';
+  $('dBody').innerHTML =
+    '<span class="zone-chip" style="background:#ffd23f">📋 創業看板・試算商辦區</span>' +
+    '<h2 class="d-name" style="color:' + c + '">' + escHtml(board.title) + '</h2>' +
+    '<p class="d-role">' + escHtml(board.sub) + '</p>' +
+    '<ul class="board-lines">' + ['l1', 'l2', 'l3'].filter(function(k){ return board[k]; }).map(function(k){ return '<li>' + escHtml(board[k]) + '</li>'; }).join('') + '</ul>' +
+    (board.detail ? '<p class="board-detail">' + escHtml(board.detail).replace(/\n/g, '<br>') + '</p>' : '') +
+    (board.link ? '<a class="go" href="' + escHtml(board.link) + '" target="_blank" rel="noopener">' + escHtml(board.linkText || '前往連結') + ' ↗</a>' : '') +
+    '<p class="board-src">' + (board.src === 'sheet' ? '內容由管理者在 Google 試算表更新。' : '目前顯示的是預設內容（讀不到管理者的試算表）。') + '</p>';
+  openDrawer('detail');
+}
 function closeDrawer(id){
   $(id).classList.remove('open');
   if (id === 'logDrawer') $('tbLog').setAttribute('aria-pressed', 'false');
+  if (id === 'detail') state.boardOpen = false;
   if (id === 'detail' && state.sel){ toolById[state.sel].g.classList.remove('sel'); state.sel = null; drawLinks(); }
 }
 document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click', function(){ closeDrawer(b.getAttribute('data-close')); }); });
@@ -1957,6 +2078,8 @@ buildWalk();
 (function(){ var c = nearestCell(walker.gx, walker.gy); if (c){ var p = cellPos(c[0], c[1]); walker.gx = p[0]; walker.gy = p[1]; } })();
 placeAvatarDepth();
 if (firstVisit) addLog(me.name + ' 登上了創業島');
+blockArea(BOARD_AT[0], BOARD_AT[1], .75);
+loadBoard(); setInterval(loadBoard, 10 * 60 * 1000);
 netConnect();
 renderRelList();
 setTags(state.tags);

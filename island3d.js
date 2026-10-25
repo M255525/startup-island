@@ -416,6 +416,33 @@ function freeSpot(z, avoid){
   }
   return {at:best, room:bs};
 }
+// 看板畫面：上方主色標題列、副標、三行內容、底部提示；背景淡淡的損益兩平圖
+function fitText(x, text, maxW, size, weight, family){
+  var sz = size; x.font = weight + ' ' + sz + 'px ' + family;
+  while (x.measureText(text).width > maxW && sz > size * .55){ sz -= 1; x.font = weight + ' ' + sz + 'px ' + family; }
+  return sz;
+}
+function drawBoardCanvas(cv){
+  var x = cv.getContext('2d'), W = cv.width, H = cv.height, c = board.color || '#2ec4b6', F = '"Noto Sans TC", sans-serif', HF = 'Huninn, "Noto Sans TC", sans-serif';
+  x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
+  x.globalAlpha = .14;                                            // 淡淡的長條圖＋上升線當背景
+  [60, 95, 130, 170, 215].forEach(function(v, i){ x.fillStyle = c; x.fillRect(360 + i * 52, H - 60 - v, 34, v); });
+  x.strokeStyle = '#ff6f59'; x.lineWidth = 8; x.lineCap = 'round'; x.beginPath(); x.moveTo(360, H - 110); x.lineTo(470, H - 170); x.lineTo(610, H - 285); x.stroke();
+  x.globalAlpha = 1;
+  x.fillStyle = c; x.fillRect(0, 0, W, 104);
+  x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#ffffff';
+  fitText(x, board.title, W - 50, 70, '400', HF); x.lineWidth = 8; x.strokeStyle = mix(c, '#14303d', .45); x.lineJoin = 'round'; x.strokeText(board.title, W / 2, 56); x.fillText(board.title, W / 2, 56);
+  x.fillStyle = mix(c, '#14303d', .55); fitText(x, board.sub, W - 50, 34, '700', F); x.fillText(board.sub, W / 2, 140);
+  x.textAlign = 'left'; x.fillStyle = '#3b2f3a';
+  ['l1', 'l2', 'l3'].filter(function(k){ return board[k]; }).forEach(function(k, i){
+    var y = 196 + i * 50;
+    x.fillStyle = c; x.beginPath(); x.arc(44, y, 8, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#3b2f3a'; fitText(x, board[k], W - 100, 34, '700', F); x.fillText(board[k], 64, y + 1);
+  });
+  x.fillStyle = mix(c, '#ffffff', .82); x.fillRect(0, H - 52, W, 52);
+  x.textAlign = 'center'; x.fillStyle = mix(c, '#14303d', .5); fitText(x, board.foot, W - 40, 26, '700', F); x.fillText(board.foot, W / 2, H - 26);
+  x.lineWidth = 10; x.strokeStyle = '#3b2f3a'; x.strokeRect(5, 5, W - 10, H - 10);
+}
 function glow(color, day, night){ var m = std(color, {emissive:color, emissiveIntensity:day}); O.glows.push({m:m, day:day, night:night}); return m; }
 function mesh(geo, mat, x, y, z, parent){ var m = new T3.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); if (parent) parent.add(m); return m; }
 
@@ -468,21 +495,19 @@ var MARKS = {
     O.anim.push(function(tm){ seat.rotation.x = Math.sin(tm * 1.8) * .45; });
     return .55;
   },
-  calc:function(g, z){                                            // 大看板：損益兩平圖
-    var tex = canvasTex(320, 200, function(x, w, h){
-      x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h);
-      x.strokeStyle = '#e3eef0'; x.lineWidth = 2; for (var i = 1; i < 5; i++){ x.beginPath(); x.moveTo(0, i * 40); x.lineTo(w, i * 40); x.stroke(); }
-      [40, 62, 88, 118, 150].forEach(function(v, i){ x.fillStyle = i < 2 ? '#ff8f8f' : z.color; x.fillRect(30 + i * 54, 180 - v, 36, v); });
-      x.setLineDash([10, 8]); x.strokeStyle = '#3b2f3a'; x.lineWidth = 3; x.beginPath(); x.moveTo(10, 105); x.lineTo(310, 105); x.stroke(); x.setLineDash([]);
-      x.strokeStyle = '#ff6f59'; x.lineWidth = 7; x.lineCap = 'round'; x.beginPath(); x.moveTo(40, 150); x.lineTo(130, 115); x.lineTo(200, 90); x.lineTo(285, 32); x.stroke();
-      x.fillStyle = '#ff6f59'; x.beginPath(); x.moveTo(300, 20); x.lineTo(268, 28); x.lineTo(290, 50); x.fill();
-      x.fillStyle = '#3b2f3a'; x.font = '700 22px "Noto Sans TC", sans-serif'; x.fillText('損益兩平', 14, 98);
-    });
+  calc:function(g, z){                                            // 創業看板：文字來自 Google 試算表（board，見 index.html）
+    var cv = document.createElement('canvas'); cv.width = 640; cv.height = 392;
+    var tex = new T3.CanvasTexture(cv); tex.colorSpace = T3.SRGBColorSpace; tex.anisotropy = 4;
+    O.boardDraw = function(){ drawBoardCanvas(cv); tex.needsUpdate = true; };
+    O.boardDraw();
     [-1, 1].forEach(function(s){ mesh(new T3.CylinderGeometry(.025, .025, .9, 8), std('#5b6770'), s * .45, .45, 0, g); });
     mesh(new T3.BoxGeometry(1.06, .68, .05), std(hexMix(z.color, '#14303d', .3)), 0, .95, 0, g);
     var face = mesh(new T3.PlaneGeometry(.98, .6), std('#ffffff', {map:tex, emissive:'#ffffff', emissiveMap:tex, emissiveIntensity:.05}), 0, .95, .027, g); face.userData.noInk = true;
     O.glows.push({m:face.material, day:.05, night:.9});
     var back = face.clone(); back.rotation.y = Math.PI; back.position.z = -.027; g.add(back);
+    var star = mesh(new T3.OctahedronGeometry(.09, 0), glow('#ffd23f', .5, 1.6), 0, 1.45, 0, g);   // 頂上轉動的星星：一眼找到看板
+    O.anim.push(function(tm){ star.rotation.y = tm * 2; star.position.y = 1.45 + Math.sin(tm * 2.4) * .04; });
+    g.userData.board = true;
     return .5;
   },
   fund:function(g, z){                                            // 金色撲滿＋金幣
@@ -568,13 +593,14 @@ function buildZoneMarks(){
     [-1, 1].forEach(function(s){ var c = Math.cos(gate.rotation.y), sn = Math.sin(gate.rotation.y); blockWalk(gx + s * .52 * c, gy - s * .52 * sn, .12); });
     // 地標
     var mk = MARKS[z.id]; if (!mk) return;
-    var spot = freeSpot(z, gates); if (!spot.at || spot.room < .05) return;
+    var spot = z.id === 'calc' ? {at:BOARD_AT, room:.55} : freeSpot(z, gates); if (!spot.at || spot.room < .05) return;   // 看板位置固定，平面地圖和小地圖才對得上
     var g = new T3.Group(); scene.add(g);
     var r = mk(g, z), k = Math.max(1.1, Math.min(2.1, (spot.room + .2) / r));
     g.scale.setScalar(k); g.position.set(spot.at[0], landY(spot.at[0], spot.at[1]) - .01, spot.at[1]);
     g.rotation.y = Math.atan2(C[0] - spot.at[0], C[1] - spot.at[1]) - Math.PI / 2 + (z.id === 'calc' || z.id === 'ops' ? Math.PI / 2 : 0);
     if (z.id === 'idea') g.rotation.y = 0;
     inkAll(shadowAll(g), .012);
+    if (g.userData.board) g.traverse(function(m){ if (m.isMesh && !m.userData.ink){ m.userData.id = '__board'; O.pick.push(m); } });
     O.markSpots.push([spot.at[0], spot.at[1], r * k + .25]);
     blockWalk(spot.at[0], spot.at[1], r * k * .85);
   });
@@ -866,6 +892,9 @@ function buildLabels(){
     var d = document.createElement('div'); d.className = 'zone3 decor'; d.innerHTML = '<b>' + G.name + '</b>';
     labRoot.appendChild(d); O.zoneTags.push({el:d, x:G.label[0], z:G.label[1], y:landY(G.label[0], G.label[1]) + .9});
   });
+  var bd = document.createElement('button'); bd.type = 'button'; bd.className = 'tag3 board3'; bd.textContent = '📋 創業看板';   // 看板的醒目標籤
+  bd.addEventListener('click', function(e){ e.stopPropagation(); openBoard(); }); bd.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+  labRoot.appendChild(bd); O.zoneTags.push({el:bd, x:BOARD_AT[0], z:BOARD_AT[1], y:landY(BOARD_AT[0], BOARD_AT[1]) + 2.5});
   var rv = document.createElement('div'); rv.className = 'zone3 decor'; rv.innerHTML = '<b>創業河</b>'; labRoot.appendChild(rv);
   O.zoneTags.push({el:rv, x:RIVER[4][0] + .2, z:RIVER[4][1] - .9, y:.9});
 }
@@ -1024,7 +1053,7 @@ function bindInput(){
       var now = performance.now(); if (now - lastHover < 60) return; lastHover = now;
       var h = pickAt(e.clientX, e.clientY, O.pick), id = h ? h.object.userData.id : null;
       hoverId = id; canvas.style.cursor = id ? 'pointer' : 'grab';
-      if (id) showTip(toolById[id], e.clientX, e.clientY - 12); else $('tip').classList.remove('show');
+      if (id === '__board') showBoardTip(e.clientX, e.clientY - 12); else if (id) showTip(toolById[id], e.clientX, e.clientY - 12); else $('tip').classList.remove('show');
       return;
     }
     ptr[e.pointerId] = {x:e.clientX, y:e.clientY};
@@ -1045,7 +1074,7 @@ function bindInput(){
     drag = null; canvas.style.cursor = hoverId ? 'pointer' : 'grab';
     if (e.type !== 'pointerup' || !d || d.moved) return;
     var hb = pickAt(e.clientX, e.clientY, O.pick);
-    if (hb){ openTool(hb.object.userData.id); return; }
+    if (hb){ if (hb.object.userData.id === '__board') openBoard(); else openTool(hb.object.userData.id); return; }
     var hg = pickAt(e.clientX, e.clientY, [O.terrain]);
     if (hg){ if (cam.overview) setOverview(false); walker.goal = null; walkTo(hg.point.x, hg.point.z); }
   }
@@ -1271,6 +1300,11 @@ function drawMini(){
   if (!mini.base) miniSetup();
   var x = mini.cv.getContext('2d'), now = performance.now() / 1000;   // 畫布 560×336，顯示成 280×168（2 倍解析度，彈出子母畫面也清楚）
   x.drawImage(mini.base, 0, 0);
+  var bp = miniP(BOARD_AT[0], BOARD_AT[1]), bob = Math.sin(now * 3) * 2;            // 看板：黃色標籤
+  x.beginPath(); x.arc(bp[0], bp[1], 9 + Math.sin(now * 4) * 2, 0, Math.PI * 2); x.fillStyle = 'rgba(255,210,63,.45)'; x.fill();
+  x.fillStyle = '#ffd23f'; x.strokeStyle = INK; x.lineWidth = 2; roundRect(x, bp[0] - 30, bp[1] - 44 + bob, 60, 26, 12); x.fill(); x.stroke();
+  x.beginPath(); x.moveTo(bp[0] - 5, bp[1] - 19 + bob); x.lineTo(bp[0], bp[1] - 11 + bob); x.lineTo(bp[0] + 5, bp[1] - 19 + bob); x.fill();
+  x.fillStyle = INK; x.font = '700 15px "Noto Sans TC", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('📋 看板', bp[0], bp[1] - 31 + bob); x.textBaseline = 'alphabetic';
   if (state.sel && toolById[state.sel]){ var t = toolById[state.sel], sp = miniP(t.gx, t.gy); x.beginPath(); x.arc(sp[0], sp[1], 11 + Math.sin(now * 5) * 2, 0, Math.PI * 2); x.strokeStyle = '#ff6f59'; x.lineWidth = 3; x.stroke(); }
   if (active && !cam.overview){                                   // 鏡頭看的方向（扇形）
     var me0 = miniP(walker.gx, walker.gy), fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw);
@@ -1327,6 +1361,6 @@ setMini(mini.on);
 window.Island3D = {
   enter:enter, leave:leave, links:buildLinks,
   overview:function(){ setOverview(!cam.overview); },
-  get active(){ return active; }, get built(){ return built; }, cam:cam, prefs:prefs, O:O, mini:mini, get renderer(){ return renderer; }
+  get active(){ return active; }, get built(){ return built; }, cam:cam, prefs:prefs, O:O, mini:mini, board:function(){ if (O.boardDraw) O.boardDraw(); }, get renderer(){ return renderer; }
 };
 })();
