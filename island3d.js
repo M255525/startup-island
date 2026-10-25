@@ -398,10 +398,7 @@ function signTex(z){
     x.font = '700 24px "JetBrains Mono", monospace'; x.fillStyle = 'rgba(255,255,255,.92)'; x.fillText(z.en, 256, 150);
   });
 }
-function blockWalk(gx, gy, r){                   // 地標擋路：角色會繞過去（平面地圖也一樣）
-  if (!walkCells) return;
-  for (var j = 0; j < WG.n; j++) for (var i = 0; i < WG.n; i++){ var p = cellPos(i, j); if (Math.hypot(p[0] - gx, p[1] - gy) < r) walkCells[j * WG.n + i] = 0; }
-}
+function blockWalk(gx, gy, r){ if (walkCells) blockArea(gx, gy, r + BODY * .6); }   // 地標擋路：角色會繞過去（平面地圖也一樣）
 function freeSpot(z, avoid){
   var b = z.box, best = null, bs = -9, M = 1.4;                  // 場地裡太擠時，可以放在場地外緣的空地
   for (var gx = b[0] - M; gx <= b[2] + M; gx += .15) for (var gy = b[1] - M; gy <= b[3] + M; gy += .15){
@@ -992,12 +989,18 @@ function keyMove(dt){
   if (cam.overview) setOverview(false);
   var fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw), rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw);
   var dx = fx * f + rx * r, dz = fz * f + rz * r, l = Math.hypot(dx, dz); dx /= l; dz /= l;
-  var nx = walker.gx + dx * .35, nz = walker.gy + dz * .35;
-  if (!walkableAt(nx, nz)){                                    // 撞牆就沿著牆滑
-    if (walkableAt(walker.gx + dx * .35, walker.gy)) nz = walker.gy;
-    else if (walkableAt(walker.gx, walker.gy + dz * .35)) nx = walker.gx;
-    else return true;
+  var here = [walker.gx, walker.gy], nx, nz, L3 = [.35, .22, .12, .06];
+  function ok(x, z){ return fineOK(x, z) && los(here, [x, z]); }
+  var k, st;
+  for (k = 0; k < L3.length && nx === undefined; k++){         // 前面有牆就縮短步伐，貼近牆邊才停
+    st = L3[k]; if (ok(walker.gx + dx * st, walker.gy + dz * st)){ nx = walker.gx + dx * st; nz = walker.gy + dz * st; }
   }
+  for (k = 0; k < L3.length && nx === undefined; k++){         // 正前方完全走不了：沿著牆滑
+    st = L3[k];
+    if (Math.abs(dx) > .2 && ok(walker.gx + Math.sign(dx) * st, walker.gy)){ nx = walker.gx + Math.sign(dx) * st; nz = walker.gy; }
+    else if (Math.abs(dz) > .2 && ok(walker.gx, walker.gy + Math.sign(dz) * st)){ nx = walker.gx; nz = walker.gy + Math.sign(dz) * st; }
+  }
+  if (nx === undefined){ walker.path = []; return true; }
   walker.goal = null; walker.pending = null; walker.path = [[nx, nz]];
   return true;
 }
