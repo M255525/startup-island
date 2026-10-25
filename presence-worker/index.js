@@ -1,5 +1,5 @@
 // 創業島「多人同島」轉播站：一個 Durable Object 房間，用 WebSocket 轉播每位訪客的
-// 隨機名字、衣服／髮色與位置。不寫入任何儲存，訪客離線就消失。
+// 隨機名字、選的動物、衣服／毛色與位置。不寫入任何儲存，訪客離線就消失。
 import { DurableObject } from 'cloudflare:workers';
 import { hasBadWord } from './badwords.js';
 
@@ -11,6 +11,8 @@ const ALLOWED_ORIGINS = [
 const MAX_SOCKETS = 200;
 const MAX_MSG_PER_SEC = 15;
 const COLOR = /^#[0-9a-fA-F]{6}$/;
+// 可以選的動物（跟 index.html 的 ANIMALS 同一份 id）；不在清單上的一律當成沒選，前端會依 id 自動配一隻
+const ANIMALS = ['cat', 'dog', 'rabbit', 'bear', 'fox', 'panda', 'penguin', 'chick', 'frog', 'koala', 'tiger', 'pig'];
 
 function clampNum(v, lo, hi) {
   const n = Number(v);
@@ -19,6 +21,9 @@ function clampNum(v, lo, hi) {
 function cleanName(v) {
   const n = String(v || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 24) || '旅人';
   return hasBadWord(n) ? '旅人' : n; // 含禁用字詞一律改成「旅人」
+}
+function cleanAnimal(v, fallback) {
+  return ANIMALS.includes(String(v)) ? String(v) : fallback;
 }
 function cleanColor(v, fallback) {
   return COLOR.test(String(v)) ? String(v) : fallback;
@@ -99,6 +104,7 @@ export class Island extends DurableObject {
         name: cleanName(m.name),
         shirt: cleanColor(m.shirt, '#ff6f59'),
         hair: cleanColor(m.hair, '#3b2a20'),
+        animal: cleanAnimal(m.animal, ''),
         gx: clampNum(m.gx, -5, 25) ?? 11,
         gy: clampNum(m.gy, -5, 25) ?? 9,
       };
@@ -125,8 +131,9 @@ export class Island extends DurableObject {
       a.name = cleanName(m.name);
       a.shirt = cleanColor(m.shirt, a.shirt);
       a.hair = cleanColor(m.hair, a.hair);
+      a.animal = cleanAnimal(m.animal, a.animal || '');
       ws.serializeAttachment(a);
-      this.broadcast({ t: 'look', id: a.id, name: a.name, shirt: a.shirt, hair: a.hair }, ws);
+      this.broadcast({ t: 'look', id: a.id, name: a.name, shirt: a.shirt, hair: a.hair, animal: a.animal }, ws);
     }
     // 'ping' 只為了保持連線，不需回應
   }

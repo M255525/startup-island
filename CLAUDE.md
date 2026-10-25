@@ -88,3 +88,11 @@
 - **人物 Q 版**：大頭（r .14）、瀏海＋後髮、大眼（含白色高光）、腮紅、微笑、手腳短；走路一蹦一蹦、晃頭，站著會呼吸、隨機眨眼。平面地圖的 SVG 小人也同步改成大頭、雙眼高光、腮紅、笑嘴，名牌上移到 `translate(0,-50)`。
 - **樹與花**：圓樹＝4 顆球合併（`mergeGeo`），松樹＝兩層圓錐，約 1/11 是櫻花粉；草地撒 520 朵小花（避開路、河、場地、建築）。擋在鏡頭與自己之間的樹 `hideTrees()` 暫時縮成 0。
 - 測試時加 `?presence=ws://127.0.0.1:1/ws` 讓多人連線刻意失敗（`?presence=` 空值不會生效，仍會連正式轉播站，測試角色會被其他訪客看到）。
+
+## 動物角色＋場地特色（2026-10-25）
+使用者要求「把人物換成動物，有更多動物可以選擇」、「每一個區塊的特色要夠明顯一點」。
+- **動物**：`index.html` 的 `ANIMALS`（12 種：cat/dog/rabbit/bear/fox/panda/penguin/chick/frog/koala/tiger/pig，欄位 fur/light/inner/nose/dark＋ear/snout/tail/mark 型別），平面與立體共用；`animalOf(data, id)` 找不到（舊版網頁或舊轉播站沒傳）就依 id 雜湊配一隻，所以大家看到的一致。`startupIslandAvatar` 多了 `animal`，舊訪客載入時自動配一隻。`#namePop` 多了 `#animalGrid`（radio 按鈕，emoji＋名稱），存檔走 `setMyLook(name, animal)`，`hello`/`look` 都帶 `animal`。
+- 平面：`drawAnimalHead()`／`drawAnimalTail()` 依型別畫（臉朝 +x），`setAvatarLook()` 動物變了才重畫；名牌上移到 `translate(0,-58)` 避開兔耳。`av.hair` 已移除，`av.data` 存最新資料（立體讀它）。
+- 立體：`makeAv(A, shirt, mine)` 依同一份型別組 3D 頭（耳朵、口鼻、喙、花紋、尾巴），動物變了 `dropAv()` 重建。
+- **轉播站** `presence-worker/index.js` 加 `ANIMALS` 白名單與 `cleanAnimal()`，`hello`/`look` 會轉播 `animal`。**清單要跟 index.html 一致**。改完要 `npx -y wrangler@4 deploy`（2026-10-25 這次部署被自動模式擋下，需使用者自己執行；沒部署前別人看到的是依 id 配的動物，功能不會壞）。
+- **場地特色**（立體 `buildZoneMarks()`）：每區入口拱門（場地中心往指揮塔方向和地塊邊界的交點＝道路出口，招牌是 CanvasTexture 寫場地名，等 `document.fonts.ready` 才畫）＋主題地標 `MARKS[z.id]`（燈泡、西洋棋、鉛筆＋鞦韆、損益兩平看板、金撲滿＋金幣、愛心氣球、貨櫃＋吊車、齒輪＋菜園），品牌街街道上方三角旗，指揮塔三圈旋轉光環。地標位置 `freeSpot()` 自動找空地（可以超出地塊 1.4 格但不能進別的場地），放大 1.1–2.1 倍；`blockWalk()` 讓角色繞開（直接改 `walkCells`，平面地圖也繞）；附近的樹會讓開。夜晚會亮的材質放 `O.glows`。地面主色混合比例 .08→.22，平面地圖場地底色 fill-opacity .1→.2、虛線框加粗。

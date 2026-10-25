@@ -230,6 +230,12 @@ body.view-time .story{bottom:214px}
 .name-pop h3{margin:2px 0 4px;font-size:17px}
 .name-pop .note{font-size:12.5px;color:var(--ink-dim);margin:0 0 10px}
 .name-row{display:flex;gap:8px}
+.animal-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:8px 0 10px}
+.animal-grid button{border:2px solid var(--line);background:var(--panel);border-radius:12px;padding:5px 0 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--ink)}
+.animal-grid button span{font-size:22px;line-height:1.1}
+.animal-grid button small{font-size:11px;color:var(--ink-dim)}
+.animal-grid button:hover{border-color:var(--coral)}
+.animal-grid button[aria-checked="true"]{border-color:var(--coral);background:rgba(255,111,89,.12)}
 .name-row input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
 .name-row input:focus{outline:2px solid var(--coral);outline-offset:0;border-color:transparent}
 .name-err{min-height:18px;margin:6px 0 4px;font-size:12.5px;color:var(--lic)}
@@ -421,8 +427,9 @@ footer{background:var(--panel);padding:30px 16px 40px}
 
   <section class="card name-pop" id="namePop" hidden role="dialog" aria-labelledby="nameTitle">
     <div class="eyebrow">Your Character</div>
-    <h3 id="nameTitle">幫你的角色取名字</h3>
-    <p class="note">同時在島上的人會看到這個名字，最多 12 個字，不能使用不雅、歧視或冒充管理者的字詞。之後點地圖上自己的名牌也能再改。</p>
+    <h3 id="nameTitle">選一隻動物、取個名字</h3>
+    <div class="animal-grid" id="animalGrid" role="radiogroup" aria-label="選擇動物"></div>
+    <p class="note">同時在島上的人會看到你的動物和名字。名字最多 12 個字，不能使用不雅、歧視或冒充管理者的字詞。之後點地圖上自己的名牌也能再改。</p>
     <div class="name-row"><input id="nameInput" maxlength="12" autocomplete="off" aria-label="角色名字"><button type="button" class="chip-btn" id="nameDice">隨機一個</button></div>
     <p class="name-err" id="nameErr" aria-live="polite"></p>
     <div class="name-acts"><button type="button" class="chip-btn" id="nameCancel">取消</button><button type="button" class="save" id="nameSave">確定</button></div>
@@ -449,7 +456,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
         <li>本頁是工具導覽地圖，本身不提供創業試算、文件產生或任何內容生成功能；點「前往工具」會在新分頁開啟各自獨立的網站。</li>
         <li>各工具的功能、計算結果與正確性，以該工具自己的說明與警語為準。標示「需序號」的工具須另外取得課程序號或登入。</li>
         <li>接力線與時間軸是課程整理的建議使用順序，工具之間沒有自動傳資料。</li>
-        <li>探索足跡只存在你這台裝置的瀏覽器，不會上傳。為了讓同時在島上的人互相看見，系統只會即時交換你的隨機角色名字、衣服顏色與位置，不會記錄或保存。</li>
+        <li>探索足跡只存在你這台裝置的瀏覽器，不會上傳。為了讓同時在島上的人互相看見，系統只會即時交換你的角色名字、選的動物、衣服顏色與位置，不會記錄或保存。</li>
         <li>僅供教學、課程及個人使用，禁止未經授權公開發布、販售或商業化使用。</li>
       </ul>
     </div>
@@ -850,7 +857,7 @@ function buildMap(){
   ZONES.forEach(function(z){
     if (z.id === 'strategy') return;
     el('polygon', {points:pts(boxPts(z.box)), fill:z.ground}, ground);
-    el('polygon', {points:pts(boxPts(z.box)), fill:z.color, 'fill-opacity':.1, stroke:z.color, 'stroke-width':2, 'stroke-dasharray':'6 5', 'stroke-linejoin':'round'}, ground);
+    el('polygon', {points:pts(boxPts(z.box)), fill:z.color, 'fill-opacity':.2, stroke:z.color, 'stroke-width':3, 'stroke-dasharray':'6 5', 'stroke-linejoin':'round'}, ground);
     decorate(z, ground);
   });
 
@@ -1151,6 +1158,23 @@ var KEY_AVATAR = 'startupIslandAvatar';
 var NAME_A = ['熱血','冷靜','好奇','勇敢','細心','樂觀','愛笑','認真','點子很多的','行動派','精打細算的','愛喝咖啡的'];
 var NAME_B = ['店長','老闆','創辦人','企劃','設計師','工程師','行銷人','小編','業務','顧問'];
 var NAME_C = ['小安','阿哲','小魚','阿凱','小晴','阿寶','小樹','阿福','小米','阿德','小芸','阿豪','小橘','阿翔','小柚','阿誠'];
+// 可以選的動物：ear 耳朵型、snout 嘴鼻型、mark 花紋；id 要跟 presence-worker 的 ANIMALS 一致
+var ANIMALS = [
+  {id:'cat',     name:'貓咪',   emoji:'🐱', fur:'#f6b26b', light:'#fff3e2', inner:'#ffb3c6', ear:'cat',    snout:'nose',  nose:'#ff8fa8', tail:'long', mark:'whisker'},
+  {id:'dog',     name:'小狗',   emoji:'🐶', fur:'#c98b55', light:'#fbe8cf', inner:'#8a5a34', ear:'floppy', snout:'muzzle', nose:'#3b2f3a', tail:'short'},
+  {id:'rabbit',  name:'兔子',   emoji:'🐰', fur:'#fbf7f2', light:'#ffffff', inner:'#ffb3c6', ear:'long',   snout:'nose',  nose:'#ff8fa8', tail:'puff'},
+  {id:'bear',    name:'小熊',   emoji:'🐻', fur:'#a3714a', light:'#ecc99f', inner:'#ecc99f', ear:'round',  snout:'muzzle', nose:'#3b2f3a', tail:'puff'},
+  {id:'fox',     name:'狐狸',   emoji:'🦊', fur:'#f2853a', light:'#fff4e6', inner:'#3b2f3a', ear:'fox',    snout:'muzzle', nose:'#3b2f3a', tail:'fluffy'},
+  {id:'panda',   name:'熊貓',   emoji:'🐼', fur:'#fbfbf7', light:'#ffffff', inner:'#2d2b36', ear:'round',  snout:'muzzle', nose:'#2d2b36', tail:'puff', mark:'panda', dark:'#2d2b36'},
+  {id:'penguin', name:'企鵝',   emoji:'🐧', fur:'#33456b', light:'#ffffff', inner:'#33456b', ear:'none',   snout:'beak',  nose:'#ffb340', tail:'none', mark:'face'},
+  {id:'chick',   name:'小雞',   emoji:'🐤', fur:'#ffd84d', light:'#fff1a8', inner:'#ffd84d', ear:'tuft',   snout:'beak',  nose:'#ff9a3c', tail:'none'},
+  {id:'frog',    name:'青蛙',   emoji:'🐸', fur:'#7fcf5a', light:'#e9f7c8', inner:'#7fcf5a', ear:'frog',   snout:'none',  nose:'#3b2f3a', tail:'none'},
+  {id:'koala',   name:'無尾熊', emoji:'🐨', fur:'#a9aab9', light:'#e8e8f0', inner:'#f3eef4', ear:'koala',  snout:'bignose', nose:'#3b3540', tail:'none'},
+  {id:'tiger',   name:'老虎',   emoji:'🐯', fur:'#f7a33b', light:'#fff4e0', inner:'#fff4e0', ear:'round',  snout:'muzzle', nose:'#ff8fa8', tail:'long', mark:'tiger', dark:'#3b2f3a'},
+  {id:'pig',     name:'小豬',   emoji:'🐷', fur:'#ffb7c5', light:'#ffd6df', inner:'#ff9fb3', ear:'pig',    snout:'pig',   nose:'#ff9fb3', tail:'curl'}
+];
+var animalById = {}; ANIMALS.forEach(function(a){ animalById[a.id] = a; });
+function animalOf(d, key){ return animalById[d && d.animal] || ANIMALS[hash(String(key || (d && d.name) || '')) % ANIMALS.length]; }
 var SHIRTS = ['#ff6f59','#4f9dff','#f4b942','#6bbf59','#9d8cf2','#ef6b8a','#2ec4b6','#f08a4b'];
 var HAIRS = ['#3b2a20','#14303d','#6b4226','#a0522d','#2b2b2b'];
 // ---- 名字禁用字詞：由 presence-worker/badwords.js 產生，兩邊清單一致（改清單請改那個檔再重新產生） ----
@@ -1186,10 +1210,11 @@ function hasBadWord(name) {
 }
 // ---- 名字禁用字詞 end ----
 function pick(a){ return a[Math.floor(Math.random() * a.length)]; }
-function newAvatar(){ return {name:randomName(), shirt:pick(SHIRTS), hair:pick(HAIRS)}; }
+function newAvatar(){ return {name:randomName(), shirt:pick(SHIRTS), hair:pick(HAIRS), animal:pick(ANIMALS).id}; }
 var me = lsGet(KEY_AVATAR, null), firstVisit = false;
 if (!me || !me.name){ me = newAvatar(); lsSet(KEY_AVATAR, me); firstVisit = true; }
 else if (hasBadWord(me.name)){ me.name = randomName(); lsSet(KEY_AVATAR, me); }
+if (!animalById[me.animal]){ me.animal = pick(ANIMALS).id; lsSet(KEY_AVATAR, me); }   // 舊訪客：自動配一隻動物
 
 // 可走格子：0.5 格一格；海、河（橋除外）、建築、池塘與噴水池不能走
 var WG = {x0:-4, y0:-4, step:.5, n:60}, walkCells = null;
@@ -1276,30 +1301,93 @@ function makeAvatar(data, mine){
   av.body = el('g', {}, g);
   av.legL = el('line', {x1:-2.5, y1:-10, x2:-2.5, y2:0, stroke:'#2b3a44', 'stroke-width':3, 'stroke-linecap':'round'}, av.body);
   av.legR = el('line', {x1:2.5, y1:-10, x2:2.5, y2:0, stroke:'#2b3a44', 'stroke-width':3, 'stroke-linecap':'round'}, av.body);
-  av.armB = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f2c9a6', 'stroke-width':2.6, 'stroke-linecap':'round'}, av.body);
-  av.shirt = el('rect', {x:-5.5, y:-21, width:11, height:12, rx:4}, av.body);
-  av.armF = el('line', {x1:0, y1:-19, x2:0, y2:-11, stroke:'#f6d3b3', 'stroke-width':2.6, 'stroke-linecap':'round'}, av.body);
-  el('circle', {cx:0, cy:-29, r:8.4, fill:'#ffe0c7', stroke:'#3b2f3a', 'stroke-width':.9}, av.body);   // Q 版大頭
-  av.hair = el('path', {d:'M-8.6 -28 A8.6 8.6 0 0 1 8.6 -29.5 Q5 -33.5 1 -31.5 Q-2 -34 -5 -31 Q-7 -30 -8.6 -28 Z', stroke:'#3b2f3a', 'stroke-width':.9, 'stroke-linejoin':'round'}, av.body);
-  [1.4, 5.4].forEach(function(x){
-    el('ellipse', {cx:x, cy:-27.6, rx:1.35, ry:1.9, fill:'#2b2140'}, av.body);
-    el('circle', {cx:x + .45, cy:-28.4, r:.55, fill:'#fff'}, av.body);
-  });
-  el('ellipse', {cx:6.4, cy:-24.6, rx:1.7, ry:1, fill:'#ff8fa8', opacity:.6}, av.body);
-  el('ellipse', {cx:-.4, cy:-24.6, rx:1.5, ry:.9, fill:'#ff8fa8', opacity:.6}, av.body);
-  el('path', {d:'M2.4 -24.2 Q3.4 -23 4.4 -24.2', fill:'none', stroke:'#a24a52', 'stroke-width':.8, 'stroke-linecap':'round'}, av.body);
+  av.tail = el('g', {}, av.body);
+  av.armB = el('line', {x1:0, y1:-19, x2:0, y2:-11, 'stroke-width':2.8, 'stroke-linecap':'round'}, av.body);
+  av.shirt = el('rect', {x:-5.5, y:-21, width:11, height:12, rx:4, stroke:'#3b2f3a', 'stroke-width':.7}, av.body);
+  av.armF = el('line', {x1:0, y1:-19, x2:0, y2:-11, 'stroke-width':2.8, 'stroke-linecap':'round'}, av.body);
+  av.head = el('g', {}, av.body);                                                                    // Q 版動物大頭（依動物重畫）
   av.tagWrap = el('g', {}, L.ptags);
   if (mine){                                  // 點自己的名牌就能改名字
     av.tagWrap.style.pointerEvents = 'auto'; av.tagWrap.style.cursor = 'pointer';
     av.tagWrap.addEventListener('click', function(e){ e.stopPropagation(); openNamePop(); });
     av.tagWrap.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
   }
-  av.tag = el('g', {transform:'translate(0,-50)'}, av.tagWrap);
+  av.tag = el('g', {transform:'translate(0,-58)'}, av.tagWrap);
   setAvatarLook(av, data);
   return av;
 }
+// 動物頭：臉朝右（+x），中心 (0,-29)、半徑 8.4；左右翻面靠 poseAvatar 的 scale
+var INK2 = '#3b2f3a';
+function drawAnimalHead(g, A){
+  g.innerHTML = '';
+  var S = {stroke:INK2, 'stroke-width':.9, 'stroke-linejoin':'round'};
+  function o(a){ for (var k in S) if (!(k in a)) a[k] = S[k]; return a; }
+  var ear = A.ear;
+  if (ear === 'cat' || ear === 'fox'){
+    var h = ear === 'fox' ? 4 : 0;
+    el('path', o({d:'M-7.8 -32 L-6.4 ' + (-40 - h) + ' L-1.8 -35.6 Z', fill:A.fur}), g);
+    el('path', o({d:'M1.6 -36.4 L6.8 ' + (-40.6 - h) + ' L8 -31.6 Z', fill:A.fur}), g);
+    el('path', {d:'M-6.3 -34 L-5.9 ' + (-38 - h * .8) + ' L-3.4 -35.6 Z', fill:A.inner}, g);
+    el('path', {d:'M3.4 -36 L6.3 ' + (-38.6 - h * .8) + ' L6.8 -33.4 Z', fill:A.inner}, g);
+  } else if (ear === 'long'){
+    el('ellipse', o({cx:-3.2, cy:-40.5, rx:2.4, ry:7, fill:A.fur, transform:'rotate(-12 -3.2 -40.5)'}), g);
+    el('ellipse', o({cx:3.6, cy:-40.5, rx:2.4, ry:7, fill:A.fur, transform:'rotate(12 3.6 -40.5)'}), g);
+    el('ellipse', {cx:-3.2, cy:-40, rx:1.1, ry:5, fill:A.inner, transform:'rotate(-12 -3.2 -40.5)'}, g);
+    el('ellipse', {cx:3.6, cy:-40, rx:1.1, ry:5, fill:A.inner, transform:'rotate(12 3.6 -40.5)'}, g);
+  } else if (ear === 'round'){
+    [-5.8, 5.8].forEach(function(x){ el('circle', o({cx:x, cy:-35.6, r:3.1, fill:A.mark === 'panda' ? A.dark : A.fur}), g); el('circle', {cx:x, cy:-35.4, r:1.5, fill:A.inner}, g); });
+  } else if (ear === 'koala'){
+    [-7.6, 7.6].forEach(function(x){ el('circle', o({cx:x, cy:-33.5, r:4.6, fill:A.fur}), g); el('circle', {cx:x, cy:-33.3, r:2.6, fill:A.inner}, g); });
+  } else if (ear === 'pig'){
+    el('path', o({d:'M-6.8 -33 L-6.6 -38.4 L-2.4 -35.8 Z', fill:A.fur}), g);
+    el('path', o({d:'M2.6 -36.2 L6.6 -38.6 L7.6 -33 Z', fill:A.fur}), g);
+  } else if (ear === 'frog'){
+    [-3.6, 3.6].forEach(function(x){ el('circle', o({cx:x, cy:-36, r:3.4, fill:A.fur}), g); });
+  }
+  el('circle', o({cx:0, cy:-29, r:8.4, fill:A.fur}), g);
+  if (ear === 'tuft') el('path', {d:'M-1 -37.2 Q0 -40.8 1.4 -37.6 Q2.6 -40.4 3.4 -37.2', fill:'none', stroke:INK2, 'stroke-width':.9, 'stroke-linecap':'round'}, g);
+  if (A.mark === 'face') el('ellipse', {cx:2.6, cy:-27.4, rx:5.6, ry:5.6, fill:A.light}, g);
+  if (A.mark === 'panda') [1.3, 5.3].forEach(function(x){ el('ellipse', {cx:x, cy:-27.4, rx:2.2, ry:2.8, fill:A.dark, transform:'rotate(' + (x < 3 ? -20 : 20) + ' ' + x + ' -27.4)'}, g); });
+  if (A.mark === 'tiger') ['M-1 -37 L0 -34.4', 'M2 -37.4 L2.2 -34.6', 'M-4.4 -35.6 L-3 -33.4', 'M-8 -30 L-5.8 -29.4', 'M-8 -27.2 L-5.8 -27'].forEach(function(d){ el('path', {d:d, stroke:A.dark, 'stroke-width':1.3, 'stroke-linecap':'round', fill:'none'}, g); });
+  if (ear === 'floppy'){
+    el('ellipse', o({cx:-6.6, cy:-28.2, rx:2.6, ry:5.4, fill:A.inner, transform:'rotate(18 -6.6 -28.2)'}), g);
+    el('ellipse', o({cx:6.9, cy:-28.6, rx:2.2, ry:5, fill:A.inner, transform:'rotate(-18 6.9 -28.6)'}), g);
+  }
+  // 嘴鼻
+  if (A.snout === 'muzzle') el('ellipse', {cx:3.8, cy:-24.8, rx:3.6, ry:2.6, fill:A.light}, g);
+  if (A.snout === 'bignose') el('ellipse', o({cx:3.8, cy:-25.6, rx:2, ry:2.6, fill:A.nose}), g);
+  // 眼睛
+  var ey = ear === 'frog' ? -36 : -27.6;
+  [1.4, 5.4].forEach(function(x){
+    var ex = ear === 'frog' ? (x < 3 ? -2.6 : 4.4) : x;
+    el('ellipse', {cx:ex, cy:ey, rx:1.35, ry:1.9, fill:A.mark === 'panda' ? '#fff' : '#2b2140'}, g);
+    if (A.mark === 'panda') el('ellipse', {cx:ex + .2, cy:ey, rx:.95, ry:1.4, fill:'#2b2140'}, g);
+    el('circle', {cx:ex + .45, cy:ey - .8, r:.55, fill:'#fff'}, g);
+  });
+  if (A.snout === 'beak') el('path', o({d:'M6.4 -26.6 L10.6 -25 L6.4 -23.4 Z', fill:A.nose, 'stroke-width':.7}), g);
+  else if (A.snout === 'pig'){ el('ellipse', o({cx:6.2, cy:-25, rx:2.4, ry:1.9, fill:A.nose, 'stroke-width':.7}), g); [5.4, 7].forEach(function(x){ el('circle', {cx:x, cy:-25, r:.45, fill:INK2}, g); }); }
+  else if (A.snout !== 'bignose' && A.snout !== 'none') el('ellipse', {cx:5.6, cy:-25.6, rx:1.1, ry:.8, fill:A.nose}, g);
+  if (A.snout === 'none') el('path', {d:'M1 -24.6 Q4 -22.4 7 -24.6', fill:'none', stroke:'#a24a52', 'stroke-width':.8, 'stroke-linecap':'round'}, g);
+  else if (A.snout !== 'beak' && A.snout !== 'pig') el('path', {d:'M4.4 -24 Q5.2 -23 6 -24', fill:'none', stroke:'#a24a52', 'stroke-width':.7, 'stroke-linecap':'round'}, g);
+  if (A.mark === 'whisker') ['M7.6 -25.8 L10.4 -26.4', 'M7.6 -24.8 L10.4 -24.6'].forEach(function(d){ el('path', {d:d, stroke:INK2, 'stroke-width':.5}, g); });
+  // 腮紅
+  el('ellipse', {cx:6.6, cy:-24.6, rx:1.6, ry:.95, fill:'#ff8fa8', opacity:A.id === 'pig' ? .35 : .6}, g);
+  el('ellipse', {cx:-.6, cy:-24.6, rx:1.4, ry:.85, fill:'#ff8fa8', opacity:.6}, g);
+}
+function drawAnimalTail(g, A){
+  g.innerHTML = '';
+  var t = A.tail, S = {stroke:INK2, 'stroke-width':.8};
+  if (t === 'long') el('path', {d:'M-5 -12 Q-11 -14 -10 -21', fill:'none', stroke:A.fur, 'stroke-width':2.6, 'stroke-linecap':'round'}, g);
+  else if (t === 'fluffy'){ el('ellipse', {cx:-8.6, cy:-14.5, rx:3.6, ry:5.6, fill:A.fur, stroke:INK2, 'stroke-width':.8, transform:'rotate(-35 -8.6 -14.5)'}, g); el('ellipse', {cx:-10.6, cy:-18.6, rx:1.8, ry:2, fill:A.light, transform:'rotate(-35 -10.6 -18.6)'}, g); }
+  else if (t === 'puff') el('circle', {cx:-6.4, cy:-12.6, r:2.4, fill:A.light, stroke:S.stroke, 'stroke-width':S['stroke-width']}, g);
+  else if (t === 'short') el('path', {d:'M-5 -14 Q-9 -16 -8.4 -19', fill:'none', stroke:A.fur, 'stroke-width':2.2, 'stroke-linecap':'round'}, g);
+  else if (t === 'curl') el('path', {d:'M-5 -14 q-3 0 -3 -2 q0 -2 2 -1.6 q1 .6 -.4 1.6', fill:'none', stroke:A.nose, 'stroke-width':1.2, 'stroke-linecap':'round'}, g);
+}
 function setAvatarLook(av, data){
-  av.shirt.setAttribute('fill', data.shirt); av.hair.setAttribute('fill', data.hair);
+  av.data = data;
+  var A = animalOf(data, data.id);
+  if (av.animal !== A.id){ av.animal = A.id; drawAnimalHead(av.head, A); drawAnimalTail(av.tail, A); av.armB.setAttribute('stroke', mix(A.fur, '#3b2f3a', .2)); av.armF.setAttribute('stroke', A.fur); av.legL.setAttribute('stroke', mix(A.fur, '#3b2f3a', .35)); av.legR.setAttribute('stroke', mix(A.fur, '#3b2f3a', .35)); }
+  av.shirt.setAttribute('fill', data.shirt);
   var tag = av.tag; tag.innerHTML = '';
   var shown = hasBadWord(data.name) ? '旅人' : data.name;
   var label = av.mine ? shown + '（你）✎' : shown;
@@ -1360,14 +1448,23 @@ function stepWalker(dt, now){
 }
 function randomName(){ var n; do { n = pick(NAME_A) + pick(NAME_B) + pick(NAME_C); } while (hasBadWord(n)); return n; }
 function cleanName(v){ return String(v || '').replace(/[\u0000-\u001f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12); }
-function setMyName(name){
-  if (name === me.name) return;
-  var old = me.name; me.name = name; lsSet(KEY_AVATAR, me); renderAvatarName();
-  addLog(old + ' 改名為 ' + me.name);
-  netSend({t:'look', name:me.name, shirt:me.shirt, hair:me.hair});
+function setMyLook(name, animal){
+  if (name === me.name && animal === me.animal) return;
+  var old = me.name, oldA = me.animal; me.name = name; me.animal = animal; lsSet(KEY_AVATAR, me); renderAvatarName();
+  if (old !== name) addLog(old + ' 改名為 ' + me.name);
+  if (oldA !== animal) addLog(me.name + ' 變成了' + animalById[animal].name + ' ' + animalById[animal].emoji);
+  netSend({t:'look', name:me.name, shirt:me.shirt, hair:me.hair, animal:me.animal});
 }
+var popAnimal = null;
+function renderAnimalGrid(){
+  $('animalGrid').innerHTML = ANIMALS.map(function(a){
+    return '<button type="button" role="radio" data-animal="' + a.id + '" aria-checked="' + (a.id === popAnimal) + '" title="' + a.name + '"><span aria-hidden="true">' + a.emoji + '</span><small>' + a.name + '</small></button>';
+  }).join('');
+}
+$('animalGrid').addEventListener('click', function(e){ var b = e.target.closest('[data-animal]'); if (!b) return; popAnimal = b.getAttribute('data-animal'); renderAnimalGrid(); });
 function openNamePop(){
   closeDrawer('logDrawer');
+  popAnimal = me.animal; renderAnimalGrid();
   $('nameInput').value = me.name; $('nameErr').textContent = '';
   $('namePop').hidden = false;
   setTimeout(function(){ $('nameInput').focus(); $('nameInput').select(); }, 0);
@@ -1377,11 +1474,11 @@ function saveNamePop(){
   var n = cleanName($('nameInput').value);
   if (!n){ $('nameErr').textContent = '名字不能空白，或按「隨機一個」。'; $('nameInput').focus(); return; }
   if (hasBadWord(n)){ $('nameErr').textContent = '這個名字含有不適合的字詞，請換一個。'; $('nameInput').focus(); $('nameInput').select(); return; }
-  setMyName(n); closeNamePop();
+  setMyLook(n, popAnimal || me.animal); closeNamePop();
 }
 
 /* ---------- 多人同島：透過 Cloudflare Worker（Durable Object）互相看見 ---------- */
-// 只交換「隨機名字、衣服髮色、位置」，沒有其他個人資料。連不上時島上只有自己，其他功能照常。
+// 只交換「隨機名字、選的動物、衣服顏色、位置」，沒有其他個人資料。連不上時島上只有自己，其他功能照常。
 var PRESENCE_URL = 'wss://startup-island-presence.content-workflow.workers.dev/ws';
 (function(){ var q = /[?&]presence=([^&]+)/.exec(location.search); if (q) PRESENCE_URL = decodeURIComponent(q[1]); })();
 var net = {ws:null, open:false, retry:1500, lastSent:0, lastPing:0, sentGx:null, sentGy:null,
@@ -1395,7 +1492,7 @@ function netConnect(){
   net.ws = ws;
   ws.onopen = function(){
     net.open = true; net.retry = 1500;
-    netSend({t:'hello', id:net.id, name:me.name, shirt:me.shirt, hair:me.hair, gx:walker.gx, gy:walker.gy});
+    netSend({t:'hello', id:net.id, name:me.name, shirt:me.shirt, hair:me.hair, animal:me.animal, gx:walker.gx, gy:walker.gy});
     net.sentGx = walker.gx; net.sentGy = walker.gy;
   };
   ws.onmessage = function(ev){ var m; try { m = JSON.parse(ev.data); } catch(e){ return; } netHandle(m); };
