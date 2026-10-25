@@ -836,9 +836,10 @@ function makeAv(A, shirt, mine){
   var tag = document.createElement('div'); tag.className = 'av3' + (mine ? ' mine' : '');
   if (mine){ tag.title = '點一下換動物、改名字'; tag.addEventListener('click', function(ev){ ev.stopPropagation(); openNamePop(); }); tag.addEventListener('pointerdown', function(ev){ ev.stopPropagation(); }); }
   labRoot.appendChild(tag);
-  return {g:g, head:head, eyes:eyes, legL:legL, legR:legR, armL:armL, armR:armR, shirt:shirtM, tag:tag, animal:A.id, last:'', px:null, pz:null, yaw:0, blink:2 + Math.random() * 3, t:0};
+  var bub = document.createElement('div'); bub.className = 'bub3'; bub.style.display = 'none'; labRoot.appendChild(bub);   // 聊天對話泡泡（內容在 index.html 的 BUBBLES）
+  return {g:g, head:head, eyes:eyes, legL:legL, legR:legR, armL:armL, armR:armR, shirt:shirtM, tag:tag, bub:bub, bubText:'', animal:A.id, last:'', px:null, pz:null, yaw:0, blink:2 + Math.random() * 3, t:0};
 }
-function dropAv(a){ scene.remove(a.g); a.tag.remove(); a.g.traverse(function(m){ if (m.geometry && !m.userData.ink) m.geometry.dispose(); }); }
+function dropAv(a){ scene.remove(a.g); a.tag.remove(); a.bub.remove(); a.g.traverse(function(m){ if (m.geometry && !m.userData.ink) m.geometry.dispose(); }); }
 function poseAv(a, o, name, shirt, dt){
   var x = o.gx, z = o.gy, moving = false;
   if (a.px !== null){ var dx = x - a.px, dz = z - a.pz; if (dx * dx + dz * dz > 1e-6){ moving = true; var want = Math.atan2(dx, dz), d = ((want - a.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI; a.yaw += d * Math.min(1, dt * 12); } }
@@ -921,7 +922,14 @@ function placeLabels(){
     o.el.classList.toggle('sel', state.sel === o.b.t.id); o.el.classList.toggle('dim', !!dim);
   });
   O.zoneTags.forEach(function(o){ put(o.el, o.x, o.y, o.z, 30, 60, .7); });
-  Object.keys(O.avs).forEach(function(id){ var a = O.avs[id]; put(a.tag, a.g.position.x, a.g.position.y + .7, a.g.position.z, 18, 40, .6); });
+  var nowMs = Date.now();
+  Object.keys(O.avs).forEach(function(id){
+    var a = O.avs[id], x = a.g.position.x, y = a.g.position.y + .7, z = a.g.position.z;
+    put(a.tag, x, y, z, 18, 40, .6);
+    var b = window.BUBBLES && BUBBLES[id], txt = b && b.until > nowMs && a.tag.style.display !== 'none' ? b.text : '';
+    if (txt !== a.bubText){ a.bub.textContent = txt; a.bubText = txt; }
+    if (txt) put(a.bub, x, y, z, 18, 40, .6); else a.bub.style.display = 'none';
+  });
 }
 
 /* ---------- 天色：跟本機時間同步，或手動切白天／黃昏／夜晚 ---------- */

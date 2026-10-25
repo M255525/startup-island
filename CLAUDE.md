@@ -44,7 +44,7 @@
 
 ## 多人同島（presence）
 使用者要求「有其他人也在這個島，都可以看到」。
-- **後端**：`presence-worker/`（Cloudflare Worker＋Durable Object `Island`，WebSocket Hibernation API，單一房間 `idFromName('main')`）。只轉播 `{id, name, shirt, hair, gx, gy}`，**不寫任何儲存**，離線即消失。驗證：Origin 白名單（`m255525.github.io`、localhost／127.0.0.1、`null`＝file://）、名字去控制字元截 24 字、顏色 `#rrggbb`、座標夾在 -5..25、每連線每秒最多 15 則、單房最多 200 人；同 id 重連會踢掉舊連線。
+- **後端**：`presence-worker/`（Cloudflare Worker＋Durable Object `Island`，WebSocket Hibernation API；公開島 `idFromName('main')`，2026-10-25 起另有房間代碼，見下方「聊天＋房間代碼」）。只轉播 `{id, name, shirt, hair, gx, gy}`，**不寫任何儲存**，離線即消失。驗證：Origin 白名單（`m255525.github.io`、localhost／127.0.0.1、`null`＝file://）、名字去控制字元截 24 字、顏色 `#rrggbb`、座標夾在 -5..25、每連線每秒最多 15 則、單房最多 200 人；同 id 重連會踢掉舊連線。
 - **協定**：client→`hello`/`move`（移動中每 180ms，位移 >0.03 格才送）/`look`（換名字）/`ping`（25s）；server→`snapshot`/`join`/`move`/`look`/`leave`。
 - **前端**：`PRESENCE_URL` 預設 `wss://startup-island-presence.content-workflow.workers.dev/ws`；網址加 `?presence=ws://127.0.0.1:8787/ws` 可改連本機。id 每次載入頁面隨機產生（不用 sessionStorage，複製分頁會撞號互踢）。其他訪客用同一個 `makeAvatar()` 畫，收到位置後以走路速度（落後 >1.5 格時加倍、>8 格直接就位）走過去，`placeDepth()` 處理前後遮擋；自己的名牌加「（你）」。斷線指數退避重連（1.5s→30s），連不上就只剩自己，其他功能不受影響。
 - **本機測試**：這台 `wrangler dev` 在沙箱內會 `spawn UNKNOWN`（workerd 被擋），改用 Python 模擬轉播站（同協定，`websockets` 套件裝在暫存目錄）開兩個分頁驗證：互相看見、即時走動、換名字同步、關分頁另一邊顯示「離開了島」。Worker 本身需部署後再驗證。
@@ -117,3 +117,13 @@
 - 位置固定 `BOARD_AT=[18.55,5.6]`（試算商辦區東南邊空地），平面、立體、小地圖共用；`blockArea()` 讓角色繞開。
 - 平面：`drawBoard2D()` 畫柱子＋看板（主色標題列＋小長條圖）＋上下浮動的黃色「📋 看板」標籤＋脈動黃圈，點了 `openBoard()`（右側抽屜顯示全部內容與連結按鈕，並走到看板前）。
 - 立體：`MARKS.calc` 改成 `drawBoardCanvas()`（640×392，標題列／副標／三行條列／底部，背景淡淡的損益圖，`fitText()` 太長自動縮字），內容更新時 `Island3D.board()` 重畫貼圖；頂上轉動的黃色星星；HTML 標籤 `.tag3.board3`「📋 創業看板」；點看板或標籤都開抽屜。小地圖畫黃色「📋 看板」標籤。
+
+## 聊天＋房間代碼（2026-10-25）
+使用者問「上傳在 GitHub 的軟體可不可能進行聊天」，同意建議做法並要求加房間代碼。GitHub Pages 是靜態網站，聊天走既有的 presence Worker 同一條 WebSocket，不另架伺服器。
+- **協定**：client→`{t:'chat', text}`；server→`{t:'chat', id, name, shirt, animal, text, at}`（**連發話者自己也收到**，看到的是過濾後版本）、`{t:'chatSlow', wait}`；`snapshot` 多了 `chat`（最近 20 則）。
+- **轉播站過濾**（`cleanChat()`）：去控制字元與雙向文字控制字元、空白合併、截 60 字；網址／網域（`URLISH`，含 line.me、.tw 等）換成「〔網址〕」；`badwords.js` 新增 `maskBadWords()` 把命中範圍遮成 `*`（逐字正規化並記原文位置；「冒充管理者」那組 `CHAT_SKIP` 不遮）。每人兩則間隔 ≥2.5 秒（網頁端 3 秒）。歷史 `this.history` 只在 Durable Object 記憶體，房間休眠或沒人就清空，不寫 storage。已知副作用：`Essex` 會被遮成 `Es***`（同名字過濾的詞組取捨）。
+- **房間**：`/ws?room=代碼`，`cleanRoom()` 收 3～12 個 `[A-Z0-9]`（轉大寫），其他一律公開島；代碼房間是 `idFromName('room:'+代碼)` 的獨立 DO。前端 `ROOM`：網址 `?room=` 優先（並記到 `startupIslandRoom`），否則用上次的。`switchRoom()` 換房間＝關舊連線（`onclose` 用 `net.ws !== ws` 忽略舊連線）、清人與訊息、`history.replaceState` 改網址、重連。「開一個新房間」用 `crypto.getRandomValues` 從去掉 0/O/1/I 的字元產 6 碼；「複製邀請連結」＝目前網址去掉其他參數只留 `room`。說明卡人數旁顯示 `#roomTag`。
+- **網頁端**：工具列 `#tbChat`（未讀紅色 `#chatBadge`）、面板 `#chatBox`（房間列、`#roomPop`、`#chatList`、7 個快捷表情、輸入框、冷卻倒數、「顯示其他人頭上的對話泡泡」）；`startupIslandChat` 存 `{open, bubbles}`。顯示時再 `maskBadWords()`＋`escHtml()` 一次。🚫 封鎖只在這次瀏覽（id 每次載入都會變）。**手機（≤820px）聊天面板和下方抽屜互斥**（同時開會疊在一起，踩過）；面板本身 `overflow:auto`、`.chat>*{flex:none}`，否則內容會溢出卡片。
+- **對話泡泡**：共用 `BUBBLES`（id→{text, until}，自己是 `'me'`，顯示 4.5 秒＋每字 0.12 秒，最多再加 4 秒）。平面：`showBubble()` 畫在 `av.tagWrap` 裡 `translate(0,-84)`（名牌上方、最上層），12 個全形字換行、最多 3 行。立體：`makeAv()` 多一個 `.bub3` div，`placeLabels()` 跟名牌同位置（CSS `margin-top:-30px` 往上推），名牌被隱藏時泡泡也藏。
+- **本機測試**：`wrangler dev` 在沙箱跑不起來，改用 node 包真正的 `index.js`（把 `cloudflare:workers` 換成假的 `DurableObject` 類別、`badwords.js` 複製成 `.mjs`、`ws@8.18.0` 當伺服器，依 `room` 參數分不同 Island 實例），網頁加 `?presence=ws://127.0.0.1:8849/ws`。驗證：兩分頁互傳、遮罩（「幹你」→`**`）、網址移除、冷卻提示、進 CLASS1 後公開島人數各自變 1、邀請連結進同房間後互相看到訊息、重新整理看得到最近訊息、立體泡泡、375px 無橫向溢出、無 console 錯誤。
+- **部署順序**：先 `cd presence-worker && npx -y wrangler@4 deploy`，再 push 網頁。反過來的話舊轉播站會忽略 `chat` 與 `room`——訊息送不出去，**而且大家其實都在公開島卻以為在房間裡**。

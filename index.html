@@ -308,6 +308,46 @@ footer{background:var(--panel);padding:30px 16px 40px}
 .creator-box{background:var(--panel-2);border-radius:12px;padding:12px 18px;margin-bottom:14px}
 .creator-box p{margin:2px 0}
 .foot-links{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+
+/* 島上聊天＋房間 */
+.toolbar .badge{min-width:17px;height:17px;padding:0 5px;border-radius:999px;background:var(--lic);color:#fff;font:700 10.5px/17px var(--f-mono);text-align:center}
+.toolbar .badge[hidden]{display:none}
+.chat{position:absolute;right:16px;bottom:76px;z-index:37;width:min(330px,calc(100vw - 32px));max-height:min(470px,calc(100% - 160px));display:flex;flex-direction:column;padding:12px 14px 10px;overflow:auto}
+.chat>*{flex:none}
+.chat[hidden]{display:none}
+body.view-time .chat{bottom:214px}
+.chat-head{display:flex;align-items:center;gap:8px}
+.chat-room{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-room b{font-family:var(--f-mono);color:var(--coral-ink);letter-spacing:.06em}
+.chat-roombar{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px}
+.room-pop{background:var(--panel-2);border-radius:12px;padding:10px;margin:4px 0}
+.room-pop[hidden]{display:none}
+.room-pop .note{font-size:12px;color:var(--ink-dim);margin:0 0 8px}
+.room-pop .name-row input{font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.08em}
+.room-pop .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.chat-list{list-style:none;margin:6px 0;padding:0 2px 0 0;overflow:auto;height:180px;font-size:13px}
+.chat-list li{display:flex;gap:6px;align-items:flex-start;padding:4px 0;border-bottom:1px dashed var(--line)}
+.chat-list .who{flex:none;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-weight:700;font-size:11.5px;padding:1px 8px;border-radius:999px}
+.chat-list .msg{flex:1;min-width:0;overflow-wrap:anywhere}
+.chat-list li.mine .msg{font-weight:700}
+.chat-list .blk{flex:none;border:0;background:none;cursor:pointer;font-size:12px;padding:0 2px;opacity:.5}
+.chat-list .blk:hover{opacity:1}
+.chat-list li.chat-empty{color:var(--ink-faint);font-size:12.5px;padding:10px 0;border:0}
+.chat-emo{display:flex;gap:4px;margin:2px 0 6px}
+.chat-emo button{flex:1;border:1px solid var(--line);background:var(--panel);border-radius:10px;font-size:17px;line-height:1.5;cursor:pointer;padding:0}
+.chat-emo button:hover{border-color:var(--coral)}
+.chat-form{display:flex;gap:6px}
+.chat-form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+.chat-form input:focus{outline:2px solid var(--coral);outline-offset:0;border-color:transparent}
+.chat-form .save{border:0;background:var(--ink);color:var(--panel);padding:6px 14px;border-radius:999px;cursor:pointer;font-weight:700;white-space:nowrap;min-width:64px}
+.chat-form .save:disabled{opacity:.5;cursor:default}
+.chat-hint{min-height:16px;margin:4px 0 2px;font-size:12px;color:var(--ink-dim);overflow-wrap:anywhere}
+.chat-hint.err{color:var(--lic)}
+.chat-opt{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-dim);cursor:pointer}
+.chat-opt input{accent-color:var(--coral)}
+.room-tag{font-family:var(--f-mono);font-weight:700;color:var(--coral-ink)}
+.bub3{color:#3b2f3a;background:#fff;border:2px solid #3b2f3a;border-radius:14px;padding:4px 10px;font:700 13px/1.35 var(--f-body);width:max-content;max-width:200px;white-space:normal;overflow-wrap:anywhere;text-align:center;margin-top:-30px;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+.bub3::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-6px;border:6px solid transparent;border-top-color:#3b2f3a;border-bottom:0}
 .foot-links button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:13px}
 
 /* ---------- RWD ---------- */
@@ -327,6 +367,9 @@ footer{background:var(--panel);padding:30px 16px 40px}
   body.view-time .story{bottom:250px}
   body.view-time .pop{bottom:244px}
   .tb-script{order:3;flex-basis:100%}
+  .chat{left:16px;right:16px;width:auto;bottom:80px;max-height:calc(100% - 170px)}
+  .chat-list{height:min(150px,22vh)}
+  body.view-time .chat{bottom:250px;max-height:calc(100% - 330px)}
 }
 @media (max-width:520px){
   .topbar{gap:6px;padding:10px 10px}
@@ -400,7 +443,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <div class="stats"><span><b id="stZones">9</b> 地點</span><span><b id="stTools">0</b> 工具</span><span><b id="stLinks">0</b> 接力線</span><span><i class="lic-dot"></i><b id="stLic">0</b> 需序號</span></div>
     <div class="clock"><span>島上時間</span><b id="clockNow">--:--</b><span id="clockNote"></span></div>
     <div class="clock"><span>你已探索</span><b id="seenCount">0</b><span>棟建築</span></div>
-    <div class="clock"><span>島上現在</span><b id="onlineN">1</b><span>人（其他訪客也看得到你走動）</span></div>
+    <div class="clock"><span>島上現在</span><b id="onlineN">1</b><span>人<span class="room-tag" id="roomTag"></span>（其他訪客也看得到你走動）</span></div>
     <button type="button" class="go3d" id="go3d" data-view="3d">走進立體島 →</button>
     <div class="clock"><span>你是</span><b id="meName" class="me-name"></b><button type="button" class="tc-toggle" id="reroll">改名字</button></div>
   </section>
@@ -415,6 +458,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <button type="button" id="tbBird">看全島</button>
     <button type="button" id="tbWalk" aria-pressed="true"><span class="dot"></span>人物跟隨</button>
     <button type="button" id="tbLog" aria-pressed="false"><span class="dot"></span>足跡</button>
+    <button type="button" id="tbChat" aria-pressed="false" aria-controls="chatBox"><span class="dot"></span>聊天<b class="badge" id="chatBadge" hidden>0</b></button>
     <button type="button" id="tbSky" class="only3d" aria-label="切換天色"><span class="dot"></span>天色：現在</button>
     <button type="button" id="tbSound" class="only3d" aria-pressed="false"><span class="dot"></span>環境音</button>
     <button type="button" id="tbMini" class="only3d" aria-pressed="true"><span class="dot"></span>小地圖</button>
@@ -455,6 +499,22 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <div class="tb-ticks" id="tbTicks"></div>
   </section>
 
+  <section class="card chat" id="chatBox" hidden aria-label="島上聊天">
+    <div class="chat-head"><span class="eyebrow">Island Chat</span><span class="chat-room" id="chatRoom"></span><button type="button" class="x" id="chatClose" aria-label="關閉聊天">×</button></div>
+    <div class="chat-roombar"><button type="button" class="chip-btn" id="roomBtn" aria-expanded="false">換房間</button><button type="button" class="chip-btn" id="roomCopy">複製邀請連結</button></div>
+    <div class="room-pop" id="roomPop" hidden>
+      <p class="note">輸入同一個房間代碼的人，才會在島上看到彼此、看到彼此的訊息，適合同一班一起用。代碼是 3～12 個英文字母或數字。</p>
+      <div class="name-row"><input id="roomInput" maxlength="12" autocomplete="off" placeholder="例如 CLASS1" aria-label="房間代碼"><button type="button" class="chip-btn" id="roomJoin">加入</button></div>
+      <p class="name-err" id="roomErr" aria-live="polite"></p>
+      <div class="row"><button type="button" class="chip-btn" id="roomNew">開一個新房間</button><button type="button" class="chip-btn" id="roomPublic">回到公開島</button></div>
+    </div>
+    <ol class="chat-list" id="chatList" aria-live="polite"></ol>
+    <div class="chat-emo" id="chatEmo" role="group" aria-label="快捷表情"></div>
+    <form class="chat-form" id="chatForm" autocomplete="off"><input id="chatInput" maxlength="60" placeholder="說點什麼…（60 字內）" aria-label="聊天訊息"><button type="submit" class="save" id="chatSend">送出</button></form>
+    <p class="chat-hint" id="chatHint" aria-live="polite"></p>
+    <label class="chat-opt"><input type="checkbox" id="chatBubbles" checked>顯示其他人頭上的對話泡泡</label>
+  </section>
+
   <section class="card name-pop" id="namePop" hidden role="dialog" aria-labelledby="nameTitle">
     <div class="eyebrow">Your Character</div>
     <h3 id="nameTitle">選一隻動物、取個名字</h3>
@@ -487,6 +547,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
         <li>各工具的功能、計算結果與正確性，以該工具自己的說明與警語為準。標示「需序號」的工具須另外取得課程序號或登入。</li>
         <li>接力線與時間軸是課程整理的建議使用順序，工具之間沒有自動傳資料。</li>
         <li>探索足跡只存在你這台裝置的瀏覽器，不會上傳。為了讓同時在島上的人互相看見，系統只會即時交換你的角色名字、選的動物、衣服顏色與位置，不會記錄或保存。</li>
+        <li>聊天訊息只即時轉給同一個房間裡的人；轉播站只在記憶體暫留最近 20 則讓剛進來的人看得到，不寫入任何儲存，房間沒人後就消失。訊息會自動拿掉網址、把不雅字詞遮成 *，但無法擋下所有不當內容，請勿在聊天中留下電話、地址等個人資料。</li>
         <li>僅供教學、課程及個人使用，禁止未經授權公開發布、販售或商業化使用。</li>
       </ul>
     </div>
@@ -1316,6 +1377,19 @@ function hasBadWord(name) {
   var n = normName(name);
   return BAD_WORDS.some(function(w){ return n.indexOf(normName(w)) >= 0; });
 }
+// 聊天訊息用：命中的範圍遮成 *（伺服器端已經遮過，這裡是舊版轉播站的備援）
+var CHAT_SKIP = ['admin', '管理員', '管理员'];
+function maskBadWords(text) {
+  var chars = Array.from(String(text || '')), norm = '', at = [];
+  chars.forEach(function(ch, i){ var n = normName(ch); for (var j = 0; j < n.length; j++){ norm += n[j]; at.push(i); } });
+  var hit = chars.map(function(){ return false; });
+  BAD_WORDS.forEach(function(w){
+    if (CHAT_SKIP.indexOf(w) >= 0) return;
+    var nw = normName(w); if (!nw) return;
+    for (var p = norm.indexOf(nw); p >= 0; p = norm.indexOf(nw, p + 1)) for (var k = at[p]; k <= at[p + nw.length - 1]; k++) hit[k] = true;
+  });
+  return chars.map(function(ch, i){ return hit[i] && !/\s/.test(ch) ? '*' : ch; }).join('');
+}
 // ---- 名字禁用字詞 end ----
 function pick(a){ return a[Math.floor(Math.random() * a.length)]; }
 function newAvatar(){ return {name:randomName(), shirt:pick(SHIRTS), hair:pick(HAIRS), animal:pick(ANIMALS).id}; }
@@ -1608,6 +1682,14 @@ function saveNamePop(){
 // 只交換「隨機名字、選的動物、衣服顏色、位置」，沒有其他個人資料。連不上時島上只有自己，其他功能照常。
 var PRESENCE_URL = 'wss://startup-island-presence.content-workflow.workers.dev/ws';
 (function(){ var q = /[?&]presence=([^&]+)/.exec(location.search); if (q) PRESENCE_URL = decodeURIComponent(q[1]); })();
+// 房間代碼：網址 ?room=代碼 優先，其次是上次用的；空白＝公開島
+var KEY_ROOM = 'startupIslandRoom';
+function cleanRoomCode(v){ var r = String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return /^[A-Z0-9]{3,12}$/.test(r) ? r : ''; }
+var ROOM = (function(){
+  var q = /[?&]room=([^&#]*)/.exec(location.search);
+  if (q){ var r = cleanRoomCode(decodeURIComponent(q[1])); lsSet(KEY_ROOM, r); return r; }
+  return cleanRoomCode(lsGet(KEY_ROOM, ''));
+})();
 var net = {ws:null, open:false, retry:1500, lastSent:0, lastPing:0, sentGx:null, sentGy:null,
            id:Math.random().toString(36).slice(2, 12)};   // 每次載入頁面一個新 id（複製分頁也不會撞號）
 var PEERS = {};
@@ -1615,15 +1697,17 @@ function netSend(o){ if (net.open) try { net.ws.send(JSON.stringify(o)); } catch
 function netConnect(){
   if (!PRESENCE_URL || !window.WebSocket) return;
   var ws;
-  try { ws = new WebSocket(PRESENCE_URL); } catch(e){ return; }
+  var url = PRESENCE_URL + (ROOM ? (PRESENCE_URL.indexOf('?') >= 0 ? '&' : '?') + 'room=' + ROOM : '');
+  try { ws = new WebSocket(url); } catch(e){ return; }
   net.ws = ws;
   ws.onopen = function(){
-    net.open = true; net.retry = 1500;
+    net.open = true; net.retry = 1500; renderOnline();
     netSend({t:'hello', id:net.id, name:me.name, shirt:me.shirt, hair:me.hair, animal:me.animal, gx:walker.gx, gy:walker.gy});
     net.sentGx = walker.gx; net.sentGy = walker.gy;
   };
   ws.onmessage = function(ev){ var m; try { m = JSON.parse(ev.data); } catch(e){ return; } netHandle(m); };
   ws.onclose = function(){
+    if (net.ws !== ws) return;                                     // 換房間時關掉的舊連線
     net.open = false; clearPeers();
     setTimeout(netConnect, net.retry); net.retry = Math.min(net.retry * 2, 30000);
   };
@@ -1637,16 +1721,177 @@ function addPeer(p){
   PEERS[p.id] = o; placeDepth(o.av.g, o.gx + o.gy); poseAvatar(o.av, o, false);
   renderOnline();
 }
-function removePeer(id){ var o = PEERS[id]; if (!o) return; o.av.g.remove(); o.av.tagWrap.remove(); delete PEERS[id]; renderOnline(); }
+function removePeer(id){ var o = PEERS[id]; if (!o) return; o.av.g.remove(); o.av.tagWrap.remove(); delete PEERS[id]; delete BUBBLES[id]; renderOnline(); }
 function clearPeers(){ Object.keys(PEERS).forEach(removePeer); }
-function renderOnline(){ if ($('onlineN')) $('onlineN').textContent = Object.keys(PEERS).length + 1; }
+function renderOnline(){
+  var n = Object.keys(PEERS).length + 1;
+  if ($('onlineN')) $('onlineN').textContent = n;
+  if ($('roomTag')) $('roomTag').textContent = ROOM ? '・房間 ' + ROOM : '';
+  $('chatRoom').innerHTML = (ROOM ? '房間 <b>' + ROOM + '</b>' : '公開島') + ' · ' + n + ' 人' + (net.open ? '' : '（連線中…）');
+}
 function netHandle(m){
-  if (m.t === 'snapshot'){ clearPeers(); (m.peers || []).forEach(addPeer); if ((m.peers || []).length) addLog('島上現在還有 ' + m.peers.length + ' 位訪客'); }
+  if (m.t === 'snapshot'){
+    clearPeers(); (m.peers || []).forEach(addPeer); if ((m.peers || []).length) addLog('島上現在還有 ' + m.peers.length + ' 位訪客');
+    chat.list = []; (m.chat || []).forEach(function(c){ addChat(c, true); }); renderChat(); renderOnline();
+  }
+  else if (m.t === 'chat'){ addChat(m, false); }
+  else if (m.t === 'chatSlow'){ chatHint('說太快了，請等 ' + Math.ceil((m.wait || 1000) / 1000) + ' 秒再送。', true); }
   else if (m.t === 'join'){ addPeer(m.peer); if (m.peer && m.peer.id !== net.id) addLog(m.peer.name + ' 也來到島上'); }
   else if (m.t === 'move' && PEERS[m.id]){ PEERS[m.id].tx = m.gx; PEERS[m.id].ty = m.gy; }
   else if (m.t === 'look' && PEERS[m.id]){ var o = PEERS[m.id]; o.name = m.name; setAvatarLook(o.av, m); }
   else if (m.t === 'leave' && PEERS[m.id]){ addLog(PEERS[m.id].name + ' 離開了島'); removePeer(m.id); }
 }
+/* ---------- 島上聊天：訊息走同一條轉播連線，只轉給同房間的人 ---------- */
+var KEY_CHAT = 'startupIslandChat';
+var chatPrefs = lsGet(KEY_CHAT, {open:false, bubbles:true});
+var chat = {list:[], unread:0, blocked:{}, nextAt:0, timer:0};
+var BUBBLES = {};                          // id（自己是 'me'）→ {text, until}；平面與立體共用
+var CHAT_EMO = ['👋', '👍', '😂', '❤️', '💡', '🎉', '🙏'];
+var CHAT_GAP = 3000;
+function chatHint(t, err){ var h = $('chatHint'); h.textContent = t || ''; h.classList.toggle('err', !!err); }
+function addChat(m, old){
+  if (!m || !m.text) return;
+  var mine = m.id === net.id;
+  var c = {id:String(m.id || ''), mine:mine, name:hasBadWord(m.name) ? '旅人' : String(m.name || '旅人'), shirt:/^#[0-9a-f]{6}$/i.test(m.shirt) ? m.shirt : '#8aa0aa',
+           animal:m.animal, text:maskBadWords(Array.from(String(m.text)).slice(0, 60).join('')), at:m.at || Date.now()};
+  chat.list.push(c); if (chat.list.length > 60) chat.list.shift();
+  if (old) return;
+  if (!chat.blocked[c.id]) showBubble(mine ? 'me' : c.id, c.text);
+  if (!mine && !chat.blocked[c.id] && $('chatBox').hidden){ chat.unread++; renderBadge(); }
+  renderChat();
+}
+function renderBadge(){ var b = $('chatBadge'); b.hidden = !chat.unread; b.textContent = chat.unread > 9 ? '9+' : chat.unread; }
+function renderChat(){
+  var ol = $('chatList'), atBottom = ol.scrollHeight - ol.scrollTop - ol.clientHeight < 30;
+  var rows = chat.list.filter(function(c){ return !chat.blocked[c.id]; });
+  ol.innerHTML = rows.length ? rows.map(function(c){
+    var A = animalOf(c, c.id), t = new Date(c.at), hm = ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2);
+    return '<li class="' + (c.mine ? 'mine' : '') + '" title="' + hm + '"><span class="who" style="background:' + c.shirt + '">' + A.emoji + ' ' + escHtml(c.name) + (c.mine ? '（你）' : '') + '</span>' +
+      '<span class="msg">' + escHtml(c.text) + '</span>' + (c.mine ? '' : '<button type="button" class="blk" data-block="' + escHtml(c.id) + '" title="不再看到這個人的訊息" aria-label="封鎖 ' + escHtml(c.name) + '">🚫</button>') + '</li>';
+  }).join('') : '<li class="chat-empty">還沒有人說話。打個招呼，或按下面的表情 👋</li>';
+  if (atBottom || rows.length && rows[rows.length - 1].mine) ol.scrollTop = ol.scrollHeight;
+}
+$('chatList').addEventListener('click', function(e){
+  var b = e.target.closest('[data-block]'); if (!b) return;
+  var id = b.getAttribute('data-block');
+  chat.blocked[id] = true; showBubble(id, '');
+  renderChat(); chatHint('已封鎖，這次瀏覽不會再看到對方的訊息（重新整理頁面就會解除）。');
+});
+function sendChat(text){
+  text = String(text || '').replace(/[\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!text) return false;
+  if (!net.open){ chatHint('還沒連上島上的轉播站，訊息送不出去，稍後再試。', true); return false; }
+  var now = Date.now();
+  if (now < chat.nextAt){ chatHint('說太快了，請等 ' + Math.ceil((chat.nextAt - now) / 1000) + ' 秒再送。', true); return false; }
+  if (/(https?:\/\/|www\.)/i.test(text)) chatHint('網址會被自動拿掉喔。');
+  else if (hasBadWord(text.replace(/管理員|管理员|admin/gi, ''))) chatHint('不適合的字詞會被遮成 *。');
+  else chatHint('');
+  netSend({t:'chat', text:Array.from(text).slice(0, 60).join('')});
+  chat.nextAt = now + CHAT_GAP; cooldown();
+  return true;
+}
+function cooldown(){
+  clearTimeout(chat.timer);
+  var left = chat.nextAt - Date.now(), btn = $('chatSend');
+  if (left <= 0){ btn.disabled = false; btn.textContent = '送出'; return; }
+  btn.disabled = true; btn.textContent = Math.ceil(left / 1000) + ' 秒';
+  chat.timer = setTimeout(cooldown, Math.min(left, 250));
+}
+$('chatForm').addEventListener('submit', function(e){ e.preventDefault(); if (sendChat($('chatInput').value)) $('chatInput').value = ''; });
+$('chatEmo').innerHTML = CHAT_EMO.map(function(x){ return '<button type="button" data-emo="' + x + '" aria-label="送出 ' + x + '">' + x + '</button>'; }).join('');
+$('chatEmo').addEventListener('click', function(e){ var b = e.target.closest('[data-emo]'); if (b) sendChat(b.getAttribute('data-emo')); });
+function setChatOpen(open, focus){
+  $('chatBox').hidden = !open; $('tbChat').setAttribute('aria-pressed', String(open));
+  chatPrefs.open = open; lsSet(KEY_CHAT, chatPrefs);
+  if (open){ if (innerWidth <= 820){ closeDrawer('detail'); closeDrawer('logDrawer'); } chat.unread = 0; renderBadge(); renderChat(); renderOnline(); if (focus && !matchMedia('(pointer:coarse)').matches) setTimeout(function(){ $('chatInput').focus(); }, 0); }
+  else { $('roomPop').hidden = true; $('roomBtn').setAttribute('aria-expanded', 'false'); }
+}
+$('tbChat').addEventListener('click', function(){ setChatOpen($('chatBox').hidden, true); });
+$('chatClose').addEventListener('click', function(){ setChatOpen(false); });
+$('chatBubbles').checked = chatPrefs.bubbles !== false;
+$('chatBubbles').addEventListener('change', function(){
+  chatPrefs.bubbles = this.checked; lsSet(KEY_CHAT, chatPrefs);
+  if (!this.checked) Object.keys(BUBBLES).forEach(function(id){ if (id !== 'me') showBubble(id, ''); });
+});
+// 頭上的對話泡泡：平面地圖畫在名牌上方（跟名牌一樣在最上層），立體由 island3d.js 讀 BUBBLES
+function wrapBubble(text, maxW, maxLines){
+  var lines = [], cur = '', w = 0;
+  Array.from(text).forEach(function(ch){
+    var cw = ch.charCodeAt(0) > 255 ? 1 : .55;
+    if (w + cw > maxW && cur){ lines.push(cur); cur = ''; w = 0; }
+    cur += ch; w += cw;
+  });
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines){ lines = lines.slice(0, maxLines); lines[maxLines - 1] = Array.from(lines[maxLines - 1]).slice(0, -1).join('') + '…'; }
+  return lines;
+}
+function showBubble(id, text){
+  if (id !== 'me' && chatPrefs.bubbles === false) text = '';
+  var av = id === 'me' ? walker.av : PEERS[id] && PEERS[id].av;
+  if (text) BUBBLES[id] = {text:text, until:Date.now() + 4500 + Math.min(4000, Array.from(text).length * 120)}; else delete BUBBLES[id];
+  if (!av) return;
+  if (!av.bubble) av.bubble = el('g', {'pointer-events':'none', transform:'translate(0,-84)'}, av.tagWrap);
+  av.bubble.innerHTML = '';
+  clearTimeout(av.bubbleT);
+  if (!text) return;
+  var lines = wrapBubble(text, 12, 3), wmax = 0;
+  lines.forEach(function(l){ var w = 0; Array.from(l).forEach(function(ch){ w += ch.charCodeAt(0) > 255 ? 13 : 7.2; }); wmax = Math.max(wmax, w); });
+  var W = Math.max(34, wmax + 20), H = lines.length * 16 + 10;
+  el('path', {d:'M-6 -2 L0 8 L6 -2 Z', fill:'#fff', stroke:'#3b2f3a', 'stroke-width':1.6, 'stroke-linejoin':'round'}, av.bubble);
+  el('rect', {x:-W/2, y:-H, width:W, height:H, rx:12, fill:'#fff', stroke:'#3b2f3a', 'stroke-width':1.6}, av.bubble);
+  el('rect', {x:-5, y:-2.4, width:10, height:3.4, fill:'#fff'}, av.bubble);
+  lines.forEach(function(l, i){ el('text', {x:0, y:-H + 18 + i * 16, 'text-anchor':'middle', 'font-size':13, 'font-weight':700, fill:'#3b2f3a', 'font-family':'var(--f-body)'}, av.bubble).textContent = l; });
+  var until = BUBBLES[id].until;
+  av.bubbleT = setTimeout(function(){ if (av.bubble) av.bubble.innerHTML = ''; if (BUBBLES[id] && BUBBLES[id].until === until) delete BUBBLES[id]; }, until - Date.now());
+}
+// 房間：每個代碼是轉播站上一個獨立房間，公開島＝沒有代碼
+function switchRoom(code){
+  code = cleanRoomCode(code);
+  $('roomPop').hidden = true; $('roomBtn').setAttribute('aria-expanded', 'false');
+  if (code === ROOM) return;
+  ROOM = code; lsSet(KEY_ROOM, ROOM);
+  try {
+    var u = new URL(location.href); if (ROOM) u.searchParams.set('room', ROOM); else u.searchParams.delete('room');
+    history.replaceState(null, '', u.pathname + u.search + u.hash);
+  } catch(e){}
+  var old = net.ws; net.ws = null; net.open = false;
+  if (old) try { old.close(); } catch(e){}
+  clearPeers(); chat.list = []; showBubble('me', ''); BUBBLES = {};
+  net.retry = 1500; netConnect();
+  addLog(ROOM ? '進入房間 ' + ROOM : '回到公開島');
+  renderChat(); renderOnline(); chatHint(ROOM ? '已進入房間 ' + ROOM + '，只有輸入同一個代碼的人看得到你。' : '已回到公開島，所有訪客都看得到你。');
+}
+function inviteUrl(){
+  var u = new URL(location.href); u.search = ''; u.hash = '';
+  if (ROOM) u.searchParams.set('room', ROOM);
+  return u.toString();
+}
+$('roomBtn').addEventListener('click', function(){
+  var open = $('roomPop').hidden; $('roomPop').hidden = !open; this.setAttribute('aria-expanded', String(open));
+  if (open){ $('roomInput').value = ROOM; $('roomErr').textContent = ''; setTimeout(function(){ $('roomInput').focus(); }, 0); }
+});
+function joinFromInput(){
+  var raw = $('roomInput').value.trim();
+  if (!raw){ switchRoom(''); return; }
+  var code = cleanRoomCode(raw);
+  if (!code){ $('roomErr').textContent = '代碼要 3～12 個英文字母或數字。'; $('roomInput').focus(); return; }
+  switchRoom(code);
+}
+$('roomJoin').addEventListener('click', joinFromInput);
+$('roomInput').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); joinFromInput(); } });
+$('roomNew').addEventListener('click', function(){
+  var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', c = '', r = new Uint32Array(6);
+  crypto.getRandomValues(r);
+  for (var i = 0; i < 6; i++) c += abc[r[i] % abc.length];
+  switchRoom(c);
+});
+$('roomPublic').addEventListener('click', function(){ switchRoom(''); });
+$('roomCopy').addEventListener('click', function(){
+  var url = inviteUrl(), done = function(){ chatHint('已複製' + (ROOM ? '房間 ' + ROOM + ' 的' : '公開島的') + '邀請連結，貼給同學就能來同一個房間。'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function(){ chatHint(url); });
+  else chatHint(url);
+});
+
 function netTick(now){
   if (!net.open) return;
   var moved = net.sentGx === null || Math.hypot(walker.gx - net.sentGx, walker.gy - net.sentGy) > .03;
@@ -1926,7 +2171,7 @@ $('dBody').addEventListener('click', function(e){
 $('dBody').addEventListener('click', function(e){
   if (e.target.closest('.go')) addLog('前往 ' + toolById[state.sel].name);
 });
-function openDrawer(id){ $(id).classList.add('open'); if (id === 'logDrawer') $('tbLog').setAttribute('aria-pressed', 'true'); }
+function openDrawer(id){ if (innerWidth <= 820 && !$('chatBox').hidden) setChatOpen(false); $(id).classList.add('open'); if (id === 'logDrawer') $('tbLog').setAttribute('aria-pressed', 'true'); }
 function openBoard(refresh){
   var c = board.color || '#2ec4b6';
   if (!refresh){
@@ -1956,7 +2201,7 @@ function closeDrawer(id){
 }
 document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click', function(){ closeDrawer(b.getAttribute('data-close')); }); });
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape'){ closeNamePop(); closeDrawer('detail'); closeDrawer('logDrawer'); $('linkPop').hidden = true; $('tbLinks').setAttribute('aria-expanded', 'false'); }
+  if (e.key === 'Escape'){ $('roomPop').hidden = true; closeNamePop(); closeDrawer('detail'); closeDrawer('logDrawer'); $('linkPop').hidden = true; $('tbLinks').setAttribute('aria-expanded', 'false'); }
 });
 
 function renderSeen(){
@@ -2081,7 +2326,7 @@ placeAvatarDepth();
 if (firstVisit) addLog(me.name + ' 登上了創業島');
 blockArea(BOARD_AT[0], BOARD_AT[1], .75);
 loadBoard(); setInterval(loadBoard, 10 * 60 * 1000);
-netConnect();
+netConnect(); renderChat(); renderOnline(); if (chatPrefs.open) setChatOpen(true);
 renderRelList();
 setTags(state.tags);
 setPaused(state.paused);

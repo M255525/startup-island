@@ -34,3 +34,23 @@ export function hasBadWord(name) {
   const n = normName(name);
   return BAD_WORDS.some((w) => n.includes(normName(w)));
 }
+
+// 聊天訊息用：把禁用字詞「遮成 *」而不是整句擋掉。逐字正規化並記住每個字在原文的位置，
+// 命中的範圍（含中間夾的空白、標點）一律換成 *。「冒充管理者」那組只用在名字，聊天裡談到管理員很正常。
+const CHAT_SKIP = ['admin', '管理員', '管理员'];
+export function maskBadWords(text) {
+  const chars = Array.from(String(text || ''));
+  let norm = '';
+  const at = [];
+  chars.forEach((ch, i) => { for (const c of normName(ch)) { norm += c; at.push(i); } });
+  const hit = new Array(chars.length).fill(false);
+  for (const w of BAD_WORDS) {
+    if (CHAT_SKIP.includes(w)) continue;
+    const nw = normName(w);
+    if (!nw) continue;
+    for (let p = norm.indexOf(nw); p >= 0; p = norm.indexOf(nw, p + 1)) {
+      for (let k = at[p]; k <= at[p + nw.length - 1]; k++) hit[k] = true;
+    }
+  }
+  return chars.map((ch, i) => (hit[i] && !/\s/.test(ch) ? '*' : ch)).join('');
+}
