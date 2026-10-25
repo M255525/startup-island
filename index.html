@@ -102,6 +102,46 @@ a{color:inherit}
 .pulse{animation:blink 1.4s ease-in-out infinite}
 @keyframes blink{50%{opacity:.2}}
 
+/* ---------- 立體漫遊 ---------- */
+.world3d{position:absolute;inset:0;z-index:1;display:none;background:#9dd6ee}
+.world3d.on{display:block}
+body.view-3d #map{display:none}
+#c3d{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;outline:none}
+.lab3d{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lab3d>*{position:absolute;left:0;top:0;transform-origin:50% 100%;will-change:transform}
+.tag3{pointer-events:auto;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:700 12px var(--f-body);padding:3px 10px;border-radius:999px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(12,48,64,.18)}
+.tag3:hover,.tag3.sel{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.tag3.dim{filter:saturate(.3);opacity:.45!important}
+.zone3{text-align:center;color:#fff;white-space:nowrap;text-shadow:0 0 4px var(--zc,#2f5b3a),0 0 4px var(--zc,#2f5b3a),0 2px 6px rgba(0,0,0,.35)}
+.zone3 b{display:block;font:400 19px var(--f-display);letter-spacing:.06em}
+.zone3 small{display:block;font:9.5px var(--f-mono);letter-spacing:.14em;opacity:.85}
+.zone3.decor b{font-size:13.5px;letter-spacing:.08em}
+.av3{color:#fff;font:700 12px var(--f-body);padding:3px 10px;border-radius:999px;white-space:nowrap;border:1px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.av3.mine{pointer-events:auto;cursor:pointer;border-width:2px}
+.zone-banner{position:absolute;left:50%;top:84px;transform:translate(-50%,-10px);z-index:22;pointer-events:none;text-align:center;opacity:0;transition:opacity .6s,transform .6s;background:rgba(251,253,253,.88);backdrop-filter:blur(6px);border-radius:18px;padding:10px 22px 12px;box-shadow:var(--shadow);max-width:min(460px,calc(100vw - 32px))}
+.zone-banner.show{opacity:1;transform:translate(-50%,0)}
+.zone-banner small{display:block;font:10.5px var(--f-mono);letter-spacing:.2em;color:var(--ink-faint)}
+.zone-banner b{display:block;font:400 28px var(--f-display);letter-spacing:.08em;-webkit-text-stroke:.5px rgba(20,48,61,.35)}
+.zone-banner span{display:block;font-size:13px;color:var(--ink-dim);margin-top:2px}
+@media (prefers-color-scheme: dark){.zone-banner{background:rgba(17,36,46,.88)}}
+.hint3d{position:absolute;right:16px;top:70px;z-index:21;padding:10px 14px;max-width:270px}
+.hint3d[hidden]{display:none}
+.hint3d ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink-dim)}
+.hint3d li{margin:3px 0}
+.hint3d b{color:var(--ink)}
+.load3d{position:absolute;inset:0;z-index:23;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(28,110,140,.9);color:#e9f6f9;text-align:center;padding:16px}
+.load3d[hidden]{display:none}
+.load3d .tiles{display:flex;gap:8px}
+.load3d .tiles i{width:16px;height:16px;transform:rotate(45deg) scaleY(.7);border-radius:3px;animation:hop 1s ease-in-out infinite}
+.load3d .tiles i:nth-child(2){animation-delay:.12s}.load3d .tiles i:nth-child(3){animation-delay:.24s}.load3d .tiles i:nth-child(4){animation-delay:.36s}
+.load3d p{font-family:var(--f-display);font-size:18px;margin:0;letter-spacing:.06em}
+.only3d{display:none!important}
+body.view-3d .only3d{display:flex!important}
+body.view-3d #tbPan{display:none}
+.go3d{display:block;width:100%;margin-top:10px;border:0;background:var(--coral);color:#fff;font-weight:700;font-size:14px;padding:9px 12px;border-radius:12px;cursor:pointer}
+.go3d:hover{background:var(--coral-ink)}
+body.view-3d .go3d{display:none}
+
 /* ---------- 浮動面板通用 ---------- */
 .card{background:var(--panel);border-radius:16px;box-shadow:var(--shadow)}
 .eyebrow{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;color:var(--ink-faint);text-transform:uppercase}
@@ -265,7 +305,11 @@ footer{background:var(--panel);padding:30px 16px 40px}
 }
 @media (max-width:520px){
   .topbar{gap:6px;padding:10px 10px}
-  .seg button{padding:6px 10px;font-size:13px;white-space:nowrap}
+  .seg button{padding:6px 8px;font-size:13px;white-space:nowrap}
+  .legend{display:none}
+  .hint3d{left:16px;right:16px;max-width:none;top:64px}
+  .zone-banner{top:64px}
+  .zone-banner b{font-size:22px}
   .brand{padding:6px 12px;white-space:nowrap}
   .brand b{font-size:19px}
   .legend{padding:7px 10px;font-size:12px}
@@ -290,6 +334,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <a class="brand" href="#" id="brandLink"><b>創業島</b><span class="mono">STARTUP ISLAND</span></a>
     <nav class="seg" aria-label="檢視模式">
       <button type="button" data-view="map" aria-pressed="true">地圖</button>
+      <button type="button" data-view="3d" aria-pressed="false">立體</button>
       <button type="button" data-view="list" aria-pressed="false">清單</button>
       <button type="button" data-view="time" aria-pressed="false">時間軸</button>
     </nav>
@@ -299,6 +344,21 @@ footer{background:var(--panel);padding:30px 16px 40px}
 
   <svg id="map" class="pan" role="application" aria-label="創業島地圖：每棟建築是一個線上工具"></svg>
 
+  <div class="world3d" id="world3d">
+    <canvas id="c3d" aria-label="創業島立體漫遊：拖曳轉視角、點地面走過去、點建築看工具"></canvas>
+    <div class="lab3d" id="lab3d"></div>
+    <div class="zone-banner" id="zoneBanner" aria-live="polite"></div>
+    <section class="card hint3d" id="hint3d" hidden>
+      <div class="tc-head"><span class="eyebrow">3D Walk</span><button type="button" class="tc-toggle" id="hint3dClose">知道了</button></div>
+      <ul>
+        <li><b>拖曳</b>轉視角，<b>滾輪／雙指</b>拉近拉遠</li>
+        <li><b>點地面</b>走過去，<b>W A S D／方向鍵</b>自己走</li>
+        <li><b>點建築或名牌</b>看工具，「看全島」切換環島鳥瞰</li>
+      </ul>
+    </section>
+    <div class="load3d" id="load3d" hidden><div class="tiles"><i style="background:#f4b942"></i><i style="background:#2ec4b6"></i><i style="background:#ef6b8a"></i><i style="background:#4f9dff"></i></div><p>島嶼正在立起來…</p></div>
+  </div>
+
   <section class="card title-card" id="titleCard" aria-label="關於創業島">
     <div class="tc-head"><span class="eyebrow">Startup Island Map</span><button type="button" class="tc-toggle" id="tcToggle" aria-expanded="true">收合</button></div>
     <h1>從一個點子出發，<br>走完整座島</h1>
@@ -306,6 +366,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <div class="clock"><span>島上時間</span><b id="clockNow">--:--</b><span id="clockNote"></span></div>
     <div class="clock"><span>你已探索</span><b id="seenCount">0</b><span>棟建築</span></div>
     <div class="clock"><span>島上現在</span><b id="onlineN">1</b><span>人（其他訪客也看得到你走動）</span></div>
+    <button type="button" class="go3d" id="go3d" data-view="3d">走進立體島 →</button>
     <div class="clock"><span>你是</span><b id="meName" class="me-name"></b><button type="button" class="tc-toggle" id="reroll">改名字</button></div>
   </section>
 
@@ -319,6 +380,8 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <button type="button" id="tbBird">看全島</button>
     <button type="button" id="tbWalk" aria-pressed="true"><span class="dot"></span>人物跟隨</button>
     <button type="button" id="tbLog" aria-pressed="false"><span class="dot"></span>足跡</button>
+    <button type="button" id="tbSky" class="only3d" aria-label="切換天色"><span class="dot"></span>天色：現在</button>
+    <button type="button" id="tbSound" class="only3d" aria-pressed="false"><span class="dot"></span>環境音</button>
   </nav>
 
   <section class="card pop" id="linkPop" hidden aria-label="接力線">
@@ -588,11 +651,13 @@ var STORY = [
   {chap:'03 創業島地圖', eb:'Relay Lines', title:'接力線：工具之間怎麼接力',
    body:'虛線表示前一個工具的產出，適合當下一個工具的輸入。在工具列的「接力線」可以只看你在意的幾條。', act:function(){ setView('map'); setLinks(true); birdview(); }},
   {chap:'03 創業島地圖', eb:'Your Turn', title:'點一棟建築，開始探索',
-   body:'探索過的建築會插上小旗子，「足跡」會記下你的路線。想重看導覽，打開足跡按「重播導覽」。', act:function(){ setView('map'); birdview(); }}
+   body:'探索過的建築會插上小旗子，「足跡」會記下你的路線。想重看導覽，打開足跡按「重播導覽」。', act:function(){ setView('map'); birdview(); }},
+  {chap:'03 創業島地圖', eb:'3D Walk', title:'走進立體島',
+   body:'換個角度：在「立體」裡拖曳轉視角、點地面或用 W A S D 走路，天色跟你的時間同步，晚上亮燈的是這時段常用的工具。工具列還能切換天色、打開環境音。', act:function(){ setView('3d'); }}
 ];
 
 /* ================= 創業島：主程式 ================= */
-var KEY_TITLE_MINI = 'startupIslandTitleMini', KEY_SEEN = 'startupIslandSeen', KEY_LOG = 'startupIslandLog', KEY_STORY = 'startupIslandStoryDone', KEY_PREF = 'startupIslandPrefs';
+var KEY_VIEW = 'startupIslandView', KEY_TITLE_MINI = 'startupIslandTitleMini', KEY_SEEN = 'startupIslandSeen', KEY_LOG = 'startupIslandLog', KEY_STORY = 'startupIslandStoryDone', KEY_PREF = 'startupIslandPrefs';
 var NS = 'http://www.w3.org/2000/svg';
 var HW = 36, HH = 18;                     // 等角格子半寬、半高
 var SLOTS = [[0,0],[1,0],[0,1],[1,1],[2,0],[0,2],[2,1],[1,2]];
@@ -821,6 +886,7 @@ function buildMap(){
   for (var k2 = 0; k2 < 40; k2++){ var a2 = tr()*Math.PI*2, r2 = 1 + tr()*2.6; tryTree(1.0 + Math.cos(a2)*r2, 9.6 + Math.sin(a2)*r2); }   // 公園裡的樹
   for (var k3 = 0; k3 < 2500 && trees.length < 150; k3++){ var a3 = tr()*Math.PI*2, r3 = Math.sqrt(tr())*12.4; tryTree(C[0] + Math.cos(a3)*r3, C[1] + Math.sin(a3)*r3); }
 
+  L.trees = trees;
   var things = [];
   trees.forEach(function(t){ things.push({kind:'tree', t:t, d:t.gx + t.gy}); });
   TOOLS.forEach(function(t){ things.push({kind:'bld', t:t, d:t.gx + t.gy}); });
@@ -1046,6 +1112,7 @@ function drawLinks(){
     el('circle', {cx:end[0], cy:end[1], r:3.5, fill:rel[e.rel].color, class:state.sel && !touches ? 'link-path fade' : ''}, L.links);
   });
   svg.classList.toggle('hide-links', !state.links);
+  if (window.Island3D) Island3D.links();
 }
 
 /* ---------- 船、雲 ---------- */
@@ -1545,14 +1612,17 @@ function setPlaying(on){
 /* ---------- 檢視切換 ---------- */
 function setView(v){
   if (state.view === v) return;
+  if (state.view === '3d' && window.Island3D) Island3D.leave();
   state.view = v;
+  lsSet(KEY_VIEW, v === '3d' ? '3d' : 'map');
   document.body.className = document.body.className.replace(/view-\w+/, 'view-' + v);
   document.querySelectorAll('[data-view]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-view') === v)); });
   if (v !== 'time') setPlaying(false);
   if (v === 'list') renderList();
   state.lastLine = null;
   renderTime();
-  if (v !== 'list') birdview();
+  if (v === '3d' && window.Island3D) Island3D.enter();
+  else if (v !== 'list') birdview();
 }
 
 /* ---------- 清單檢視 ---------- */
@@ -1672,7 +1742,7 @@ $('nameDice').addEventListener('click', function(){ $('nameInput').value = rando
 $('nameSave').addEventListener('click', saveNamePop);
 $('nameCancel').addEventListener('click', closeNamePop);
 $('nameInput').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); saveNamePop(); } });
-$('tbBird').addEventListener('click', function(){ if (state.view === 'list') setView('map'); else birdview(); });
+$('tbBird').addEventListener('click', function(){ if (state.view === 'list') setView('map'); else if (state.view === '3d') Island3D.overview(); else birdview(); });
 $('tbLog').addEventListener('click', function(){
   if ($('logDrawer').classList.contains('open')) closeDrawer('logDrawer');
   else { closeDrawer('detail'); renderLog(); openDrawer('logDrawer'); }
@@ -1713,12 +1783,12 @@ $('tcToggle').addEventListener('click', function(){
   var on = !$('titleCard').classList.contains('mini'); setTitleMini(on); lsSet(KEY_TITLE_MINI, on);
 });
 setTitleMini(lsGet(KEY_TITLE_MINI, false));
-$('brandLink').addEventListener('click', function(e){ e.preventDefault(); setView('map'); birdview(); });
+$('brandLink').addEventListener('click', function(e){ e.preventDefault(); if (state.view === '3d') Island3D.overview(); else { setView('map'); birdview(); } });
 
 /* ---------- 引導故事 ---------- */
 var storyI = 0;
 function startStory(){ storyI = 0; $('story').hidden = false; showStep(); }
-function endStory(){ $('story').hidden = true; lsSet(KEY_STORY, true); if (state.view !== 'list') birdview(); }
+function endStory(){ $('story').hidden = true; lsSet(KEY_STORY, true); if (state.view === 'map' || state.view === 'time') birdview(); }
 function showStep(){
   var s = STORY[storyI];
   $('sEyebrow').textContent = s.eb;
@@ -1757,14 +1827,16 @@ renderLog();
 birdview();
 requestAnimationFrame(tick);
 setInterval(renderTime, 60000);
-var resizeT; window.addEventListener('resize', function(){ clearTimeout(resizeT); resizeT = setTimeout(function(){ if (state.view !== 'list') birdview(); }, 200); });
+var resizeT; window.addEventListener('resize', function(){ clearTimeout(resizeT); resizeT = setTimeout(function(){ if (state.view === 'map' || state.view === 'time') birdview(); }, 200); });
 setTimeout(function(){
   $('loader').classList.add('done');
   setTimeout(function(){ $('loader').remove(); }, 600);
   if (!lsGet(KEY_STORY, false)) startStory();
+  else if (lsGet(KEY_VIEW, 'map') === '3d') setView('3d');
 }, REDUCED ? 100 : 900);
-window.__startupIsland = {state:state, TOOLS:TOOLS, LINKS:LINKS, ZONES:ZONES, setView:setView, setT:setT, setTimeMode:setTimeMode, openTool:openTool, toolUrl:toolUrl};
+window.__startupIsland = {state:state, TOOLS:TOOLS, LINKS:LINKS, ZONES:ZONES, walker:walker, setView:setView, setT:setT, setTimeMode:setTimeMode, openTool:openTool, toolUrl:toolUrl};
 </script>
+<script src="island3d.js"></script>
 
 <script>
 /* ================= 頂部跑馬燈 — 獨立運作，沿用工作區共用授權伺服器的公告內容 ================= */

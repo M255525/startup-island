@@ -1,9 +1,10 @@
 // 僅供「加入主畫面」安裝需求使用：network-first + 同源快取備援。
-const CACHE_NAME = 'startup-island-shell-v1';
+const CACHE_NAME = 'startup-island-shell-v2';
 const SHELL_FILES = [
   './',
   './index.html',
   './manual.html',
+  './island3d.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',

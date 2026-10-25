@@ -68,3 +68,14 @@
 - 比對前正規化：小寫、全形轉半形、leet 字（0→o、1→i、3→e、4→a、5→s、7→t、@→a、$→s）、去掉空白與標點；用詞組（「幹你」）不用單字（「幹」），避免誤擋「能幹」「幹勁」。英文刻意不放 `fuc`、`sht`、`kill`、`ass` 這類太短的片段（會擋到 fuchsia、Ashton、skill、class）。
 - 網頁端：自訂名字含禁用字詞會提示「這個名字含有不適合的字詞，請換一個。」；載入時舊名字若含禁用字詞自動換隨機名；其他訪客名字也再檢查一次，命中就顯示「旅人」；`randomName()` 保證不會抽到。已用 node 測 24 個案例（含變體與誤擋測試）與全部 1,920 種隨機名字組合，皆通過。
 - 創作者資訊：`manual.html#creator`「關於創作者」（介紹、專長、證照與培訓、經歷），內容逐字取自 `影音工具/ai-video-studio/manual.html` 的「關於創作者」，只把最後一句換成創業島；`index.html` 頁尾放摘要＋連到完整經歷。日後創作者資料更新，各工具手冊要一起同步。
+
+## 立體漫遊（2026-10-25）
+使用者要求「創業島更立體化、更有沉浸式的感覺」。新增第四個檢視 **「立體」**（`data-view="3d"`），程式在獨立檔 **`island3d.js`**（`window.Island3D`），切到立體時才 `import()` Three.js `0.160.0`（jsdelivr ES module），不影響平面地圖載入速度；SW 快取已加 `island3d.js`（cache v2）。
+- **不另外維護一份島**：地形、建築、河、路、橋、樹、人物全部讀 `index.html` 的全域資料（`TOOLS`/`ZONES`/`RIVER_S`/`ROAD_S`/`BRIDGE_S`/`HILLS`/`WATERS`/`GREENS`/`L.trees`/`walker`/`PEERS`/`me`）。改 `POS`、加工具、改地形，兩種檢視自動一致。`buildMap()` 多了一行 `L.trees = trees` 給立體用。
+- 座標 x=gx、z=gy；SVG 像素高度 × `HK=1/30`。`landY()` 是解析式地形高度（草地 .5、海平面 `SEA=.2`、河道與池塘往下挖、山丘用 smoothstep 圓台）；**海、河、池塘共用同一張水面**（land 高於水面就蓋住），河床低於水面就自然出現河。橋面 `DECK=.58`，`standY()` 在橋上取橋面高度。道路用 ribbon 貼地，`ROAD_S` 每 49 點一條路（對應 `buildMap` 的 `k<=48`）。
+- 建築依 `t.style` 各有 3D 造型（涼亭／斜屋頂住家／倉庫／學校旗桿操場／柱廊／遮陽棚商店／高樓／燈塔光束／觀景台圓頂／指揮塔天線）；窗戶是 CanvasTexture 重複貼圖，`emissiveMap` 控制夜裡亮窗（該時段常用的工具才亮）。
+- 操作：拖曳轉視角、滾輪／雙指縮放、點地面 `walkTo()`、點建築或 HTML 名牌 `openTool()`、WASD／方向鍵直接推 `walker.path`（撞牆沿牆滑，用 `walkableAt()`）。走路動畫、多人同步仍由主程式 `stepWalker`/`netTick` 負責，立體只讀位置來畫。**擋在鏡頭與自己之間的建築自動半透明**（Ray×Box3）。走進地點顯示 `#zoneBanner`。
+- 工具列在立體時：「看全島」切環島旋轉鳥瞰、「拖曳」隱藏、多出 `#tbSky`（現在／白天／黃昏／夜晚）與 `#tbSound`（WebAudio 合成浪聲／鳥叫／蟲鳴，預設關）；「接力線」畫成 3D 弧線＋流動光點（`drawLinks()` 末尾呼叫 `Island3D.links()`）。
+- localStorage：`startupIslandView`（記住上次是地圖或立體，導覽看完才套用）、`startupIsland3d`（`{sky, sound, hint}`）。導覽多一步「走進立體島」（共 11 步）。
+- 沒有 WebGL 或 CDN 載入失敗 → 顯示訊息後自動回到地圖。
+- 驗證（2026-10-25，Playwright 1366×800 與 375×740）：載入無 console 錯誤、夜景／鳥瞰／接力線截圖正常、WASD 可走、切換地圖↔時間軸↔立體正常、375px `scrollWidth===clientWidth`。
