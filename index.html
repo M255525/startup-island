@@ -346,6 +346,24 @@ body.view-time .chat{bottom:214px}
 .chat-opt{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-dim);cursor:pointer}
 .chat-opt input{accent-color:var(--coral)}
 .room-tag{font-family:var(--f-mono);font-weight:700;color:var(--coral-ink)}
+.chat-list .who{cursor:pointer;border:0;font-family:inherit}
+.chat-list .to{flex:none;font-size:11.5px;font-weight:700;color:var(--ink-dim);padding-top:1px;white-space:nowrap}
+.chat-list li.tome{background:rgba(255,210,63,.18);border-radius:8px;padding-left:4px;padding-right:4px}
+.chat-list li.tome .to{color:var(--coral-ink)}
+.chat-to{display:flex;align-items:center;gap:6px;margin:0 0 6px;font-size:12.5px;font-weight:700}
+.chat-to[hidden]{display:none}
+.chat-to .pill{color:#fff;padding:2px 10px;border-radius:999px;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-to button{border:0;background:var(--panel-2);border-radius:999px;cursor:pointer;font-size:12px;padding:2px 10px;margin-left:auto}
+.talk-card{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);z-index:36;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;max-width:calc(100vw - 32px);font-size:13.5px}
+.talk-card[hidden]{display:none}
+body.view-time .talk-card{bottom:216px}
+.talk-card .msg{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.talk-card .msg b{font-weight:700}
+.talk-card button{flex:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px;cursor:pointer;font-weight:700;font-size:13px;white-space:nowrap}
+.talk-card button.main{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.talk-card button.x2{border:0;background:none;color:var(--ink-faint);padding:4px 6px}
+.talk-card.incoming{box-shadow:0 0 0 3px rgba(255,210,63,.6),var(--shadow)}
+.av3.peer{pointer-events:auto;cursor:pointer}
 .bub3{color:#3b2f3a;background:#fff;border:2px solid #3b2f3a;border-radius:14px;padding:4px 10px;font:700 13px/1.35 var(--f-body);width:max-content;max-width:200px;white-space:normal;overflow-wrap:anywhere;text-align:center;margin-top:-30px;box-shadow:0 3px 10px rgba(0,0,0,.2)}
 .bub3::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-6px;border:6px solid transparent;border-top-color:#3b2f3a;border-bottom:0}
 .foot-links button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:13px}
@@ -369,6 +387,8 @@ body.view-time .chat{bottom:214px}
   .tb-script{order:3;flex-basis:100%}
   .chat{left:16px;right:16px;width:auto;bottom:80px;max-height:calc(100% - 170px)}
   .chat-list{height:min(150px,22vh)}
+  .talk-card{bottom:84px;left:16px;right:16px;transform:none;max-width:none}
+  .talk-card .msg{flex:1}
   body.view-time .chat{bottom:250px;max-height:calc(100% - 330px)}
 }
 @media (max-width:520px){
@@ -510,10 +530,13 @@ body.view-time .chat{bottom:214px}
     </div>
     <ol class="chat-list" id="chatList" aria-live="polite"></ol>
     <div class="chat-emo" id="chatEmo" role="group" aria-label="快捷表情"></div>
+    <div class="chat-to" id="chatTo" hidden><span>對</span><span class="pill" id="chatToName"></span><span>說</span><button type="button" id="chatToClear">改成對大家說</button></div>
     <form class="chat-form" id="chatForm" autocomplete="off"><input id="chatInput" maxlength="60" placeholder="說點什麼…（60 字內）" aria-label="聊天訊息"><button type="submit" class="save" id="chatSend">送出</button></form>
     <p class="chat-hint" id="chatHint" aria-live="polite"></p>
     <label class="chat-opt"><input type="checkbox" id="chatBubbles" checked>顯示其他人頭上的對話泡泡</label>
   </section>
+
+  <section class="card talk-card" id="talkCard" hidden aria-live="polite"><span class="msg" id="talkMsg"></span><span id="talkActs"></span></section>
 
   <section class="card name-pop" id="namePop" hidden role="dialog" aria-labelledby="nameTitle">
     <div class="eyebrow">Your Character</div>
@@ -1508,11 +1531,9 @@ function makeAvatar(data, mine){
   av.armF = el('line', {x1:0, y1:-19, x2:0, y2:-11, 'stroke-width':2.8, 'stroke-linecap':'round'}, av.body);
   av.head = el('g', {}, av.body);                                                                    // Q 版動物大頭（依動物重畫）
   av.tagWrap = el('g', {}, L.ptags);
-  if (mine){                                  // 點自己的名牌就能改名字
-    av.tagWrap.style.pointerEvents = 'auto'; av.tagWrap.style.cursor = 'pointer';
-    av.tagWrap.addEventListener('click', function(e){ e.stopPropagation(); openNamePop(); });
-    av.tagWrap.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
-  }
+  av.tagWrap.style.pointerEvents = 'auto'; av.tagWrap.style.cursor = 'pointer';   // 點自己的名牌改名字，點別人的名牌開始對話
+  av.tagWrap.addEventListener('click', function(e){ e.stopPropagation(); if (mine) openNamePop(); else if (data.id) openTalk(data.id); });
+  av.tagWrap.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
   av.tag = el('g', {transform:'translate(0,-58)'}, av.tagWrap);
   setAvatarLook(av, data);
   return av;
@@ -1591,7 +1612,7 @@ function setAvatarLook(av, data){
   av.shirt.setAttribute('fill', data.shirt);
   var tag = av.tag; tag.innerHTML = '';
   var shown = hasBadWord(data.name) ? '旅人' : data.name;
-  var label = av.mine ? shown + '（你）✎' : shown;
+  var label = av.mine ? shown + '（你）✎' : shown + ' 💬';
   var w = 0; for (var i = 0; i < label.length; i++) w += label.charCodeAt(i) > 255 ? 12 : 7; w += 18;
   el('rect', {x:-w/2, y:-11, width:w, height:20, rx:10, fill:data.shirt, stroke:'#fff', 'stroke-width':av.mine ? 2.2 : 1, opacity:av.mine ? 1 : .92}, tag);
   el('path', {d:'M-4 9 L0 14 L4 9 Z', fill:data.shirt}, tag);
@@ -1637,6 +1658,7 @@ function stepWalker(dt, now){
     var sx = dx - dy; if (Math.abs(sx) > .01) walker.face = sx > 0 ? 1 : -1;
     moving = true;
   }
+  if (!moving){ var ft = faceTarget(walker); if (ft){ var fs = (ft.gx - walker.gx) - (ft.gy - walker.gy); if (Math.abs(fs) > .01) walker.face = fs > 0 ? 1 : -1; } }
   walker.phase = moving ? walker.phase + dt * 11 : walker.phase * .8;
   walker.elev += (groundAt(walker.gx, walker.gy) - walker.elev) * Math.min(1, dt * 12);
   poseAvatar(walker.av, walker, moving);
@@ -1721,7 +1743,11 @@ function addPeer(p){
   PEERS[p.id] = o; placeDepth(o.av.g, o.gx + o.gy); poseAvatar(o.av, o, false);
   renderOnline();
 }
-function removePeer(id){ var o = PEERS[id]; if (!o) return; o.av.g.remove(); o.av.tagWrap.remove(); delete PEERS[id]; delete BUBBLES[id]; renderOnline(); }
+function removePeer(id){
+  var o = PEERS[id]; if (!o) return; o.av.g.remove(); o.av.tagWrap.remove(); delete PEERS[id]; delete BUBBLES[id]; renderOnline();
+  if (chat.to === id){ setTalkTo(null); chatHint(o.name + ' 離開了，訊息改成對大家說。'); }
+  if (talk.id === id) hideTalk();
+}
 function clearPeers(){ Object.keys(PEERS).forEach(removePeer); }
 function renderOnline(){
   var n = Object.keys(PEERS).length + 1;
@@ -1753,11 +1779,19 @@ function addChat(m, old){
   if (!m || !m.text) return;
   var mine = m.id === net.id;
   var c = {id:String(m.id || ''), mine:mine, name:hasBadWord(m.name) ? '旅人' : String(m.name || '旅人'), shirt:/^#[0-9a-f]{6}$/i.test(m.shirt) ? m.shirt : '#8aa0aa',
-           animal:m.animal, text:maskBadWords(Array.from(String(m.text)).slice(0, 60).join('')), at:m.at || Date.now()};
+           animal:m.animal, text:maskBadWords(Array.from(String(m.text)).slice(0, 60).join('')), at:m.at || Date.now(),
+           to:m.to ? String(m.to) : '', toName:m.to ? (hasBadWord(m.toName) ? '旅人' : String(m.toName || '旅人')) : ''};
+  c.tome = !!c.to && c.to === net.id;
   chat.list.push(c); if (chat.list.length > 60) chat.list.shift();
   if (old) return;
-  if (!chat.blocked[c.id]) showBubble(mine ? 'me' : c.id, c.text);
-  if (!mine && !chat.blocked[c.id] && $('chatBox').hidden){ chat.unread++; renderBadge(); }
+  if (chat.blocked[c.id]) return;
+  showBubble(mine ? 'me' : c.id, c.to ? '@' + (c.tome ? '你' : c.toName) + ' ' + c.text : c.text);
+  if (c.to){                                             // 說話的人轉頭面向對象
+    var who = mine ? walker : PEERS[c.id];
+    if (who){ who.faceId = c.tome ? 'me' : c.to; who.faceUntil = Date.now() + 12000; }
+  }
+  if (c.tome){ showIncoming(c); if (!chat.to && !$('chatBox').hidden) setTalkTo(c.id); }
+  if (!mine && $('chatBox').hidden){ chat.unread++; renderBadge(); }
   renderChat();
 }
 function renderBadge(){ var b = $('chatBadge'); b.hidden = !chat.unread; b.textContent = chat.unread > 9 ? '9+' : chat.unread; }
@@ -1766,15 +1800,17 @@ function renderChat(){
   var rows = chat.list.filter(function(c){ return !chat.blocked[c.id]; });
   ol.innerHTML = rows.length ? rows.map(function(c){
     var A = animalOf(c, c.id), t = new Date(c.at), hm = ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2);
-    return '<li class="' + (c.mine ? 'mine' : '') + '" title="' + hm + '"><span class="who" style="background:' + c.shirt + '">' + A.emoji + ' ' + escHtml(c.name) + (c.mine ? '（你）' : '') + '</span>' +
+    return '<li class="' + (c.mine ? 'mine' : '') + (c.tome ? ' tome' : '') + '" title="' + hm + '"><button type="button" class="who" style="background:' + c.shirt + '"' + (c.mine ? ' disabled' : ' data-talk="' + escHtml(c.id) + '" title="對 ' + escHtml(c.name) + ' 說話"') + '>' + A.emoji + ' ' + escHtml(c.name) + (c.mine ? '（你）' : '') + '</button>' +
+      (c.to ? '<span class="to">→ ' + (c.tome ? '你' : escHtml(c.toName)) + '</span>' : '') +
       '<span class="msg">' + escHtml(c.text) + '</span>' + (c.mine ? '' : '<button type="button" class="blk" data-block="' + escHtml(c.id) + '" title="不再看到這個人的訊息" aria-label="封鎖 ' + escHtml(c.name) + '">🚫</button>') + '</li>';
   }).join('') : '<li class="chat-empty">還沒有人說話。打個招呼，或按下面的表情 👋</li>';
   if (atBottom || rows.length && rows[rows.length - 1].mine) ol.scrollTop = ol.scrollHeight;
 }
 $('chatList').addEventListener('click', function(e){
+  var t = e.target.closest('[data-talk]'); if (t){ var tid = t.getAttribute('data-talk'); if (PEERS[tid]) openTalk(tid); else chatHint('對方已經不在島上了。'); return; }
   var b = e.target.closest('[data-block]'); if (!b) return;
   var id = b.getAttribute('data-block');
-  chat.blocked[id] = true; showBubble(id, '');
+  chat.blocked[id] = true; showBubble(id, ''); if (chat.to === id) setTalkTo(null); if (talk.id === id) hideTalk();
   renderChat(); chatHint('已封鎖，這次瀏覽不會再看到對方的訊息（重新整理頁面就會解除）。');
 });
 function sendChat(text){
@@ -1786,7 +1822,9 @@ function sendChat(text){
   if (/(https?:\/\/|www\.)/i.test(text)) chatHint('網址會被自動拿掉喔。');
   else if (hasBadWord(text.replace(/管理員|管理员|admin/gi, ''))) chatHint('不適合的字詞會被遮成 *。');
   else chatHint('');
-  netSend({t:'chat', text:Array.from(text).slice(0, 60).join('')});
+  var msg = {t:'chat', text:Array.from(text).slice(0, 60).join('')};
+  if (chat.to && PEERS[chat.to]) msg.to = chat.to;
+  netSend(msg);
   chat.nextAt = now + CHAT_GAP; cooldown();
   return true;
 }
@@ -1800,6 +1838,93 @@ function cooldown(){
 $('chatForm').addEventListener('submit', function(e){ e.preventDefault(); if (sendChat($('chatInput').value)) $('chatInput').value = ''; });
 $('chatEmo').innerHTML = CHAT_EMO.map(function(x){ return '<button type="button" data-emo="' + x + '" aria-label="送出 ' + x + '">' + x + '</button>'; }).join('');
 $('chatEmo').addEventListener('click', function(e){ var b = e.target.closest('[data-emo]'); if (b) sendChat(b.getAttribute('data-emo')); });
+
+/* ---------- 碰到人就能聊：靠近時提示、點別人的動物或名牌開始對話 ---------- */
+// 「對某人說」大家都看得到（刻意不做私訊），只是標出對象、雙方轉頭面對面
+var talk = {id:null, mode:null, dismissed:{}, timer:0, lastCheck:0};
+function faceTarget(o){
+  if (!o.faceId || !(o.faceUntil > Date.now())) return null;
+  return o.faceId === 'me' ? walker : PEERS[o.faceId] || null;
+}
+function peerLabel(o){ var A = animalOf(o.av && o.av.data || o, o.id); return A.emoji + ' ' + (hasBadWord(o.name) ? '旅人' : o.name); }
+function setTalkTo(id){
+  chat.to = id && PEERS[id] && !chat.blocked[id] ? id : null;
+  var o = chat.to && PEERS[chat.to];
+  $('chatTo').hidden = !o;
+  if (o){ $('chatToName').textContent = peerLabel(o); $('chatToName').style.background = (o.av.data && o.av.data.shirt) || '#8aa0aa'; $('chatInput').placeholder = '對 ' + o.name + ' 說…'; }
+  else $('chatInput').placeholder = '說點什麼…（60 字內）';
+}
+$('chatToClear').addEventListener('click', function(){ setTalkTo(null); $('chatInput').focus(); });
+function openTalk(id){
+  var o = PEERS[id]; if (!o || chat.blocked[id]) return;
+  hideTalk(); talk.dismissed[id] = true;
+  setTalkTo(id); setChatOpen(true, true);
+  var dx = walker.gx - o.gx, dy = walker.gy - o.gy, d = Math.hypot(dx, dy);
+  if (d > 1.6){ var k = d ? .8 / d : 0; walker.goal = null; walkTo(o.gx + dx * k, o.gy + dy * k); }   // 走到對方旁邊
+  walker.faceId = id; walker.faceUntil = Date.now() + 15000;
+  chatHint('現在是對 ' + o.name + ' 說話；同房間的人也看得到。');
+}
+function greet(id){
+  var o = PEERS[id]; if (!o) return;
+  var keep = chat.to; chat.to = id;
+  var ok = sendChat('👋');
+  chat.to = keep;
+  if (ok){ walker.faceId = id; walker.faceUntil = Date.now() + 12000; hideTalk(); talk.dismissed[id] = true; }
+}
+function renderTalkCard(html, acts, cls){
+  $('talkMsg').innerHTML = html;
+  $('talkActs').innerHTML = acts;
+  $('talkCard').className = 'card talk-card' + (cls ? ' ' + cls : '');
+  $('talkCard').hidden = false;
+}
+function hideTalk(){ $('talkCard').hidden = true; talk.id = null; talk.mode = null; clearTimeout(talk.timer); }
+function showIncoming(c){
+  if (!PEERS[c.id]) return;
+  talk.id = c.id; talk.mode = 'in';
+  renderTalkCard('<b>' + escHtml(peerLabel(PEERS[c.id])) + '</b> 對你說：「' + escHtml(c.text) + '」',
+    '<button type="button" class="main" data-tk="reply">回覆</button><button type="button" class="x2" data-tk="close" aria-label="關閉">×</button>', 'incoming');
+  clearTimeout(talk.timer); talk.timer = setTimeout(function(){ if (talk.mode === 'in') hideTalk(); }, 9000);
+}
+$('talkCard').addEventListener('click', function(e){
+  var b = e.target.closest('[data-tk]'); if (!b) return;
+  var act = b.getAttribute('data-tk'), id = talk.id;
+  if (act === 'close'){ if (id) talk.dismissed[id] = true; hideTalk(); }
+  else if (act === 'hi') greet(id);
+  else if (act === 'talk' || act === 'reply') openTalk(id);
+});
+function nearestPeer(){
+  var best = null, bd = 1e9;
+  Object.keys(PEERS).forEach(function(id){
+    if (chat.blocked[id]) return;
+    var o = PEERS[id], d = Math.hypot(o.gx - walker.gx, o.gy - walker.gy);
+    if (d < bd){ bd = d; best = id; }
+  });
+  return best ? {id:best, d:bd} : null;
+}
+function checkNear(now){                                  // 每 0.3 秒看一次身邊有沒有人
+  if (now - talk.lastCheck < 300) return; talk.lastCheck = now;
+  Object.keys(talk.dismissed).forEach(function(id){ var o = PEERS[id]; if (!o || Math.hypot(o.gx - walker.gx, o.gy - walker.gy) > 2.6) delete talk.dismissed[id]; });
+  if (talk.mode === 'in') return;
+  var n = nearestPeer(), mobileChat = innerWidth <= 820 && !$('chatBox').hidden;
+  if (talk.mode === 'near'){
+    var o = PEERS[talk.id];
+    if (!o || Math.hypot(o.gx - walker.gx, o.gy - walker.gy) > 1.9 || chat.to === talk.id || mobileChat) hideTalk();
+    return;
+  }
+  if (!n || n.d > 1.4 || talk.dismissed[n.id] || chat.to === n.id || mobileChat) return;
+  talk.id = n.id; talk.mode = 'near';
+  renderTalkCard('<b>' + escHtml(peerLabel(PEERS[n.id])) + '</b> 就在你旁邊',
+    '<button type="button" data-tk="hi">👋 打招呼</button> <button type="button" class="main" data-tk="talk">💬 聊天</button><button type="button" class="x2" data-tk="close" aria-label="關閉">×</button>');
+}
+// 平面地圖：點到別人的動物身上（名牌另外可點）
+function peerAtClient(cx, cy){
+  var c = clientToSvg(cx, cy), r = svg.getBoundingClientRect(), s = Math.min(r.width / vb.w, r.height / vb.h), tol = Math.max(10, 14 / s), hit = null, hd = 1e9;
+  Object.keys(PEERS).forEach(function(id){
+    var o = PEERS[id], p = up(iso(o.gx, o.gy), o.elev), dx = Math.abs(c.x - p[0]), dy = c.y - p[1];
+    if (dx < tol && dy > -44 - tol && dy < tol){ var d = dx + Math.abs(dy + 20); if (d < hd){ hd = d; hit = id; } }
+  });
+  return hit;
+}
 function setChatOpen(open, focus){
   $('chatBox').hidden = !open; $('tbChat').setAttribute('aria-pressed', String(open));
   chatPrefs.open = open; lsSet(KEY_CHAT, chatPrefs);
@@ -1856,7 +1981,7 @@ function switchRoom(code){
   } catch(e){}
   var old = net.ws; net.ws = null; net.open = false;
   if (old) try { old.close(); } catch(e){}
-  clearPeers(); chat.list = []; showBubble('me', ''); BUBBLES = {};
+  clearPeers(); chat.list = []; showBubble('me', ''); BUBBLES = {}; setTalkTo(null); hideTalk(); talk.dismissed = {};
   net.retry = 1500; netConnect();
   addLog(ROOM ? '進入房間 ' + ROOM : '回到公開島');
   renderChat(); renderOnline(); chatHint(ROOM ? '已進入房間 ' + ROOM + '，只有輸入同一個代碼的人看得到你。' : '已回到公開島，所有訪客都看得到你。');
@@ -1894,6 +2019,7 @@ $('roomCopy').addEventListener('click', function(){
 
 function netTick(now){
   if (!net.open) return;
+  checkNear(now);
   var moved = net.sentGx === null || Math.hypot(walker.gx - net.sentGx, walker.gy - net.sentGy) > .03;
   if (moved && now - net.lastSent > 180){
     net.lastSent = now; net.lastPing = now; net.sentGx = walker.gx; net.sentGy = walker.gy;
@@ -1909,6 +2035,7 @@ function stepPeers(dt){
       if (d <= step){ o.gx = o.tx; o.gy = o.ty; } else { o.gx += dx / d * step; o.gy += dy / d * step; }
       var sx = dx - dy; if (Math.abs(sx) > .01) o.face = sx > 0 ? 1 : -1;
     }
+    if (!moving){ var ft = faceTarget(o); if (ft){ var fs = (ft.gx - o.gx) - (ft.gy - o.gy); if (Math.abs(fs) > .01) o.face = fs > 0 ? 1 : -1; } }
     o.phase = moving ? o.phase + dt * 11 : o.phase * .8;
     o.elev += (groundAt(o.gx, o.gy) - o.elev) * Math.min(1, dt * 12);
     poseAvatar(o.av, o, moving);
@@ -2005,7 +2132,7 @@ svg.addEventListener('click', function(e){
   var g = e.target.closest && e.target.closest('.bld');
   if (g) openTool(g.getAttribute('data-id'));
   else if (e.target.closest && e.target.closest('.board')) openBoard();
-  else { var q = clientToGrid(e.clientX, e.clientY); walker.goal = null; walkTo(q[0], q[1]); }
+  else { var pid = peerAtClient(e.clientX, e.clientY); if (pid){ openTalk(pid); return; } var q = clientToGrid(e.clientX, e.clientY); walker.goal = null; walkTo(q[0], q[1]); }
 });
 svg.addEventListener('keydown', function(e){
   var g = e.target.closest && e.target.closest('.bld');

@@ -162,6 +162,10 @@ export class Island extends DurableObject {
       if (!text) return;
       r.chatAt = now;
       const msg = { t: 'chat', id: a.id, name: a.name, shirt: a.shirt, animal: a.animal, text, at: now };
+      // 「對某人說」：仍然轉給同房間所有人（刻意不做私訊，大家看得到才好管理），只標出對象
+      const to = String(m.to || '').replace(/[^a-z0-9]/gi, '').slice(0, 16);
+      const target = to && to !== a.id ? this.peers(ws).find((p) => p.id === to) : null;
+      if (target) { msg.to = target.id; msg.toName = target.name; }
       this.history.push(msg);
       if (this.history.length > CHAT_HISTORY) this.history.shift();
       this.broadcast(msg); // 連自己也送：發話的人看到的就是過濾後的版本

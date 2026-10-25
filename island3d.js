@@ -843,6 +843,7 @@ function dropAv(a){ scene.remove(a.g); a.tag.remove(); a.bub.remove(); a.g.trave
 function poseAv(a, o, name, shirt, dt){
   var x = o.gx, z = o.gy, moving = false;
   if (a.px !== null){ var dx = x - a.px, dz = z - a.pz; if (dx * dx + dz * dz > 1e-6){ moving = true; var want = Math.atan2(dx, dz), d = ((want - a.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI; a.yaw += d * Math.min(1, dt * 12); } }
+  if (!moving){ var ft = faceTarget(o); if (ft){ var fw = Math.atan2(ft.gx - x, ft.gy - z), fd = ((fw - a.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI; if (Math.abs(fd) > .02) a.yaw += fd * Math.min(1, dt * 8); } }   // 說話時轉頭面向對方
   a.px = x; a.pz = z;
   a.g.position.set(x, standY(x, z), z); a.g.rotation.y = a.yaw;
   var sw = moving ? Math.sin(o.phase) * .7 : 0;
@@ -866,7 +867,11 @@ function syncAvatars(dt){
   Object.keys(PEERS).forEach(function(id){
     var p = PEERS[id], d = p.av.data || {}, PA = animalOf(d, id);
     if (O.avs[id] && O.avs[id].animal !== PA.id){ dropAv(O.avs[id]); delete O.avs[id]; }
-    if (!O.avs[id]) O.avs[id] = makeAv(PA, d.shirt, false);
+    if (!O.avs[id]){
+      O.avs[id] = makeAv(PA, d.shirt, false);
+      var tg = O.avs[id].tag; tg.classList.add('peer'); tg.title = '點一下跟他說話';     // 點別人的名牌開始對話
+      tg.addEventListener('click', function(ev){ ev.stopPropagation(); openTalk(id); }); tg.addEventListener('pointerdown', function(ev){ ev.stopPropagation(); });
+    }
     poseAv(O.avs[id], p, p.name, d.shirt, dt);
   });
   Object.keys(O.avs).forEach(function(id){
@@ -1049,6 +1054,16 @@ function pickAt(cx, cy, list){
   var hit = raycaster.intersectObjects(list, false);
   return hit.length ? hit[0] : null;
 }
+function peerAt(cx, cy){
+  var r = canvas.getBoundingClientRect(), hit = null, hd = 1e9;
+  Object.keys(O.avs).forEach(function(id){
+    if (id === 'me' || !PEERS[id]) return;
+    var g = O.avs[id].g.position, p = project(g.x, g.y + .3, g.z); if (!p.ok) return;
+    var d = Math.hypot(cx - r.left - p.x, cy - r.top - p.y), tol = Math.max(18, 40 / Math.max(1, camera.position.distanceTo(g) / 4));
+    if (d < tol && d < hd){ hd = d; hit = id; }
+  });
+  return hit;
+}
 function bindInput(){
   canvas.addEventListener('pointerdown', function(e){
     ptr[e.pointerId] = {x:e.clientX, y:e.clientY};
@@ -1081,6 +1096,7 @@ function bindInput(){
     if (Object.keys(ptr).length) return;
     drag = null; canvas.style.cursor = hoverId ? 'pointer' : 'grab';
     if (e.type !== 'pointerup' || !d || d.moved) return;
+    var pid = peerAt(e.clientX, e.clientY); if (pid){ openTalk(pid); return; }   // 點到別人的動物
     var hb = pickAt(e.clientX, e.clientY, O.pick);
     if (hb){ if (hb.object.userData.id === '__board') openBoard(); else openTool(hb.object.userData.id); return; }
     var hg = pickAt(e.clientX, e.clientY, [O.terrain]);
