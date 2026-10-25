@@ -320,15 +320,16 @@ body.view-time .chat{bottom:214px}
 .chat-room{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-room b{font-family:var(--f-mono);color:var(--coral-ink);letter-spacing:.06em}
 .chat-roombar{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px}
+.chat-roombar .chip-btn[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
 .room-pop{background:var(--panel-2);border-radius:12px;padding:10px;margin:4px 0}
 .room-pop[hidden]{display:none}
 .room-pop .note{font-size:12px;color:var(--ink-dim);margin:0 0 8px}
 .room-pop .name-row input{font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.08em}
 .room-pop .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-.chat-list{list-style:none;margin:6px 0;padding:0 2px 0 0;overflow:auto;height:180px;font-size:13px}
-.chat-list li{display:flex;gap:6px;align-items:flex-start;padding:4px 0;border-bottom:1px dashed var(--line)}
+.chat-list{list-style:none;margin:6px 0;padding:0 2px 0 0;overflow-x:hidden;overflow-y:auto;height:180px;font-size:13px}
+.chat-list li{display:flex;flex-wrap:wrap;gap:2px 6px;align-items:flex-start;padding:4px 0;border-bottom:1px dashed var(--line)}
 .chat-list .who{flex:none;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-weight:700;font-size:11.5px;padding:1px 8px;border-radius:999px}
-.chat-list .msg{flex:1;min-width:0;overflow-wrap:anywhere}
+.chat-list .msg{flex:1 1 55%;min-width:0;overflow-wrap:anywhere}
 .chat-list li.mine .msg{font-weight:700}
 .chat-list .blk{flex:none;border:0;background:none;cursor:pointer;font-size:12px;padding:0 2px;opacity:.5}
 .chat-list .blk:hover{opacity:1}
@@ -347,13 +348,14 @@ body.view-time .chat{bottom:214px}
 .chat-opt input{accent-color:var(--coral)}
 .room-tag{font-family:var(--f-mono);font-weight:700;color:var(--coral-ink)}
 .chat-list .who{cursor:pointer;border:0;font-family:inherit}
-.chat-list .to{flex:none;font-size:11.5px;font-weight:700;color:var(--ink-dim);padding-top:1px;white-space:nowrap}
+.chat-list .to{flex:0 1 auto;min-width:0;max-width:40%;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;font-weight:700;color:var(--ink-dim);padding-top:1px;white-space:nowrap}
 .chat-list li.tome{background:rgba(255,210,63,.18);border-radius:8px;padding-left:4px;padding-right:4px}
 .chat-list li.tome .to{color:var(--coral-ink)}
 .chat-to{display:flex;align-items:center;gap:6px;margin:0 0 6px;font-size:12.5px;font-weight:700}
 .chat-to[hidden]{display:none}
-.chat-to .pill{color:#fff;padding:2px 10px;border-radius:999px;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chat-to button{border:0;background:var(--panel-2);border-radius:999px;cursor:pointer;font-size:12px;padding:2px 10px;margin-left:auto}
+.chat-to .pill{color:#fff;padding:2px 10px;border-radius:999px;min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-to span{white-space:nowrap}
+.chat-to button{flex:none;white-space:nowrap;border:0;background:var(--panel-2);border-radius:999px;cursor:pointer;font-size:12px;padding:2px 10px;margin-left:auto}
 .talk-card{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);z-index:36;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;max-width:calc(100vw - 32px);font-size:13.5px}
 .talk-card[hidden]{display:none}
 body.view-time .talk-card{bottom:216px}
@@ -521,7 +523,7 @@ body.view-time .talk-card{bottom:216px}
 
   <section class="card chat" id="chatBox" hidden aria-label="島上聊天">
     <div class="chat-head"><span class="eyebrow">Island Chat</span><span class="chat-room" id="chatRoom"></span><button type="button" class="x" id="chatClose" aria-label="關閉聊天">×</button></div>
-    <div class="chat-roombar"><button type="button" class="chip-btn" id="roomBtn" aria-expanded="false">換房間</button><button type="button" class="chip-btn" id="roomCopy">複製邀請連結</button></div>
+    <div class="chat-roombar"><button type="button" class="chip-btn" id="roomBtn" aria-expanded="false">換房間</button><button type="button" class="chip-btn" id="roomCopy">複製邀請連結</button><button type="button" class="chip-btn" id="botBtn" aria-pressed="false" title="叫出一個虛擬角色，用來測試聊天功能">🤖 測試小幫手</button></div>
     <div class="room-pop" id="roomPop" hidden>
       <p class="note">輸入同一個房間代碼的人，才會在島上看到彼此、看到彼此的訊息，適合同一班一起用。代碼是 3～12 個英文字母或數字。</p>
       <div class="name-row"><input id="roomInput" maxlength="12" autocomplete="off" placeholder="例如 CLASS1" aria-label="房間代碼"><button type="button" class="chip-btn" id="roomJoin">加入</button></div>
@@ -1916,6 +1918,96 @@ function checkNear(now){                                  // 每 0.3 秒看一�
   renderTalkCard('<b>' + escHtml(peerLabel(PEERS[n.id])) + '</b> 就在你旁邊',
     '<button type="button" data-tk="hi">👋 打招呼</button> <button type="button" class="main" data-tk="talk">💬 聊天</button><button type="button" class="x2" data-tk="close" aria-label="關閉">×</button>');
 }
+/* ---------- 🤖 測試小幫手：從這個網頁另外開一條連線，用另一位訪客的身份進同一個房間 ---------- */
+// 走的是真正的轉播站，所以靠近提示、打招呼、對你說、泡泡、轉頭都會被完整測到。
+// 只能在房間裡叫出來（避免打擾公開島），只回應叫它出來的人；關掉網頁它就消失。
+var bot = null;
+function botUrl(){ return PRESENCE_URL + (PRESENCE_URL.indexOf('?') >= 0 ? '&' : '?') + 'room=' + ROOM; }
+function renderBotBtn(){ var b = $('botBtn'); b.setAttribute('aria-pressed', String(!!bot)); b.textContent = bot ? '🤖 請小幫手離開' : '🤖 測試小幫手'; }
+function botSpot(cx, cy, rMin, rMax){                     // 在 (cx,cy) 附近找一個走得到的位置
+  for (var i = 0; i < 40; i++){
+    var a = Math.random() * Math.PI * 2, r = rMin + Math.random() * (rMax - rMin), x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+    if (fineOK(x, y) && nearestCell(x, y)) return [x, y];
+  }
+  return [cx, cy];
+}
+function summonBot(){
+  if (bot){ dismissBot(); return; }
+  if (!ROOM){ chatHint('測試小幫手只能在房間裡叫出來，避免打擾公開島的訪客。先按「換房間」→「開一個新房間」。', true); return; }
+  if (!net.open){ chatHint('還沒連上島上的轉播站，等一下再試。', true); return; }
+  var ws; try { ws = new WebSocket(botUrl()); } catch(e){ return; }
+  var others = ANIMALS.filter(function(a){ return a.id !== me.animal; }), at = botSpot(walker.gx, walker.gy, 2.6, 3.4);
+  bot = {ws:ws, id:'bot' + Math.random().toString(36).slice(2, 10), name:'🤖' + Array.from(hasBadWord(me.name) ? '旅人' : me.name).slice(0, 6).join('') + '的小幫手',
+         animal:pick(others).id, shirt:'#8aa0aa', gx:at[0], gy:at[1], path:[], sentAt:0, ping:0, sayAt:0, heardAt:0, nextWander:0};
+  ws.onopen = function(){
+    if (!bot || bot.ws !== ws) return;
+    ws.send(JSON.stringify({t:'hello', id:bot.id, name:bot.name, shirt:bot.shirt, hair:'#3b2a20', animal:bot.animal, gx:bot.gx, gy:bot.gy}));
+    botGo(walker.gx, walker.gy, .9);                          // 走到你旁邊，觸發「就在你旁邊」提示
+    botSay('哈囉！我是測試小幫手 🤖 走到我旁邊或點我，對我說說話試試看～', net.id, 1200);
+  };
+  ws.onmessage = function(ev){ var m; try { m = JSON.parse(ev.data); } catch(e){ return; } botHandle(m); };
+  ws.onclose = function(){ if (bot && bot.ws === ws){ bot = null; renderBotBtn(); } };
+  renderBotBtn();
+  chatHint('測試小幫手來了，它只在這個房間、只回應你；關掉網頁或再按一次按鈕它就離開。');
+}
+function dismissBot(silent){
+  if (!bot) return;
+  var b = bot; bot = null; clearTimeout(b.sayT);
+  try { b.ws.close(); } catch(e){}
+  renderBotBtn();
+  if (!silent) chatHint('測試小幫手離開了。');
+}
+function botSend(o){ if (bot && bot.ws.readyState === 1) try { bot.ws.send(JSON.stringify(o)); } catch(e){} }
+function botSay(text, to, delay){                          // 轉播站同一人兩則要隔 2.5 秒，排在後面送
+  if (!bot) return;
+  var when = Math.max(Date.now() + (delay || 1000), bot.sayAt + 2800), b = bot;
+  bot.sayAt = when;
+  setTimeout(function(){ if (bot === b) botSend({t:'chat', text:text, to:to}); }, when - Date.now());
+}
+function botGo(x, y, near){
+  if (!bot) return;
+  var t = near ? botSpot(x, y, near * .7, near * 1.2) : [x, y];
+  var a = nearestCell(bot.gx, bot.gy), g = nearestCell(t[0], t[1]); if (!a || !g) return;
+  var path = findPath(a, g); if (!path) return;
+  bot.path = straighten([bot.gx, bot.gy], path.length ? path : [cellPos(g[0], g[1])]);
+}
+function botHandle(m){
+  if (!bot || m.t !== 'chat' || m.id === bot.id) return;
+  if (m.to ? m.to !== bot.id : m.id !== net.id) return;      // 只回應：對它說的話，或叫它出來的人說的公開訊息
+  bot.heardAt = Date.now();
+  var o = PEERS[m.id];
+  if (o && Math.hypot(o.gx - bot.gx, o.gy - bot.gy) > 2.2) botGo(o.gx, o.gy, .9);   // 有人跟它說話就走過去
+  botSay(botAnswer(String(m.text || ''), hasBadWord(m.name) ? '旅人' : String(m.name || '')), m.id, 900 + Math.random() * 700);
+}
+function botAnswer(t, who){
+  var q = Array.from(t), short = q.length > 12 ? q.slice(0, 12).join('') + '…' : t;
+  var emojiOnly = false;
+  try { emojiOnly = /^[\p{Extended_Pictographic}‍️\s]+$/u.test(t); } catch(e){}
+  if (emojiOnly) return t.trim() + ' ' + pick(['😄', '🙌', '✨']);
+  if (/\*/.test(t)) return '有些字被遮成 * 了，過濾功能正常 🙈';
+  if (/〔網址〕/.test(t)) return '網址被拿掉了，連結過濾正常 🔗🚫';
+  if (/(你好|哈囉|嗨|安安|早安|午安|晚安|hello|hey|\bhi\b)/i.test(t)) return pick(['嗨 ' + who + '！聊天功能運作正常 👍', '哈囉～收到你的招呼了 👋', '你好呀！我聽得到你 🤖']);
+  if (/(掰|再見|拜拜|bye)/i.test(t)) return '掰掰！要我離開就按聊天面板的「請小幫手離開」👋';
+  var tool = null; TOOLS.forEach(function(x){ if (!tool && x.short.length > 1 && t.indexOf(x.short) >= 0) tool = x; });
+  if (tool){ var z = ZONES.filter(function(z){ return z.id === tool.zone; })[0]; return '「' + tool.short + '」在' + (z ? z.name : '島上') + '，點那棟建築就能打開喔 🏠'; }
+  if (/(\?|？|嗎|什麼|怎麼|為什麼|哪)/.test(t)) return pick(['好問題！不過我只是測試用的小幫手，答不出來 😅', '這題我不會，但你的問題有送到我這裡 📨', '嗯…我是來測試聊天的，這個要問老師喔 🙋']);
+  return pick(['收到：「' + short + '」✅', '有喔，我看到你說「' + short + '」👀', '訊息送達 📨（' + q.length + ' 個字）']);
+}
+function botTick(dt, now){
+  if (!bot || bot.ws.readyState !== 1) return;
+  if (bot.path.length){
+    var nx = bot.path[0], dx = nx[0] - bot.gx, dy = nx[1] - bot.gy, d = Math.hypot(dx, dy), step = 2.1 * dt;
+    if (d <= step){ bot.gx = nx[0]; bot.gy = nx[1]; bot.path.shift(); } else { bot.gx += dx / d * step; bot.gy += dy / d * step; }
+    if (now - bot.sentAt > 180 || !bot.path.length){ bot.sentAt = now; bot.ping = now; botSend({t:'move', gx:+bot.gx.toFixed(2), gy:+bot.gy.toFixed(2)}); }
+  } else if (now > bot.nextWander && Date.now() - bot.heardAt > 15000){   // 聊天中就站著不動
+    bot.nextWander = now + 5000 + Math.random() * 5000;
+    if (Math.hypot(walker.gx - bot.gx, walker.gy - bot.gy) > 4) botGo(walker.gx, walker.gy, 1.6);   // 離你太遠就跟過來
+    else { var w = botSpot(bot.gx, bot.gy, .8, 2); botGo(w[0], w[1]); }
+  }
+  if (now - bot.ping > 25000){ bot.ping = now; botSend({t:'ping'}); }
+}
+$('botBtn').addEventListener('click', summonBot);
+
 // 平面地圖：點到別人的動物身上（名牌另外可點）
 function peerAtClient(cx, cy){
   var c = clientToSvg(cx, cy), r = svg.getBoundingClientRect(), s = Math.min(r.width / vb.w, r.height / vb.h), tol = Math.max(10, 14 / s), hit = null, hd = 1e9;
@@ -1979,6 +2071,7 @@ function switchRoom(code){
     var u = new URL(location.href); if (ROOM) u.searchParams.set('room', ROOM); else u.searchParams.delete('room');
     history.replaceState(null, '', u.pathname + u.search + u.hash);
   } catch(e){}
+  dismissBot(true);
   var old = net.ws; net.ws = null; net.open = false;
   if (old) try { old.close(); } catch(e){}
   clearPeers(); chat.list = []; showBubble('me', ''); BUBBLES = {}; setTalkTo(null); hideTalk(); talk.dismissed = {};
@@ -2020,6 +2113,7 @@ $('roomCopy').addEventListener('click', function(){
 function netTick(now){
   if (!net.open) return;
   checkNear(now);
+  botTick(Math.min(.1, (now - (netTick.last || now)) / 1000), now); netTick.last = now;
   var moved = net.sentGx === null || Math.hypot(walker.gx - net.sentGx, walker.gy - net.sentGy) > .03;
   if (moved && now - net.lastSent > 180){
     net.lastSent = now; net.lastPing = now; net.sentGx = walker.gx; net.sentGy = walker.gy;
