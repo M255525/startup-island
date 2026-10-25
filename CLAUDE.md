@@ -103,3 +103,9 @@
 - 擋路一律用 `blockArea(gx, gy, r)`（兩種格子一起改，並重新規劃正在走的路線）；立體的地標、拱門柱子走 `blockWalk()` → `blockArea()`。
 - 立體鍵盤：先試正前方 .35/.22/.12/.06 步長（`fineOK`＋`los`），都不行才沿牆滑，所以能貼到牆邊才停。
 - 驗證：400 趟隨機 `walkTo()` 沿路每 0.03 格檢查都沒進到任何建築（`s+.08` 內），41 棟門口都走得到，規劃平均 1ms、最慢 19ms；立體按住 W 朝 41 棟建築走都沒穿進去。其他訪客的位置是對方傳來的、這邊只做直線補間，理論上轉角處仍可能被看到擦過一點點。
+
+## 小地圖＋子母畫面（2026-10-25）
+使用者要求「要用 pip 可以顯示地圖」。立體檢視左下 `#mini3d`：2D canvas（560×336，CSS 顯示 280×168，手機 150×90），等角投影和平面地圖同方向。`miniSetup()` 把海、沙灘、草地、山丘、場地、道路、河、建築、場地名稱先畫進離屏底圖，`drawMini()` 每 80ms 疊上選取光圈、鏡頭方向扇形、其他訪客（衣服色圓點＋動物 emoji）、自己（脈動光圈＋動物＋「你」）。點小地圖 → 反算格子座標 `walkTo()`。
+- **子母畫面**：`#miniPip` 把小地圖畫布 `captureStream(15)` 接到隱藏的 `<video>`，再 `requestPictureInPicture()`（瀏覽器原生 PiP 浮動視窗）。PiP 開著時就算離開立體檢視也繼續畫（`mini.pip`）。不支援 `pictureInPictureEnabled` 或 `captureStream` 就隱藏按鈕。
+- 工具列 `#tbMini`、面板 × 可收起，存在 `startupIsland3d.mini`。`.lab3d` 加 `z-index:5` 自成圖層，名牌才不會蓋到小地圖。
+- 驗證：Playwright 點小地圖規劃出正確終點；點 PiP 後 `document.pictureInPictureElement` 就是那支 video（560×382 當時尺寸），切回平面地圖畫面仍在更新，「收回」可關閉。這次量 fps 時發現 Playwright 視窗被系統降到約 1 fps（平面地圖也一樣），不是程式問題；單次 `renderer.render` 約 35ms（Intel UHD）。

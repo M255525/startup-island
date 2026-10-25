@@ -1228,9 +1228,105 @@ $('tbSky').innerHTML = '<span class="dot"></span>天色：' + SKY_LABEL[prefs.sk
 $('hint3dClose').addEventListener('click', function(){ $('hint3d').hidden = true; prefs.hint = false; lsSet(KEY_3D, prefs); });
 document.addEventListener('visibilitychange', function(){ if (document.hidden) stopSound(); else if (active && prefs.sound) startSound(); });
 
+/* ---------- 小地圖：立體裡隨時看全島、自己和其他訪客在哪；也能彈出成瀏覽器的子母畫面（PiP）視窗 ---------- */
+var mini = {cv:$('miniCv'), on:prefs.mini !== false, pip:false, base:null, k:1, ox:0, oy:0};
+function miniP(gx, gy){ var p = iso(gx, gy); return [mini.ox + p[0] * mini.k, mini.oy + p[1] * mini.k]; }
+function miniSetup(){
+  var W = mini.cv.width, H = mini.cv.height, xs = [], ys = [];
+  for (var a = 0; a < Math.PI * 2; a += .1){ var p = iso(C[0] + Math.cos(a) * 13.3, C[1] + Math.sin(a) * 13.3); xs.push(p[0]); ys.push(p[1]); }
+  var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+  mini.k = Math.min(W / (x1 - x0), H / (y1 - y0)) * .96;
+  mini.ox = W / 2 - (x0 + x1) / 2 * mini.k; mini.oy = H / 2 - (y0 + y1) / 2 * mini.k;
+  var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
+  function path(list, close){ x.beginPath(); list.forEach(function(q, i){ var p = miniP(q[0], q[1]); if (i) x.lineTo(p[0], p[1]); else x.moveTo(p[0], p[1]); }); if (close) x.closePath(); }
+  function circle(cx, cy, r){ var o = []; for (var i = 0; i < 40; i++){ var b = i / 40 * Math.PI * 2; o.push([cx + Math.cos(b) * r, cy + Math.sin(b) * r]); } return o; }
+  var sea = x.createLinearGradient(0, 0, 0, H); sea.addColorStop(0, '#6fd0e8'); sea.addColorStop(1, '#3a9fcc'); x.fillStyle = sea; x.fillRect(0, 0, W, H);
+  var ring = [], beach = [];
+  for (var i = 0; i < 96; i++){ var b = i / 96 * Math.PI * 2, r = islandR(b); ring.push([C[0] + Math.cos(b) * r, C[1] + Math.sin(b) * r]); beach.push([C[0] + Math.cos(b) * (r + .6), C[1] + Math.sin(b) * (r + .6)]); }
+  path(beach, true); x.fillStyle = '#f7e4ab'; x.fill();
+  path(ring, true); x.fillStyle = '#9edb6f'; x.fill();
+  GREENS.forEach(function(G){ path(circle(G.at[0], G.at[1], G.r), true); x.fillStyle = '#7fd35e'; x.fill(); });
+  HILLS.forEach(function(H2){ H2.layers.forEach(function(Ly, j){ path(circle(H2.at[0], H2.at[1], Ly[0]), true); x.fillStyle = j ? '#aee07f' : '#86c25c'; x.fill(); }); });
+  ZONES.forEach(function(z){
+    var b = z.box; path([[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]], true);
+    if (z.id !== 'strategy'){ x.fillStyle = mix(z.color, '#ffffff', .5); x.fill(); }
+    x.strokeStyle = z.color; x.lineWidth = 2; x.stroke();
+  });
+  x.lineCap = x.lineJoin = 'round';
+  for (var s = 0; s + 48 < ROAD_S.length; s += 49){ path(ROAD_S.slice(s, s + 49)); x.strokeStyle = '#f5eedb'; x.lineWidth = 9 * mini.k * 1.4; x.stroke(); }
+  path(RIVER_S); x.strokeStyle = '#47c6e6'; x.lineWidth = 27 * mini.k; x.stroke();
+  WATERS.forEach(function(w){ path(circle(w.at[0], w.at[1], w.r), true); x.fillStyle = '#47c6e6'; x.fill(); });
+  TOOLS.forEach(function(t){
+    var e = t.s; path([[t.gx - e, t.gy - e], [t.gx + e, t.gy - e], [t.gx + e, t.gy + e], [t.gx - e, t.gy + e]], true);
+    x.fillStyle = zoneById[t.zone].color; x.fill(); x.strokeStyle = INK; x.lineWidth = 1; x.stroke();
+  });
+  x.textAlign = 'center'; x.font = '400 19px Huninn, "Noto Sans TC", sans-serif'; x.lineJoin = 'round';
+  ZONES.forEach(function(z){
+    var p = miniP(z.cx, z.cy); x.lineWidth = 4; x.strokeStyle = mix(z.color, '#14303d', .55); x.strokeText(z.name, p[0], p[1] + 6); x.fillStyle = '#ffffff'; x.fillText(z.name, p[0], p[1] + 6);
+  });
+  mini.base = c;
+}
+function drawMini(){
+  if (!((active && mini.on) || mini.pip)) return;
+  if (!mini.base) miniSetup();
+  var x = mini.cv.getContext('2d'), now = performance.now() / 1000;   // 畫布 560×336，顯示成 280×168（2 倍解析度，彈出子母畫面也清楚）
+  x.drawImage(mini.base, 0, 0);
+  if (state.sel && toolById[state.sel]){ var t = toolById[state.sel], sp = miniP(t.gx, t.gy); x.beginPath(); x.arc(sp[0], sp[1], 11 + Math.sin(now * 5) * 2, 0, Math.PI * 2); x.strokeStyle = '#ff6f59'; x.lineWidth = 3; x.stroke(); }
+  if (active && !cam.overview){                                   // 鏡頭看的方向（扇形）
+    var me0 = miniP(walker.gx, walker.gy), fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw);
+    x.beginPath(); x.moveTo(me0[0], me0[1]);
+    for (var a = -.55; a <= .56; a += .11){ var c = Math.cos(a), s = Math.sin(a), q = miniP(walker.gx + (fx * c - fz * s) * 4.5, walker.gy + (fx * s + fz * c) * 4.5); x.lineTo(q[0], q[1]); }
+    x.closePath(); x.fillStyle = 'rgba(255,255,255,.35)'; x.fill();
+  }
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  Object.keys(PEERS).forEach(function(id){
+    var p = PEERS[id], d = p.av.data || {}, q = miniP(p.gx, p.gy);
+    x.beginPath(); x.arc(q[0], q[1], 9, 0, Math.PI * 2); x.fillStyle = d.shirt || '#ffffff'; x.fill(); x.strokeStyle = '#ffffff'; x.lineWidth = 2; x.stroke();
+    x.font = '13px sans-serif'; x.fillText(animalOf(d, id).emoji, q[0], q[1] + 1);
+  });
+  var m = miniP(walker.gx, walker.gy), pulse = 17 + Math.sin(now * 4) * 3;
+  x.beginPath(); x.arc(m[0], m[1], pulse, 0, Math.PI * 2); x.fillStyle = 'rgba(255,111,89,.28)'; x.fill();
+  x.beginPath(); x.arc(m[0], m[1], 13, 0, Math.PI * 2); x.fillStyle = me.shirt; x.fill(); x.strokeStyle = '#ffffff'; x.lineWidth = 3; x.stroke();
+  x.font = '19px sans-serif'; x.fillText(animalOf(me).emoji, m[0], m[1] + 1);
+  x.font = '700 13px "Noto Sans TC", sans-serif'; x.lineWidth = 3; x.strokeStyle = '#14303d'; x.strokeText('你', m[0], m[1] - 24); x.fillStyle = '#ffffff'; x.fillText('你', m[0], m[1] - 24);
+  x.textBaseline = 'alphabetic';
+}
+setInterval(drawMini, 80);
+function setMini(on){
+  mini.on = on; prefs.mini = on; lsSet(KEY_3D, prefs);
+  $('mini3d').hidden = !on; $('tbMini').setAttribute('aria-pressed', String(on));
+  if (on) drawMini();
+}
+mini.cv.addEventListener('click', function(e){                    // 點小地圖：走過去
+  var r = mini.cv.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * mini.cv.width, py = (e.clientY - r.top) / r.height * mini.cv.height;
+  var ix = (px - mini.ox) / mini.k, iy = (py - mini.oy) / mini.k, gx = (ix / HW + iy / HH) / 2, gy = (iy / HH - ix / HW) / 2;
+  if (cam.overview) setOverview(false);
+  walker.goal = null; walkTo(gx, gy);
+});
+$('miniClose').addEventListener('click', function(){ setMini(false); });
+$('tbMini').addEventListener('click', function(){ setMini(!mini.on); });
+// 子母畫面：把小地圖畫布變成影片串流，交給瀏覽器的 Picture-in-Picture 浮動視窗
+var pipOK = !!(document.pictureInPictureEnabled && mini.cv.captureStream);
+if (!pipOK) $('miniPip').hidden = true;
+$('miniPip').addEventListener('click', function(){
+  if (document.pictureInPictureElement){ document.exitPictureInPicture(); return; }
+  var v = mini.video;
+  if (!v){
+    v = mini.video = document.createElement('video'); v.muted = true; v.playsInline = true;
+    v.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0;pointer-events:none';
+    document.body.appendChild(v);
+    v.srcObject = mini.cv.captureStream(15);
+    v.addEventListener('enterpictureinpicture', function(){ mini.pip = true; $('miniPip').textContent = '⧉ 收回'; });
+    v.addEventListener('leavepictureinpicture', function(){ mini.pip = false; $('miniPip').textContent = '⧉ 子母畫面'; });
+  }
+  mini.pip = true; drawMini();
+  v.play().then(function(){ return v.requestPictureInPicture(); }).catch(function(err){ mini.pip = false; if (window.console) console.warn('[startup-island pip]', err); });
+});
+setMini(mini.on);
+
 window.Island3D = {
   enter:enter, leave:leave, links:buildLinks,
   overview:function(){ setOverview(!cam.overview); },
-  get active(){ return active; }, get built(){ return built; }, cam:cam, prefs:prefs, O:O
+  get active(){ return active; }, get built(){ return built; }, cam:cam, prefs:prefs, O:O, mini:mini, get renderer(){ return renderer; }
 };
 })();

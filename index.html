@@ -107,7 +107,7 @@ a{color:inherit}
 .world3d.on{display:block}
 body.view-3d #map{display:none}
 #c3d{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;outline:none}
-.lab3d{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lab3d{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
 .lab3d>*{position:absolute;left:0;top:0;transform-origin:50% 100%;will-change:transform}
 .tag3{pointer-events:auto;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:700 12px var(--f-body);padding:3px 10px;border-radius:999px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(12,48,64,.18)}
 .tag3:hover,.tag3.sel{background:var(--ink);color:var(--panel);border-color:var(--ink)}
@@ -135,6 +135,13 @@ body.view-3d #map{display:none}
 .load3d .tiles i{width:16px;height:16px;transform:rotate(45deg) scaleY(.7);border-radius:3px;animation:hop 1s ease-in-out infinite}
 .load3d .tiles i:nth-child(2){animation-delay:.12s}.load3d .tiles i:nth-child(3){animation-delay:.24s}.load3d .tiles i:nth-child(4){animation-delay:.36s}
 .load3d p{font-family:var(--f-display);font-size:18px;margin:0;letter-spacing:.06em}
+.mini3d{position:absolute;left:16px;bottom:84px;z-index:21;padding:6px 6px 4px;width:292px}
+.mini3d[hidden]{display:none}
+.mini-head{display:flex;align-items:center;gap:6px;padding:0 2px 4px}
+.mini-head .eyebrow{margin-right:auto}
+.mini-head button{border:0;background:var(--panel-2);border-radius:999px;padding:2px 9px;font-size:11.5px;cursor:pointer;color:var(--ink-dim)}
+.mini-head button:hover{color:var(--ink)}
+#miniCv{display:block;width:280px;height:168px;border-radius:10px;cursor:crosshair}
 .only3d{display:none!important}
 body.view-3d .only3d{display:flex!important}
 body.view-3d #tbPan{display:none}
@@ -316,6 +323,11 @@ footer{background:var(--panel);padding:30px 16px 40px}
   .hint3d{left:16px;right:16px;max-width:none;top:64px}
   .zone-banner{top:64px}
   .zone-banner b{font-size:22px}
+  .mini3d{width:162px;bottom:80px;left:10px}
+  #miniCv{width:150px;height:90px}
+  .mini-head .eyebrow{display:none}
+  .mini-head{justify-content:flex-end}
+  .mini-head button{white-space:nowrap}
   .brand{padding:6px 12px;white-space:nowrap}
   .brand b{font-size:19px}
   .legend{padding:7px 10px;font-size:12px}
@@ -360,7 +372,12 @@ footer{background:var(--panel);padding:30px 16px 40px}
         <li><b>拖曳</b>轉視角，<b>滾輪／雙指</b>拉近拉遠</li>
         <li><b>點地面</b>走過去，<b>W A S D／方向鍵</b>自己走</li>
         <li><b>點建築或名牌</b>看工具，「看全島」切換環島鳥瞰</li>
+        <li>左下<b>小地圖</b>點一下就走過去，「⧉ 子母畫面」可彈出浮動視窗</li>
       </ul>
+    </section>
+    <section class="card mini3d" id="mini3d" aria-label="小地圖">
+      <div class="mini-head"><span class="eyebrow">Island Map</span><button type="button" id="miniPip" title="彈出成子母畫面，切到別的分頁也看得到">⧉ 子母畫面</button><button type="button" id="miniClose" aria-label="收起小地圖">×</button></div>
+      <canvas id="miniCv" width="560" height="336" aria-label="小地圖：點一下走過去"></canvas>
     </section>
     <div class="load3d" id="load3d" hidden><div class="tiles"><i style="background:#f4b942"></i><i style="background:#2ec4b6"></i><i style="background:#ef6b8a"></i><i style="background:#4f9dff"></i></div><p>島嶼正在立起來…</p></div>
   </div>
@@ -388,6 +405,7 @@ footer{background:var(--panel);padding:30px 16px 40px}
     <button type="button" id="tbLog" aria-pressed="false"><span class="dot"></span>足跡</button>
     <button type="button" id="tbSky" class="only3d" aria-label="切換天色"><span class="dot"></span>天色：現在</button>
     <button type="button" id="tbSound" class="only3d" aria-pressed="false"><span class="dot"></span>環境音</button>
+    <button type="button" id="tbMini" class="only3d" aria-pressed="true"><span class="dot"></span>小地圖</button>
   </nav>
 
   <section class="card pop" id="linkPop" hidden aria-label="接力線">
