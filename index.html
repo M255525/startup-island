@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>創業島 · 從一個點子出發，走完整座島</title>
-<meta name="description" content="把 41 個線上創業工具放進一座可以探索的島：公園、山丘、學校、河口碼頭等九個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
+<meta name="description" content="把 42 個線上創業工具放進一座可以探索的島：公園、山丘、學校、河口碼頭等九個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
 <meta name="theme-color" content="#1c6e8c">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -618,6 +618,8 @@ var TOOLS = [
 
   {id:'business-model-canvas-generator', zone:'strategy', short:'商業模式圖', name:'商業模式圖產生器', hour:[9,11], month:[1,3],
    role:'用九宮格寫清楚顧客、價值主張、通路與收入來源。', input:'選定的點子', output:'商業模式九宮格'},
+  {id:'business-model-pattern-studio', zone:'strategy', short:'商業模式組合', name:'商業模式組合工作室', hour:[9,11], month:[1,3],
+   role:'從經典商業模式挑出最適合的組合，再用雷達、SWOT、五力與財務健檢評價。', input:'產品或服務', output:'商業模式組合與評價報告'},
   {id:'where-what-how-strategy-studio', zone:'strategy', short:'商業策略', name:'商業策略工作室', hour:[9,11], month:[2,4],
    role:'回答在哪裡打仗、靠什麼贏、怎麼落地三個問題。', input:'商業模式', output:'三層策略藍圖'},
   {id:'new-product-strategy-studio', zone:'strategy', short:'新品策略', name:'新品開發策略工作室', lic:true, hour:[10,12], month:[2,5],
@@ -724,6 +726,7 @@ var LINKS = [
   {id:'l22', name:'記帳回頭校正',      chain:['expense-tracker-pwa','restaurant-feasibility-calculator'], desc:'實際開銷回頭修正當初的試算假設。'},
   {id:'l23', name:'內容工作流一條龍',  star:['content-workflow-studio-cf','business-idea-generator','where-what-how-strategy-studio','SocialPost','social-post-grader'], desc:'工作流把商業創意、商業策略、貼文產生與健診四個節點串成一條線。'},
   {id:'l25', name:'自製節點 → 工作流', chain:['node-pack-designer-cf','content-workflow-studio-cf'], desc:'設計好的節點補充包，裝進內容工作流就能用。'},
+  {id:'l26', name:'點子 → 商業模式組合 → 策略', chain:['business-idea-generator','business-model-pattern-studio','where-what-how-strategy-studio'], desc:'點子先套經典商業模式組合並評價，再決定戰場與致勝方式。'},
   {id:'l24', name:'跨境電商冒險路線',  star:['animal-ecommerce-adventure','traffic-rank-estimator','amazon-logistics-game','product-title-generator','amazon-cost-calculator'], desc:'動物朋友帶你依序走過這些關卡。'}
 ];
 
@@ -879,7 +882,7 @@ var WATERS = [{at:[.9,9.9], r:.75}, {at:[16.0,11.3], r:.5}];          // 公園�
 // 每個工具在島上的位置（格子座標）
 var POS = {
   'business-idea-generator':[-.6,8.0], 'mandala-thinking':[1.1,7.9], 'scamper-thinking-generator':[2.6,8.6], 'six-thinking-hats-generator':[2.5,10.6], 'innovation-matrix-studio':[-.7,11.2],
-  'mentors-panel':[3.0,3.0], 'business-model-canvas-generator':[4.6,3.0], 'where-what-how-strategy-studio':[3.0,4.6], 'new-product-strategy-studio':[4.6,4.6],
+  'mentors-panel':[3.0,3.0], 'business-model-canvas-generator':[4.6,3.0], 'where-what-how-strategy-studio':[3.0,4.6], 'new-product-strategy-studio':[4.6,4.6], 'business-model-pattern-studio':[1.9,3.8],
   'animal-ecommerce-adventure':[7.9,.4], 'swot-game':[9.4,.4], 'amazon-logistics-game':[7.9,2.2], 'industry-talent-generator':[9.4,2.2],
   'restaurant-feasibility-calculator':[13.2,2.5], 'restaurant-menu-mix-calculator':[14.9,2.5], 'tourism-hotel-feasibility-calculator':[16.4,2.5],
   'amazon-cost-calculator':[13.2,4.4], 'amazon-listing-mix-calculator':[14.9,4.4], 'ecommerce-health-dashboard':[16.4,4.4],
