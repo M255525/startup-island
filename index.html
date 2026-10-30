@@ -79,6 +79,10 @@ a{color:inherit}
 .bld{cursor:pointer}
 .bld .hit{fill:transparent}
 .board{cursor:pointer}
+.farland{cursor:pointer}
+.farland .hit{fill:transparent}
+.farland:focus{outline:none}
+.farland:hover .far-sign rect,.farland:focus .far-sign rect{fill:#fff3a0}
 .board .hit{fill:transparent}
 .board:focus{outline:none}
 .board .ring{animation:ring 1.6s ease-in-out infinite}
@@ -828,6 +832,7 @@ var HILLS = [
 // 創業看板：試算商辦區旁的大看板，文字由管理者在 Google 試算表「board-template」編輯（2026-10-25 由 CSV 上傳建立）
 // 試算表要設成「知道連結的任何人可以檢視」；讀不到時用 BOARD_DEFAULT，並沿用上次成功讀到的內容（localStorage）
 var BOARD_SHEET = '1reL32KcSUL-YNh4ICVxm-fROcjBzRiKVLjy05t7q_bs', KEY_BOARD = 'startupIslandBoard';
+var FAR = {sign:'🏭 創作者小鎮 →', at:[26.2, 4.2], r:1.7, url:'https://m255525.github.io/creator-town/', name:'創作者小鎮', host:'另一個網站', emoji:'🏭'};
 var BOARD_AT = [18.55, 5.6];
 var BOARD_FIELDS = [   // [程式用 key, 試算表 A 欄名稱, 字數上限]
   ['title', '標題', 8], ['sub', '副標', 16], ['l1', '內容1', 14], ['l2', '內容2', 14], ['l3', '內容3', 14],
@@ -967,6 +972,68 @@ function circlePts(cx, cy, r, n, elev){
 function boxPts(b, elev){ return [iso(b[0],b[1]), iso(b[2],b[1]), iso(b[2],b[3]), iso(b[0],b[3])].map(function(p){ return up(p, elev || 0); }); }
 function polyD(list){ return list.map(function(p, i){ return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' '); }
 
+
+// ---- 海的另一端：姊妹地圖的小島，點了就切到那個網站 ----
+function farBox(g, gx, gy, s, h, cL, cR, cT){
+  var T = iso(gx - s, gy - s), Rr = iso(gx + s, gy - s), B = iso(gx + s, gy + s), Lp = iso(gx - s, gy + s);
+  function U(p, k){ return [p[0], p[1] - k]; }
+  el('polygon', {points:pts([Lp, B, U(B, h), U(Lp, h)]), fill:cL}, g);
+  el('polygon', {points:pts([B, Rr, U(Rr, h), U(B, h)]), fill:cR}, g);
+  el('polygon', {points:pts([U(T, h), U(Rr, h), U(B, h), U(Lp, h)]), fill:cT}, g);
+}
+function farGable(g, gx, gy, s, h, rh, cL, cR, cRoof){
+  farBox(g, gx, gy, s, h, cL, cR, cR);
+  var P1 = iso(gx - s, gy), P2 = iso(gx + s, gy), B = iso(gx + s, gy + s), Lp = iso(gx - s, gy + s), Rr = iso(gx + s, gy - s);
+  function U(p, k){ return [p[0], p[1] - k]; }
+  el('polygon', {points:pts([U(Rr, h), U(B, h), U(P2, h + rh)]), fill:cR}, g);
+  el('polygon', {points:pts([U(P1, h + rh), U(P2, h + rh), U(B, h), U(Lp, h)]), fill:cRoof}, g);
+}
+function farSign(g, text){
+  var c = iso(FAR.at[0], FAR.at[1]), pos = el('g', {transform:'translate(' + c[0].toFixed(1) + ',' + (c[1] - 74).toFixed(1) + ')'}, g), s = el('g', {class:'far-sign board-flag'}, pos);   // 定位放外層，浮動動畫的 CSS transform 才不會蓋掉位置
+  var w = 0; for (var i = 0; i < text.length; i++) w += text.charCodeAt(i) > 255 ? 13 : 7.4;
+  w += 26;
+  el('line', {x1:0, y1:8, x2:0, y2:40, stroke:'#3b2f3a', 'stroke-width':1.6}, s);
+  el('rect', {x:-w / 2, y:-13, width:w, height:24, rx:12, fill:'#ffd23f', stroke:'#3b2f3a', 'stroke-width':1.6}, s);
+  el('text', {x:0, y:4, 'text-anchor':'middle', 'font-size':13, 'font-weight':700, fill:'#3b2f3a', 'font-family':'var(--f-body)'}, s).textContent = text;
+  el('text', {x:0, y:24, 'text-anchor':'middle', 'font-size':10.5, 'font-weight':700, fill:'#fff', stroke:'#3b2f3a', 'stroke-width':3, 'paint-order':'stroke', 'font-family':'var(--f-body)'}, s).textContent = '點一下前往';
+}
+function farRoute(g, from){
+  var q0 = iso(from[0], from[1]), q1 = iso(FAR.at[0] - FAR.r * .7, FAR.at[1] + FAR.r * .7);
+  el('path', {d:'M' + q0[0].toFixed(1) + ' ' + q0[1].toFixed(1) + ' Q' + ((q0[0] + q1[0]) / 2).toFixed(1) + ' ' + ((q0[1] + q1[1]) / 2 + 34).toFixed(1) + ' ' + q1[0].toFixed(1) + ' ' + q1[1].toFixed(1),
+    stroke:'rgba(255,255,255,.6)', 'stroke-width':2, 'stroke-dasharray':'6 7', fill:'none', class:'link-path'}, g);
+}
+function goFar(){
+  addLog('搭船前往' + FAR.name);
+  var u = FAR.url; setTimeout(function(){ location.href = u; }, 120);
+}
+function showFarTip(x, y){
+  var tip = $('tip'); tip.textContent = FAR.emoji + ' 點一下前往' + FAR.name + '（' + FAR.host + '）';
+  tip.style.left = Math.min(window.innerWidth - tip.offsetWidth - 8, Math.max(8, x - tip.offsetWidth / 2)) + 'px';
+  tip.style.top = Math.max(8, y - 34) + 'px';
+  tip.classList.add('show');
+}
+function drawFar(g){                                            // 海的另一端：迷你創作者小鎮（岸壁平台、紅磚倉庫、貨櫃、起重機、棕櫚樹）
+  var a = FAR.at, r = FAR.r, b = [a[0] - r, a[1] - r, a[0] + r, a[1] + r];
+  farRoute(g, [21.4, 7.6]);
+  el('polygon', {points:pts(boxPts([b[0] - .3, b[1] - .3, b[2] + .3, b[3] + .3]).map(function(p){ return [p[0], p[1] + 8]; })), fill:'var(--foam)', opacity:.5}, g);
+  el('polygon', {points:pts(boxPts(b).map(function(p){ return [p[0], p[1] + 14]; })), fill:'#7d776c'}, g);
+  el('polygon', {points:pts(boxPts(b)), fill:'#d9d3c5'}, g);
+  el('polygon', {points:pts(boxPts([b[0] + .25, b[1] + .25, b[2] - .25, b[3] - .25])), fill:'#bcd88f'}, g);
+  var things = [['w', a[0] - .6, a[1] - .5], ['p', a[0] + .9, a[1] - .9], ['w', a[0] + .5, a[1] + .1], ['c', a[0] - .6, a[1] + .8], ['k', a[0] + 1.1, a[1] + 1.1], ['p', a[0] - 1.2, a[1] + .1]];
+  things.sort(function(p, q){ return (p[1] + p[2]) - (q[1] + q[2]); }).forEach(function(o){
+    if (o[0] === 'w') farGable(g, o[1], o[2], .36, 13, 7, '#9c4a36', '#bd6247', '#66737c');
+    else if (o[0] === 'c'){ farBox(g, o[1], o[2], .3, 8, '#b8402f', '#e05a47', '#f08a7a'); farBox(g, o[1] + .05, o[2], .26, 16, '#2f7fd0', '#4f9dff', '#8fc1ff'); }
+    else if (o[0] === 'p'){ var p = iso(o[1], o[2]), tp = [p[0] + 2, p[1] - 28];
+      el('path', {d:'M' + p[0] + ' ' + p[1] + ' Q' + p[0] + ' ' + (p[1] - 14) + ' ' + tp[0] + ' ' + tp[1], stroke:'#8a6a48', 'stroke-width':2.5, fill:'none'}, g);
+      [[-12, 4], [-7, -5], [0, -7], [7, -5], [12, 4]].forEach(function(f){ el('path', {d:'M' + tp[0] + ' ' + tp[1] + ' Q' + (tp[0] + f[0] * .5) + ' ' + (tp[1] - 5) + ' ' + (tp[0] + f[0]) + ' ' + (tp[1] + f[1] + 5), stroke:'#4f9a5a', 'stroke-width':2.6, fill:'none', 'stroke-linecap':'round'}, g); }); }
+    else { var A = iso(o[1] - .25, o[2] + .25), B = iso(o[1] + .25, o[2] - .25);
+      [A, B].forEach(function(P){ el('line', {x1:P[0], y1:P[1], x2:P[0], y2:P[1] - 38, stroke:'#d9533b', 'stroke-width':2.4}, g); });
+      el('line', {x1:A[0], y1:A[1] - 38, x2:B[0], y2:B[1] - 38, stroke:'#d9533b', 'stroke-width':3}, g);
+      var m = [(A[0] + B[0]) / 2, A[1] - 38]; el('line', {x1:m[0], y1:m[1], x2:m[0] + 10, y2:m[1] - 34, stroke:'#d9533b', 'stroke-width':2.4}, g); }
+  });
+  el('polygon', {class:'hit', points:pts(boxPts([b[0] - .3, b[1] - .3, b[2] + .3, b[3] + .3]).map(function(p){ return [p[0], p[1] - 10]; }))}, g);
+}
+
 function buildMap(){
   svg.innerHTML = '';
   var defs = el('defs', {}, svg);
@@ -974,6 +1041,7 @@ function buildMap(){
   el('path', {d:'M4 18 q8 -6 16 0 M34 8 q8 -6 16 0', stroke:'rgba(255,255,255,.18)', 'stroke-width':1.6, fill:'none', 'stroke-linecap':'round'}, pat);
   el('rect', {x:-5000, y:-4000, width:10000, height:9000, fill:'url(#waves)'}, svg);
   L.boats = el('g', {}, svg);
+  L.far = el('g', {class:'farland', tabindex:0, role:'link', 'aria-label':'前往' + FAR.name}, svg); drawFar(L.far);
   var ground = el('g', {}, svg);
 
   // 島嶼輪廓、沙灘、懸崖
@@ -1102,6 +1170,7 @@ function buildMap(){
   });
   L.links = el('g', {class:'links', 'pointer-events':'none'}, svg);
   L.tags = el('g', {class:'tags', 'pointer-events':'none'}, svg);
+  L.farTop = el('g', {class:'farland', role:'link', 'aria-label':'前往' + FAR.name}, svg); farSign(L.farTop, FAR.sign);   // 招牌放最上層，不被陸地蓋住
   TOOLS.forEach(function(t){
     var top = up(iso(t.gx, t.gy), t.top);
     var w = 0; for (var i = 0; i < t.short.length; i++) w += t.short.charCodeAt(i) > 255 ? 12.5 : 7.2;
@@ -2146,6 +2215,7 @@ function setVB(){ svg.setAttribute('viewBox', vb.x.toFixed(1)+' '+vb.y.toFixed(1
 function islandBox(){
   var xs = [], ys = [];
   for (var a = 0; a < Math.PI*2; a += .2){ var p = iso(C[0] + Math.cos(a)*13.2, C[1] + Math.sin(a)*13.2); xs.push(p[0]); ys.push(p[1]); }
+  [[FAR.at[0] + FAR.r + .8, FAR.at[1]], [FAR.at[0], FAR.at[1] - FAR.r - .8], [FAR.at[0], FAR.at[1] + FAR.r + .8]].forEach(function(q){ var p = iso(q[0], q[1]); xs.push(p[0]); ys.push(p[1]); });
   return {x:Math.min.apply(null, xs), y:Math.min.apply(null, ys) - 40, w:Math.max.apply(null, xs) - Math.min.apply(null, xs), h:Math.max.apply(null, ys) - Math.min.apply(null, ys) + 50};
 }
 function padBox(b){
@@ -2229,12 +2299,14 @@ svg.addEventListener('click', function(e){
   var g = e.target.closest && e.target.closest('.bld');
   if (g) openTool(g.getAttribute('data-id'));
   else if (e.target.closest && e.target.closest('.board')) openBoard();
+  else if (e.target.closest && e.target.closest('.farland')) goFar();
   else { var pid = peerAtClient(e.clientX, e.clientY); if (pid){ openTalk(pid); return; } var q = clientToGrid(e.clientX, e.clientY); walker.goal = null; walkTo(q[0], q[1]); }
 });
 svg.addEventListener('keydown', function(e){
   var g = e.target.closest && e.target.closest('.bld');
   if (g && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openTool(g.getAttribute('data-id')); }
   if (!g && e.target.closest && e.target.closest('.board') && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openBoard(); }
+  if (!g && e.target.closest && e.target.closest('.farland') && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); goFar(); }
 });
 svg.addEventListener('focusin', function(e){
   var g = e.target.closest && e.target.closest('.bld');
@@ -2244,6 +2316,7 @@ svg.addEventListener('focusout', function(){ $('tip').classList.remove('show'); 
 function hoverTip(e){
   var g = e.target.closest && e.target.closest('.bld');
   if (!g && e.target.closest && e.target.closest('.board')){ showBoardTip(e.clientX, e.clientY - 12); return; }
+  if (!g && e.target.closest && e.target.closest('.farland')){ showFarTip(e.clientX, e.clientY - 12); return; }
   if (!g){ $('tip').classList.remove('show'); return; }
   showTip(toolById[g.getAttribute('data-id')], e.clientX, e.clientY - 12);
 }

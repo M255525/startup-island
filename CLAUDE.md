@@ -148,3 +148,10 @@
 
 ## 2026-10-26 新增商業模式組合工作室
 使用者要求「合乎創業島定義就放上去」。`business-model-pattern-studio` 放策略山丘西側台地 `POS [1.9,3.8]`（山頂第 5 棟，elev 26、不重疊）；山頂擠，名牌由標籤避讓往上疊並拉虛線，屬正常行為。新增接力線 `l26` 點子 → 商業模式組合 → 商業策略；manual 的街區表與創業路線圖第 2 階段已補連結；工具數 41→42。
+
+## 海的另一端：姊妹地圖互連（2026-10-30）
+使用者要求「把創業島放到這個畫面，在海的另一端新增，點擊就切到創業島的網域；創業島也一樣新增一個創作者小鎮」。兩邊各有 `FAR = {sign, at, r, url, name, host, emoji}`：
+- 平面：`drawFar()` 畫在 `L.far`（在 `L.boats` 之後、陸地之前，海上不會被蓋到），招牌 `farSign()` 畫在最上層 `L.farTop`（**放在陸地層會被蓋住**；外層 g 負責定位、內層 `.board-flag` 負責浮動，**CSS 動畫的 transform 會蓋掉 SVG transform 屬性**，踩過）。`farRoute()` 是從岸邊到小島的虛線航線；`islandBox()` 取景有把小島算進去。點擊／Enter → `goFar()`（寫足跡後同一分頁 `location.href` 切過去），滑過 `showFarTip()`。
+- 立體：`buildFar()`（在 `buildLabels()` 之後）把小島網格標 `userData.id='__far'` 加進 `O.pick`，`farLabel()` 加一顆 `.tag3.board3` 名牌；pointermove／點擊判斷 `'__far'`。
+- 兩邊的 `FAR.url` 寫死對方的 GitHub Pages 網址；改網址要兩個 repo 一起改。
+- 創業島這邊：`FAR.at=[26.2,4.2]` 迷你創作者小鎮（岸壁平台、兩棟紅磚倉庫、疊貨櫃、起重機、棕櫚樹），放在小船繞島航線（r≤15.2）外側；航線從 `[21.4,7.6]` 出發。取景因此往右擴大，島會稍微變小。
