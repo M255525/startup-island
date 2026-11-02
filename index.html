@@ -15,13 +15,14 @@
 <style>
 :root{
   --ink:#14303d; --ink-dim:#4d6672; --ink-faint:#8aa0aa;
-  --sea:#3d9ab5; --sea-deep:#1c6e8c; --foam:#bfe8ef;
-  --sand:#f3d798; --grass:#c4dd9c; --cliff:#b98a4e;
+  /* 地圖色票＝立體 island3d.js 的 PAL／THEME（熱帶潟湖），改一邊要改另一邊 */
+  --sea:#1fb5d6; --sea-deep:#1767b8; --foam:#e9fffb; --lagoon:#6ff5df;
+  --sand:#fdf1cf; --grass:#9edb6f; --cliff:#d2b071;
   --panel:#fbfdfd; --panel-2:#eef6f8; --line:#d4e3e8;
   --coral:#ff6f59; --coral-ink:#c8412d;
   --lic:#e11d2e;
-  --park:#8fcf6e; --lawn:#bfe09c; --yard:#efdfb2; --paving:#e6e2d8; --wood:#d8b588; --road:#eef0ea;
-  --river:#5fb8d4; --river-rim:#3a8fae; --hillside:#86b85f; --hilltop:#b3d98a;
+  --park:#7fd35e; --lawn:#b8e58f; --yard:#f0dca8; --paving:#e4ded0; --wood:#e0bd8c; --road:#f5eedb;
+  --river:#3fc9de; --river-rim:#e2c98e; --hillside:#76b850; --hilltop:#aee07f;
   --shadow:0 10px 30px rgba(12,48,64,.18);
   --mq:0px;
   --f-display:"Huninn","Noto Sans TC",system-ui,sans-serif;
@@ -31,7 +32,7 @@
 @media (prefers-color-scheme: dark){
   :root{
     --ink:#e4f0f3; --ink-dim:#a4bcc5; --ink-faint:#6f8b96;
-    --sea:#145069; --sea-deep:#0b2c3c; --foam:#2c6f86;
+    --sea:#0f5f86; --sea-deep:#0a2f55; --foam:#2c7f8a; --lagoon:#2a9c9a;
     --sand:#b89a62; --grass:#7d9b5c; --cliff:#6e5230;
     --panel:#11242e; --panel-2:#183340; --line:#264552;
     --coral:#ff8470; --coral-ink:#ffb3a5;
@@ -1056,9 +1057,9 @@ function drawFar(g){
   drawFarBridge(g);
   var H = FARB.style === 'harbor';
   el('polygon', {points:pts(farOutline(.55, 120).map(function(q){ var p = iso(q[0], q[1]); return [p[0], p[1] + 8]; })), fill:'var(--foam)', opacity:.5}, g);
-  el('polygon', {points:pts(farOutline(H ? .05 : .4, 120).map(function(q){ var p = iso(q[0], q[1]); return [p[0], p[1] + 14]; })), fill:H ? '#7d776c' : '#b98a4e'}, g);
-  el('polygon', {points:pts(farOutline(H ? .05 : .4, 120).map(function(q){ return iso(q[0], q[1]); })), fill:H ? '#d9d3c5' : '#f3d798'}, g);
-  el('polygon', {points:pts(farOutline(H ? -.35 : -.05, 120).map(function(q){ return iso(q[0], q[1]); })), fill:H ? '#bcd88f' : '#b8e08a'}, g);
+  el('polygon', {points:pts(farOutline(H ? .05 : .4, 120).map(function(q){ var p = iso(q[0], q[1]); return [p[0], p[1] + 14]; })), fill:H ? '#8b8578' : '#d2b071'}, g);
+  el('polygon', {points:pts(farOutline(H ? .05 : .4, 120).map(function(q){ return iso(q[0], q[1]); })), fill:H ? '#d6cfc0' : '#fdf1cf'}, g);
+  el('polygon', {points:pts(farOutline(H ? -.35 : -.05, 120).map(function(q){ return iso(q[0], q[1]); })), fill:H ? '#b7c87c' : '#9edb6f'}, g);
   FAR_THINGS.forEach(function(o){
     var p = iso(o.x, o.y);
     if (o.k === 'w') farGable(g, o.x, o.y, o.s, o.h * .8, 9, '#9c4a36', '#bd6247', o.c < .5 ? '#66737c' : '#7a5a4a');
@@ -1157,6 +1158,9 @@ function buildMap(){
     outline.push(iso(C[0] + Math.cos(a) * r, C[1] + Math.sin(a) * r));
     beach.push(iso(C[0] + Math.cos(a) * (r + .6), C[1] + Math.sin(a) * (r + .6)));
   }
+  // 淺水環：跟立體水面一樣岸邊淺、外海深（--lagoon＝立體 THEME.shallow）
+  [[2.6, .3], [1.4, .45]].forEach(function(L2){ var lg = []; for (var j = 0; j < 96; j++){ var a2 = j / 96 * Math.PI * 2, r2 = islandR(a2) + L2[0]; lg.push(iso(C[0] + Math.cos(a2) * r2, C[1] + Math.sin(a2) * r2)); }
+    el('polygon', {points:pts(lg), fill:'var(--lagoon)', opacity:L2[1]}, ground); });
   el('polygon', {points:pts(beach.map(function(p){ return [p[0], p[1] + 8]; })), fill:'var(--foam)', opacity:.55}, ground);
   el('polygon', {points:pts(beach.map(function(p){ return [p[0], p[1] + 18]; })), fill:'var(--cliff)'}, ground);
   el('polygon', {points:pts(beach), fill:'var(--sand)'}, ground);
@@ -1381,9 +1385,9 @@ function drawTree(t){
   var p = up(iso(t.gx, t.gy), t.elev), k = t.big ? 1.3 : 1;
   var g = el('g', {'pointer-events':'none'}, L.blds); g._d = t.gx + t.gy;
   el('ellipse', {cx:p[0], cy:p[1], rx:7*k, ry:3.5*k, fill:'rgba(0,0,0,.12)'}, g);
-  el('rect', {x:p[0]-1.5, y:p[1]-8, width:3, height:8, fill:'#8a6239'}, g);
-  el('polygon', {points:pts([[p[0], p[1]-28*k], [p[0]+8*k, p[1]-6], [p[0]-8*k, p[1]-6]]), fill:'#4f9a5a'}, g);
-  el('polygon', {points:pts([[p[0], p[1]-28*k], [p[0]+8*k, p[1]-6], [p[0], p[1]-6]]), fill:'#3f8550'}, g);
+  el('rect', {x:p[0]-1.5, y:p[1]-8, width:3, height:8, fill:'#9a6a3f'}, g);
+  el('polygon', {points:pts([[p[0], p[1]-28*k], [p[0]+8*k, p[1]-6], [p[0]-8*k, p[1]-6]]), fill:'#5cc45a'}, g);
+  el('polygon', {points:pts([[p[0], p[1]-28*k], [p[0]+8*k, p[1]-6], [p[0], p[1]-6]]), fill:'#3fa65c'}, g);
 }
 
 function footprint(t, s){

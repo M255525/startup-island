@@ -186,3 +186,10 @@
   - harbor（創作者小鎮）：暖色黃金時刻天空與較近的霧、橄欖色草地（`PAL.grass/grass2/park/lawn` 已改）、深青港灣＋金色波光、沿路之字形串燈（夜裡發光暈）、7 支倉庫煙囪冒煙、夜晚 34 盞天燈升空、兩道探照燈。
 - **鄰島照真實比例（`index.html`）**：原本對岸是半徑 1.6～1.7 的迷你島。現在 `FARB` 依橋的方向把整座鄰島（創作者小鎮＝圓角方形 11.6、創業島＝起伏圓 12.4，跟對方真正的輪廓一樣）擺在橋的另一端，近岸剛好接橋頭；`FAR.at` 由程式改成「上岸後 1.3 格」（招牌、走路目的地）。`farEdge()` 給距離，`onFarIsland()` 改成整座鄰島；`farTick`／`farGoClick` 的門檻改為踏上岸 0.6 格。島上建築、樹、吊車、燈塔、中央地標塔由 `FAR_THINGS`（固定亂數，平面與立體共用）產生，尺寸跟自己島上的建築同比例。平面 `drawFar()`、立體 `buildFar()`（`ExtrudeGeometry` 擠出輪廓）都讀它。取景 `islandBox()` 不變（只框近岸），其餘延伸到畫面外。小鎮的貨輪與魚群航線縮短（u≤21、魚 24→19.5），避免開進對岸創業島。
 - SW 快取：創業島 v8→v9、小鎮 v6→v7。驗證：Playwright 兩站平面／立體白天／近拍／黃昏／夜晚截圖、從橋頭朝對岸看三種天色、走路規劃到對岸（終點在鄰島上），無 console 錯誤。
+
+## 平面地圖／小地圖配色對齊立體（2026-11-02）
+使用者反映「地圖與 3D 色系不吻合，覺得突兀」。原因：景色主題只改了 `island3d.js` 的 `PAL`／`THEME`，平面地圖的 CSS 色票、2D 樹色、2D 鄰島、小地圖仍是舊的淡色。
+- `index.html` `:root` 的地形色票（`--sea/--sea-deep/--sand/--grass/--park/--lawn/--yard/--wood/--road/--river/--river-rim/--hillside/--hilltop`）改成跟 `PAL`／`THEME` 同值，新增 `--lagoon`（＝`THEME.shallow`）；`buildMap()` 在沙灘外畫兩圈淺水環（r+2.6／r+1.4），對應立體的潟湖漸層。2D 松樹色改用立體 `LEAF`。
+- 小地圖 `miniSetup()` 不再寫死色碼，直接讀 `PAL`／`THEME`（海＝mid→deep 漸層、淺水環、沙、草、公園、山丘、道路、河與池塘＝`THEME.shallow`）。
+- 2D 鄰島 `drawFar()` 的沙／草／岸色改成對方島的立體色票（兩站同一段程式）。
+- **日後改 `PAL`／`THEME` 要同步改 `index.html` 的 CSS 色票**（`:root` 開頭有註解提醒）；小地圖會自動跟上。姊妹站 `creator-town` 同日同步處理。SW 快取 v9→v10。
