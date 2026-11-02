@@ -1153,9 +1153,9 @@ function makeAv(A, shirt, mine){
   var eyes = [], frog = e === 'frog';
   if (A.mark === 'panda') [-1, 1].forEach(function(s){ var pt = M(S(.05), darkM, s * .068, .0, .108, head); pt.scale.set(.9, 1.15, .35); pt.rotation.z = s * .5; noInk.push(pt); });
   [-1, 1].forEach(function(s){
-    var eye = M(S(.052, 24, 16), white, s * (frog ? .07 : .046), frog ? .12 : .025, frog ? .075 : .118, head);
+    var eye = M(S(.06, 24, 16), white, s * (frog ? .07 : .05), frog ? .12 : .03, frog ? .075 : .12, head);
     eye.scale.set(1, 1.15, .4); eye.rotation.z = s * -.12; eyes.push(eye);
-    var pup = M(S(.011, 10, 8), black, -s * .012, -.004, .05, eye); pup.scale.z = .5; noInk.push(pup);
+    var pup = M(S(.012, 10, 8), black, -s * .014, -.004, .058, eye); pup.scale.z = .5; noInk.push(pup);
   });
   // 鼻子、嘴：扁平小色塊
   var mzl = A.snout === 'muzzle', my = -.085, mzz = .128;
