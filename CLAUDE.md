@@ -193,3 +193,5 @@
 - 小地圖 `miniSetup()` 不再寫死色碼，直接讀 `PAL`／`THEME`（海＝mid→deep 漸層、淺水環、沙、草、公園、山丘、道路、河與池塘＝`THEME.shallow`）。
 - 2D 鄰島 `drawFar()` 的沙／草／岸色改成對方島的立體色票（兩站同一段程式）。
 - **日後改 `PAL`／`THEME` 要同步改 `index.html` 的 CSS 色票**（`:root` 開頭有註解提醒）；小地圖會自動跟上。姊妹站 `creator-town` 同日同步處理。SW 快取 v9→v10。
+
+- 2026-11-02 創作者小鎮改成手繪動畫風（紅瓦灰泥、蔚藍海、鮮綠草原），本站 2D `drawFar()` 與 3D `buildFar()` 的 harbor 分支顏色同步更新；SW v10→v11。細節見 `creator-town/CLAUDE.md`「手繪動畫風」。

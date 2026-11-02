@@ -1057,12 +1057,12 @@ function drawFar(g){
   drawFarBridge(g);
   var H = FARB.style === 'harbor';
   el('polygon', {points:pts(farOutline(.55, 120).map(function(q){ var p = iso(q[0], q[1]); return [p[0], p[1] + 8]; })), fill:'var(--foam)', opacity:.5}, g);
-  el('polygon', {points:pts(farOutline(H ? .05 : .4, 120).map(function(q){ var p = iso(q[0], q[1]); return [p[0], p[1] + 14]; })), fill:H ? '#8b8578' : '#d2b071'}, g);
-  el('polygon', {points:pts(farOutline(H ? .05 : .4, 120).map(function(q){ return iso(q[0], q[1]); })), fill:H ? '#d6cfc0' : '#fdf1cf'}, g);
-  el('polygon', {points:pts(farOutline(H ? -.35 : -.05, 120).map(function(q){ return iso(q[0], q[1]); })), fill:H ? '#b7c87c' : '#9edb6f'}, g);
+  el('polygon', {points:pts(farOutline(H ? .05 : .4, 120).map(function(q){ var p = iso(q[0], q[1]); return [p[0], p[1] + 14]; })), fill:H ? '#9a8f7c' : '#d2b071'}, g);
+  el('polygon', {points:pts(farOutline(H ? .05 : .4, 120).map(function(q){ return iso(q[0], q[1]); })), fill:H ? '#e6dcc4' : '#fdf1cf'}, g);
+  el('polygon', {points:pts(farOutline(H ? -.35 : -.05, 120).map(function(q){ return iso(q[0], q[1]); })), fill:H ? '#93c25e' : '#9edb6f'}, g);
   FAR_THINGS.forEach(function(o){
     var p = iso(o.x, o.y);
-    if (o.k === 'w') farGable(g, o.x, o.y, o.s, o.h * .8, 9, '#9c4a36', '#bd6247', o.c < .5 ? '#66737c' : '#7a5a4a');
+    if (o.k === 'w') farGable(g, o.x, o.y, o.s, o.h * .8, 9, '#cdb79c', '#f2e2c4', o.c < .33 ? '#5f9e8f' : '#cf6a3f');
     else if (o.k === 'c'){ farBox(g, o.x, o.y, o.s, 9, '#8d3a2c', FAR_COL.box[Math.floor(o.c * 7)], mix(FAR_COL.box[Math.floor(o.c * 7)], '#ffffff', .3)); farBox(g, o.x + .05, o.y, o.s * .9, 18, '#2a5f9a', FAR_COL.box[Math.floor(o.c * 7 + 3) % 7], mix(FAR_COL.box[Math.floor(o.c * 7 + 3) % 7], '#ffffff', .3)); }
     else if (o.k === 'p'){ var tp = [p[0] + 2, p[1] - 30]; el('path', {d:'M' + p[0] + ' ' + p[1] + ' Q' + p[0] + ' ' + (p[1] - 15) + ' ' + tp[0] + ' ' + tp[1], stroke:'#8a6a48', 'stroke-width':2.6, fill:'none'}, g);
       [[-12, 4], [-7, -5], [0, -7], [7, -5], [12, 4]].forEach(function(f){ el('path', {d:'M' + tp[0] + ' ' + tp[1] + ' Q' + (tp[0] + f[0] * .5) + ' ' + (tp[1] - 5) + ' ' + (tp[0] + f[0]) + ' ' + (tp[1] + f[1] + 5), stroke:'#4f9a5a', 'stroke-width':2.6, fill:'none', 'stroke-linecap':'round'}, g); }); }
@@ -1080,7 +1080,7 @@ function drawFar(g){
     else if (o.k === 'L'){ el('rect', {x:p[0] - 4.5, y:p[1] - 40, width:9, height:40, fill:'#faf4e8', stroke:'#3b2f3a', 'stroke-width':.8}, g); el('rect', {x:p[0] - 4.5, y:p[1] - 28, width:9, height:6, fill:'#e05a47'}, g);
       el('polygon', {points:pts([[p[0] - 7, p[1] - 40], [p[0] + 7, p[1] - 40], [p[0], p[1] - 51]]), fill:'#e05a47'}, g); el('circle', {class:'pulse', cx:p[0], cy:p[1] - 43, r:2.6, fill:'#ffe08a'}, g); }
     else if (o.k === 'T'){
-      if (H){ farBox(g, o.x, o.y, .7, 70, '#9c4a36', '#bd6247', '#d27a5c'); farBox(g, o.x, o.y, .45, 96, '#3d4f5c', '#55697a', '#9fb3c0'); el('line', {x1:p[0], y1:p[1] - 96 - 8, x2:p[0], y2:p[1] - 128, stroke:'#3b2f3a', 'stroke-width':1.6}, g); el('circle', {class:'pulse', cx:p[0], cy:p[1] - 128, r:3, fill:'#ff6f59'}, g); }
+      if (H){ farBox(g, o.x, o.y, .7, 70, '#cdb79c', '#f2e2c4', '#cf6a3f'); farBox(g, o.x, o.y, .45, 96, '#3d4f5c', '#55697a', '#9fb3c0'); el('line', {x1:p[0], y1:p[1] - 96 - 8, x2:p[0], y2:p[1] - 128, stroke:'#3b2f3a', 'stroke-width':1.6}, g); el('circle', {class:'pulse', cx:p[0], cy:p[1] - 128, r:3, fill:'#ff6f59'}, g); }
       else { farBox(g, o.x, o.y, .6, 80, '#c8b8a0', '#efe4d0', '#f7efe0'); var t1 = [p[0], p[1] - 80 - 34]; el('polygon', {points:pts([iso(o.x - .6, o.y + .6).map(function(v, i){ return i ? v - 80 : v; }), iso(o.x + .6, o.y + .6).map(function(v, i){ return i ? v - 80 : v; }), t1]), fill:'#ff6f59'}, g); el('polygon', {points:pts([iso(o.x + .6, o.y + .6).map(function(v, i){ return i ? v - 80 : v; }), iso(o.x + .6, o.y - .6).map(function(v, i){ return i ? v - 80 : v; }), t1]), fill:'#ff9a87'}, g); }
     }
   });
