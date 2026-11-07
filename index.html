@@ -129,6 +129,11 @@ a{color:inherit}
 .m-sugg button:hover{background:#ece6ff}
 .m-form{display:flex;gap:6px}
 .m-form input{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;background:var(--panel);color:var(--ink)}
+.talk-card.merlin-card{bottom:132px;flex-wrap:wrap;max-width:min(520px,calc(100vw - 32px));box-shadow:0 0 0 3px rgba(124,92,240,.45),var(--shadow)}
+.talk-card.merlin-card .msg{white-space:normal;overflow:visible;flex:1 1 260px;line-height:1.6}
+.merlin-card .acts{display:flex;gap:6px;margin-left:auto}
+.talk-card.merlin-card button.main{background:#6c4bd8;border-color:#6c4bd8;color:#fff}
+body.view-time .talk-card.merlin-card{bottom:270px}
 .m-form button{border:0;background:#6c4bd8;color:#fff;border-radius:999px;padding:0 16px;font-weight:700;cursor:pointer}
 .board-lines{margin:0 0 12px;padding:12px 12px 12px 30px;background:var(--panel-2);border-radius:12px;font-size:14px;font-weight:500}
 .board-lines li{margin:3px 0}
@@ -436,6 +441,7 @@ body.view-time .talk-card{bottom:216px}
   .chat-list{height:min(150px,22vh)}
   .talk-card{bottom:84px;left:16px;right:16px;transform:none;max-width:none}
   .talk-card .msg{flex:1}
+  .talk-card.merlin-card{bottom:140px}
   body.view-time .chat{bottom:250px;max-height:calc(100% - 330px)}
 }
 @media (max-width:520px){
@@ -597,6 +603,7 @@ body.view-time .talk-card{bottom:216px}
     <label class="chat-opt"><input type="checkbox" id="chatBubbles" checked>顯示其他人頭上的對話泡泡</label>
   </section>
 
+  <section class="card talk-card merlin-card" id="merlinCard" hidden aria-live="polite"><span class="msg" id="mcMsg"></span><span class="acts"><button type="button" class="main" id="mcYes">好啊，請教你</button><button type="button" id="mcNo">不用了，謝謝</button><button type="button" class="x2" id="mcX" aria-label="不用了">×</button></span></section>
   <section class="card talk-card" id="talkCard" hidden aria-live="polite"><span class="msg" id="talkMsg"></span><span id="talkActs"></span></section>
 
   <section class="card name-pop" id="namePop" hidden role="dialog" aria-labelledby="nameTitle">
@@ -890,7 +897,7 @@ var BOARD_SHEET = '1reL32KcSUL-YNh4ICVxm-fROcjBzRiKVLjy05t7q_bs', KEY_BOARD = 's
 var FAR = {self:'startup', shape:'square', bridge:[[20.4, 5.82], [24.75, 4.62]], sign:'🏭 創作者小鎮 →', at:[26.2, 4.2], r:1.7, url:'https://m255525.github.io/creator-town/', name:'創作者小鎮', host:'另一個網站', emoji:'🏭'};
 var BOARD_AT = [18.55, 5.6];
 var MERLIN_AT = [12.3, 9.7];          // 智者梅林：島中央、出生點旁（指揮塔南方空地），一登島就看得到
-var merlin = {near:false, face:1, lastCheck:0};
+var merlin = {gx:MERLIN_AT[0], gy:MERLIN_AT[1], elev:0, path:[], phase:0, dirX:1, dirY:0, moving:false, mode:'idle', wait:3, born:0, near:false, face:1, lastCheck:0, say:'', sayUntil:0, label:''};   // 會四處走，MERLIN_AT 是家
 var BOARD_FIELDS = [   // [程式用 key, 試算表 A 欄名稱, 字數上限]
   ['title', '標題', 8], ['sub', '副標', 16], ['l1', '內容1', 14], ['l2', '內容2', 14], ['l3', '內容3', 14],
   ['foot', '底部', 20], ['detail', '詳細說明', 300], ['link', '連結', 300], ['linkText', '連結文字', 10], ['color', '主色', 7]
@@ -1410,9 +1417,10 @@ function drawMerlin2D(){
   if (!L.blds) return;
   if (L.merlin) L.merlin.remove();
   if (L.merlinTop) L.merlinTop.remove();
-  var p = up(iso(MERLIN_AT[0], MERLIN_AT[1]), groundAt(MERLIN_AT[0], MERLIN_AT[1]));
+  if (!merlin.elev) merlin.elev = groundAt(merlin.gx, merlin.gy);
+  var p = up(iso(merlin.gx, merlin.gy), merlin.elev);
   var g = el('g', {class:'merlin', tabindex:0, role:'button', 'aria-label':'智者梅林：問島上的工具', transform:'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')'}, L.blds);
-  g._d = MERLIN_AT[0] + MERLIN_AT[1];
+  g._d = merlin.gx + merlin.gy; merlin.face = 1;
   var INKC = '#2a1b5e', ROBE = '#5b3fc4', ROBE2 = '#4a32a8', GOLD = '#f7c948', SKIN = '#f6d2b8';
   el('ellipse', {class:'ring', cx:0, cy:0, rx:30, ry:14, fill:'none', stroke:'#9b7bff', 'stroke-width':3}, g);
   el('ellipse', {cx:2, cy:1, rx:18, ry:6, fill:'rgba(0,0,0,.18)'}, g);
@@ -1448,9 +1456,11 @@ function drawMerlin2D(){
   placeDepth(g, g._d);
 }
 function merlinFlagText(){
+  var t = merlinLabel(); merlin.label = t;
   if (!L.merlinFlag) return;
-  var t = merlin.near ? '👋 點我發問！' : '🧙 智者梅林';
   L.merlinFlag.textContent = t;
+  var w = 92; try { w = Math.max(92, L.merlinFlag.getComputedTextLength() + 24); } catch(e){}
+  L.merlinFlagBox.setAttribute('x', (-w / 2).toFixed(1)); L.merlinFlagBox.setAttribute('width', w.toFixed(1));
 }
 
 // 各場地的地面裝飾
@@ -1835,6 +1845,7 @@ function tick(ts){
   stepPeers(dt);
   netTick(ts);
   stepCreatures(dt);
+  merlinMove(dt);
   merlinTick(ts);
   boats.forEach(function(b){
     var p = iso(C[0] + Math.cos(b.a)*b.r, C[1] + Math.sin(b.a)*b.r), bob = Math.sin(elapsed*2 + b.a*5) * 1.5;
@@ -3303,22 +3314,142 @@ function openMerlin(){
     mAppend('m-say', escHtml((me && me.name ? me.name : '旅人') + '，歡迎來到創業島。想做什麼、卡在哪裡，直接問我；或點下面的問題試試。'));
     mSuggest();
   }
-  if (Math.hypot(walker.gx - MERLIN_AT[0], walker.gy - MERLIN_AT[1]) > 1.4){ walker.goal = null; walkTo(MERLIN_AT[0] - .7, MERLIN_AT[1] + .5); }
+  $('merlinCard').hidden = true; if (!mMem.met){ mMem.met = true; mSave(); }   // 說過話就不是陌生人了
+  merlin.path = []; merlin.mode = 'talk';
+  if (Math.hypot(walker.gx - merlin.gx, walker.gy - merlin.gy) > 1.4){ var mc = nearestCell(merlin.gx - .7, merlin.gy + .5) || nearestCell(merlin.gx, merlin.gy); if (mc){ var mq = cellPos(mc[0], mc[1]); walker.goal = null; walkTo(mq[0], mq[1]); } }
   if (state.view === 'map' || state.view === 'time'){
-    var mp = iso(MERLIN_AT[0], MERLIN_AT[1]), box = padBox({x:mp[0] - 420, y:mp[1] - 340, w:840, h:560});
+    var mp = iso(merlin.gx, merlin.gy), box = padBox({x:mp[0] - 420, y:mp[1] - 340, w:840, h:560});
     if (svg.getBoundingClientRect().width > 820) box.x += (200 * box.w / svg.getBoundingClientRect().width);
     animateTo(box);
   }
   if (innerWidth > 820) setTimeout(function(){ $('mInput').focus(); }, 380);
 }
-function merlinTick(ts){                       // 每 0.3 秒：你走近時名牌改成「點我發問」，平面的梅林轉頭看你
+function merlinTick(ts){                       // 每 0.3 秒：你走近時名牌改成「點我發問」；說話泡泡到時間就收回
   if (ts - merlin.lastCheck < 300) return;
   merlin.lastCheck = ts;
-  var d = Math.hypot(walker.gx - MERLIN_AT[0], walker.gy - MERLIN_AT[1]), near = merlin.near ? d < 2.1 : d < 1.7;
-  if (near !== merlin.near){ merlin.near = near; merlinFlagText(); }
-  var face = iso(walker.gx, walker.gy)[0] >= iso(MERLIN_AT[0], MERLIN_AT[1])[0] ? 1 : -1;
-  if (face !== merlin.face && L.merlinBody){ merlin.face = face; L.merlinBody.setAttribute('transform', face < 0 ? 'scale(-1,1)' : ''); }
+  var d = Math.hypot(walker.gx - merlin.gx, walker.gy - merlin.gy), near = merlin.near ? d < 2.1 : d < 1.7;
+  merlin.near = near;
+  if (merlinLabel() !== merlin.label) merlinFlagText();
 }
+/* ---------- 梅林四處走＋主動跟陌生人打招呼 ----------
+ * 每個瀏覽器各自模擬一位梅林（不經轉播站），所以每位訪客看到的梅林都在照顧「自己」。
+ * 「陌生人」＝還沒跟梅林說過話的訪客（startupIslandMerlin.met 為假）。導覽結束、登島幾秒後，梅林走過來打招呼：
+ *   好啊 → 開問答（met=true，以後不再主動靠近）；不用了／× → declined=true 永久不再打擾，散步也避開你；
+ *   25 秒沒回應 → 這次來訪不再打擾，下次來訪再問一次。 */
+var KEY_MERLIN = 'startupIslandMerlin';
+var mMem = lsGet(KEY_MERLIN, {});
+function mSave(){ lsSet(KEY_MERLIN, mMem); }
+var M_SPOTS = null;
+function merlinSpots(){                               // 散步的停靠點：家、各場地中心附近、看板前、幾個路口
+  if (M_SPOTS) return M_SPOTS;
+  var raw = [MERLIN_AT, [BOARD_AT[0] - .9, BOARD_AT[1] + .6]].concat(ZONES.map(function(z){ return [z.cx, z.cy]; }));
+  for (var i = 0; i < ROAD_S.length; i += 17) raw.push(ROAD_S[i]);
+  M_SPOTS = [];
+  raw.forEach(function(p){ var c = nearestCell(p[0], p[1]); if (!c) return; var q = cellPos(c[0], c[1]); if (slimeOK(q[0], q[1])) M_SPOTS.push(q); });
+  return M_SPOTS;
+}
+function merlinPathTo(gx, gy){
+  var a = nearestCell(merlin.gx, merlin.gy), b = nearestCell(gx, gy); if (!a || !b) return false;
+  var p = findPath(a, b); if (!p) return false;
+  if (p.some(function(q){ return farBridgeDist(q[0], q[1]) < .6 || onFarIsland(q[0], q[1], -.3); })) return false;   // 不走過跨海大橋
+  merlin.path = straighten([merlin.gx, merlin.gy], p.length ? p : [cellPos(b[0], b[1])]);
+  return true;
+}
+function merlinWanderPick(awayFromYou){
+  var spots = merlinSpots(), mine = Math.hypot(walker.gx - merlin.gx, walker.gy - merlin.gy);
+  var ok = spots.filter(function(s){
+    var dm = Math.hypot(s[0] - merlin.gx, s[1] - merlin.gy), dy = Math.hypot(s[0] - walker.gx, s[1] - walker.gy);
+    if (dm < 1.5 || dm > 9) return false;
+    if ((mMem.declined || awayFromYou) && dy < 4) return false;                       // 說過不用了：別走到你身邊
+    return true;
+  });
+  if (awayFromYou) ok.sort(function(a, b){ return Math.hypot(b[0] - walker.gx, b[1] - walker.gy) - Math.hypot(a[0] - walker.gx, a[1] - walker.gy); }), ok = ok.slice(0, 4);
+  for (var t = 0; t < 6 && ok.length; t++){
+    var s = ok.splice(Math.floor(Math.random() * ok.length), 1)[0];
+    if (merlinPathTo(s[0], s[1])) return true;
+  }
+  return false;
+}
+function merlinSay(text, ms){ merlin.say = text; merlin.sayUntil = performance.now() + (ms || 5000); merlinFlagText(); }
+function merlinLabel(){
+  if (merlin.say && performance.now() < merlin.sayUntil) return merlin.say;
+  if (merlin.mode === 'greet') return '👋 有什麼需要幫忙的嗎？';
+  return merlin.near ? '👋 點我發問！' : '🧙 智者梅林';
+}
+function merlinWantsToGreet(){
+  if (mMem.met || mMem.declined || merlin.greetedVisit) return false;
+  if (!$('story').hidden || state.view === 'list' || net.paused) return false;
+  if ($('merlinDrawer').classList.contains('open') || !$('namePop').hidden) return false;
+  return performance.now() - merlin.born > 6000;
+}
+function merlinGreet(){
+  merlin.mode = 'greet'; merlin.path = []; merlin.greetAt = performance.now(); merlin.greetedVisit = true;
+  merlinSay('👋 歡迎來到創業島！', 6000);
+  var nm = escHtml(me && me.name ? me.name : '旅人');
+  $('mcMsg').innerHTML = '<b>🧙 智者梅林</b>：' + nm + '，第一次來創業島嗎？我是島上的智者，有什麼可以幫你的嗎？';
+  $('merlinCard').hidden = false;
+  addLog('智者梅林來打招呼');
+}
+function merlinEndGreet(answer){                     // 'yes'｜'no'｜'ignore'
+  $('merlinCard').hidden = true;
+  if (answer === 'yes'){ mMem.met = true; mSave(); openMerlin(); return; }
+  if (answer === 'no'){ mMem.declined = true; mSave(); merlinSay('好的，祝你一路順風！', 5000); }
+  else merlinSay('我先去散步，需要我就按「問梅林」。', 5500);
+  merlin.mode = 'leave'; merlin.wait = 1.2;
+}
+function merlinMove(dt){                              // tick 每格呼叫：走路、轉身、畫面位置
+  var now = performance.now(), canMove = !state.paused && !REDUCED, moving = false;
+  if (!merlin.born) merlin.born = now;
+  if (typeof fineCells === 'undefined' || !fineCells) return;
+  var talking = $('merlinDrawer').classList.contains('open');
+  if (talking && merlin.mode !== 'talk'){ merlin.mode = 'talk'; merlin.path = []; $('merlinCard').hidden = true; }
+  if (!talking && merlin.mode === 'talk'){ merlin.mode = 'idle'; merlin.wait = 3; }
+  if (merlin.mode === 'greet' && now - merlin.greetAt > 25000) merlinEndGreet('ignore');
+  if ((merlin.mode === 'idle' || merlin.mode === 'wander') && merlinWantsToGreet()){
+    if (!canMove) merlinGreet();                     // 靜止／減少動態：站在原地出聲打招呼
+    else { merlin.mode = 'approach'; merlin.approachAt = now; merlin.lastPlan = 0; }
+  }
+  if (merlin.mode === 'approach'){
+    var dyou = Math.hypot(walker.gx - merlin.gx, walker.gy - merlin.gy);
+    if (dyou < 1.4 || now - merlin.approachAt > 20000) merlinGreet();
+    else if (onFarIsland(walker.gx, walker.gy, -.3) || farBridgeDist(walker.gx, walker.gy) < .6){ merlin.path = []; }   // 你在橋上或對岸：等你回來
+    else if (now - merlin.lastPlan > 900){
+      merlin.lastPlan = now;
+      var ux = merlin.gx - walker.gx, uy = merlin.gy - walker.gy, ul = Math.hypot(ux, uy) || 1;
+      merlinPathTo(walker.gx + ux / ul * .8, walker.gy + uy / ul * .8);
+    }
+  }
+  if (canMove && (merlin.mode === 'idle' || merlin.mode === 'leave') && !merlin.path.length){
+    merlin.wait -= dt;
+    if (merlin.wait <= 0){
+      if (merlinWanderPick(merlin.mode === 'leave')) merlin.mode = 'wander';
+      merlin.wait = 4 + Math.random() * 5;
+      if (merlin.mode === 'leave') merlin.mode = 'idle';
+    }
+  }
+  if (canMove && merlin.path.length && merlin.mode !== 'greet' && merlin.mode !== 'talk'){
+    var nx = merlin.path[0], dx = nx[0] - merlin.gx, dy = nx[1] - merlin.gy, d = Math.hypot(dx, dy), step = (merlin.mode === 'approach' ? 1.9 : 1.15) * dt;
+    if (d <= step){ merlin.gx = nx[0]; merlin.gy = nx[1]; merlin.path.shift(); } else { merlin.gx += dx / d * step; merlin.gy += dy / d * step; }
+    if (d > .001){ merlin.dirX = dx / d; merlin.dirY = dy / d; }
+    moving = true;
+    if (!merlin.path.length && merlin.mode === 'wander'){ merlin.mode = 'idle'; }
+  }
+  merlin.moving = moving;
+  merlin.phase = moving ? merlin.phase + dt * 7 : 0;
+  merlin.elev += (groundAt(merlin.gx, merlin.gy) - merlin.elev) * Math.min(1, dt * 10);
+  // 平面：位置、朝向、走路一晃一晃
+  if (!L.merlin) return;
+  var p = up(iso(merlin.gx, merlin.gy), merlin.elev), tr = 'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')';
+  L.merlin.setAttribute('transform', tr); L.merlinTop.setAttribute('transform', tr);
+  var face = moving ? ((merlin.dirX - merlin.dirY) >= 0 ? 1 : -1) : (iso(walker.gx, walker.gy)[0] >= p[0] ? 1 : -1);
+  if (face !== merlin.face){ merlin.face = face; L.merlinBody.setAttribute('transform', face < 0 ? 'scale(-1,1)' : ''); }
+  var bob = moving ? -Math.abs(Math.sin(merlin.phase)) * 3 : 0;
+  L.merlinBody.parentNode.setAttribute('transform', 'translate(0,' + bob.toFixed(1) + ') scale(1.25)');
+  if (moving){ L.merlin._d = merlin.gx + merlin.gy; placeDepth(L.merlin, L.merlin._d); }
+}
+$('mcYes').addEventListener('click', function(){ merlinEndGreet('yes'); });
+$('mcNo').addEventListener('click', function(){ merlinEndGreet('no'); });
+$('mcX').addEventListener('click', function(){ merlinEndGreet('no'); });
 $('tbMerlin').addEventListener('click', function(){ if ($('merlinDrawer').classList.contains('open')) closeDrawer('merlinDrawer'); else openMerlin(); });
 $('tcMerlin').addEventListener('click', openMerlin);
 $('mForm').addEventListener('submit', function(e){ e.preventDefault(); var v = $('mInput').value; $('mInput').value = ''; merlinAsk(v); });
@@ -3339,7 +3470,6 @@ buildWalk();
 placeAvatarDepth();
 if (firstVisit) addLog(me.name + ' 登上了創業島');
 blockArea(BOARD_AT[0], BOARD_AT[1], .75);
-blockArea(MERLIN_AT[0], MERLIN_AT[1], .32);
 loadBoard(); setInterval(loadBoard, 10 * 60 * 1000);
 /* ---------- 一個瀏覽器只有一個角色在線上 ----------
  * 創業島與創作者小鎮同網域（m255525.github.io），角色資料互通；為了不讓同一個角色同時出現兩次，
