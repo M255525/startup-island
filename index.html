@@ -90,6 +90,46 @@ a{color:inherit}
 .board-flag{animation:bob 1.8s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translate(0,-74px)}50%{transform:translate(0,-79px)}}
 .paused .board .ring,.paused .board-flag{animation-play-state:paused}
+/* 智者梅林（平面）＋對話抽屜 */
+.merlin{cursor:pointer}
+.merlin .hit{fill:transparent}
+.merlin:focus{outline:none}
+.merlin .ring{animation:ring 1.6s ease-in-out infinite}
+.merlin-flag{animation:bobM 1.8s ease-in-out infinite}
+@keyframes bobM{0%,100%{transform:translate(0,-118px)}50%{transform:translate(0,-123px)}}
+.merlin .orb{animation:orb 2.2s ease-in-out infinite}
+@keyframes orb{50%{opacity:.35}}
+.paused .merlin .ring,.paused .merlin-flag,.paused .merlin .orb{animation-play-state:paused}
+.merlin:hover .merlin-flag rect,.merlin:focus .merlin-flag rect{fill:#7d5cf0}
+.toolbar button.tb-merlin{background:#6c4bd8;color:#fff;font-weight:700}
+.toolbar button.tb-merlin:hover,.toolbar button.tb-merlin[aria-pressed="true"]{background:#5536c0;color:#fff}
+.tag3.merlin3{background:#6c4bd8;color:#fff;border:2px solid #2a1b5e;font-size:14px;padding:4px 12px;box-shadow:0 0 0 4px rgba(124,92,240,.35),0 3px 10px rgba(12,48,64,.25)}
+.merlin-drawer .body{flex:1;min-height:0}
+.m-intro{display:flex;gap:10px;align-items:flex-start;margin:4px 0 10px}
+.m-intro .m-face{flex:none;width:44px;height:44px;border-radius:50%;background:#ece6ff;display:grid;place-items:center;font-size:26px}
+.m-intro h2{font-family:var(--f-display);font-weight:400;font-size:21px;margin:0 0 2px;color:#5536c0}
+.m-intro p{margin:0;font-size:12.5px;color:var(--ink-dim);line-height:1.6}
+.m-log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.m-log li{font-size:13.5px;line-height:1.7;padding:9px 12px;border-radius:14px;max-width:92%;overflow-wrap:anywhere}
+.m-log li.m-say{background:#f1ecff;border:1px solid #d9ccff;align-self:flex-start;border-top-left-radius:4px}
+.m-log li.m-you{background:var(--panel-2);align-self:flex-end;border-top-right-radius:4px}
+.m-log li.m-wait{color:#7d6bb8;letter-spacing:3px}
+.m-cards{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.m-card{background:var(--panel);border:1px solid #d9ccff;border-radius:10px;padding:8px 10px}
+.m-card b{display:block;font-size:13.5px}
+.m-card small{display:block;color:var(--ink-dim);font-size:12px;line-height:1.55;margin:2px 0 6px}
+.m-card .zone-chip{font-size:11px;padding:1px 8px;margin-bottom:4px}
+.m-card .m-acts{display:flex;gap:6px;flex-wrap:wrap}
+.m-card .m-acts a,.m-card .m-acts button{font-size:12px;border-radius:999px;padding:3px 10px;cursor:pointer;text-decoration:none;border:1px solid #6c4bd8}
+.m-card .m-acts button{background:#6c4bd8;color:#fff}
+.m-card .m-acts a{background:var(--panel);color:#5536c0}
+.m-foot{padding:8px 16px 14px;border-top:1px solid var(--line)}
+.m-sugg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.m-sugg button{border:1px solid #d9ccff;background:#f7f4ff;color:#4a33a8;border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer}
+.m-sugg button:hover{background:#ece6ff}
+.m-form{display:flex;gap:6px}
+.m-form input{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;background:var(--panel);color:var(--ink)}
+.m-form button{border:0;background:#6c4bd8;color:#fff;border-radius:999px;padding:0 16px;font-weight:700;cursor:pointer}
 .board-lines{margin:0 0 12px;padding:12px 12px 12px 30px;background:var(--panel-2);border-radius:12px;font-size:14px;font-weight:500}
 .board-lines li{margin:3px 0}
 .board-detail{font-size:13.5px;line-height:1.75;margin:0 0 14px;color:var(--ink-dim)}
@@ -471,6 +511,7 @@ body.view-time .talk-card{bottom:216px}
     <div class="clock"><span>島上時間</span><b id="clockNow">--:--</b><span id="clockNote"></span></div>
     <div class="clock"><span>你已探索</span><b id="seenCount">0</b><span>棟建築</span></div>
     <div class="clock"><span>島上現在</span><b id="onlineN">1</b><span>人<span class="room-tag" id="roomTag"></span>（其他訪客也看得到你走動）</span></div>
+    <div class="clock"><span>不知道用哪個？</span><button type="button" class="tc-toggle" id="tcMerlin">🧙 問島中央的智者梅林</button></div>
     <button type="button" class="go3d" id="go3d" data-view="3d">走進立體島 →</button>
     <div class="clock"><span>你是</span><b id="meName" class="me-name"></b><button type="button" class="tc-toggle" id="reroll">改名字</button></div>
   </section>
@@ -478,6 +519,7 @@ body.view-time .talk-card{bottom:216px}
   <div class="list-view" id="listView"></div>
 
   <nav class="card toolbar" id="toolbar" aria-label="地圖工具">
+    <button type="button" id="tbMerlin" class="tb-merlin" aria-pressed="false" aria-controls="merlinDrawer" title="找智者梅林問島上的工具">🧙 問梅林</button>
     <button type="button" id="tbTags" aria-pressed="true"><span class="dot"></span>標籤</button>
     <button type="button" id="tbPan" aria-pressed="true"><span class="dot"></span>拖曳</button>
     <button type="button" id="tbLinks" aria-pressed="false" aria-expanded="false"><span class="dot"></span>接力線</button>
@@ -502,6 +544,18 @@ body.view-time .talk-card{bottom:216px}
   <aside class="card drawer" id="detail" aria-label="建築資訊">
     <div class="head"><span class="eyebrow" id="dEyebrow">Building</span><button type="button" class="x" data-close="detail" aria-label="關閉">×</button></div>
     <div class="body" id="dBody"></div>
+  </aside>
+
+  <aside class="card drawer merlin-drawer" id="merlinDrawer" aria-label="智者梅林">
+    <div class="head"><span class="eyebrow">Wise Merlin</span><button type="button" class="x" data-close="merlinDrawer" aria-label="關閉">×</button></div>
+    <div class="body" id="mBody">
+      <div class="m-intro"><span class="m-face" aria-hidden="true">🧙</span><div><h2>智者梅林</h2><p>島上每一棟建築我都去過。問我工具能做什麼、在哪裡、下一步該用什麼。</p></div></div>
+      <ol class="m-log" id="mLog" aria-live="polite"></ol>
+    </div>
+    <div class="m-foot">
+      <div class="m-sugg" id="mSugg"></div>
+      <form class="m-form" id="mForm" autocomplete="off"><input id="mInput" maxlength="60" placeholder="例如：想開咖啡店要先算什麼？" aria-label="問梅林的問題"><button type="submit">問</button></form>
+    </div>
   </aside>
 
   <aside class="card drawer" id="logDrawer" aria-label="探索足跡">
@@ -835,6 +889,8 @@ var HILLS = [
 var BOARD_SHEET = '1reL32KcSUL-YNh4ICVxm-fROcjBzRiKVLjy05t7q_bs', KEY_BOARD = 'startupIslandBoard';
 var FAR = {self:'startup', shape:'square', bridge:[[20.4, 5.82], [24.75, 4.62]], sign:'🏭 創作者小鎮 →', at:[26.2, 4.2], r:1.7, url:'https://m255525.github.io/creator-town/', name:'創作者小鎮', host:'另一個網站', emoji:'🏭'};
 var BOARD_AT = [18.55, 5.6];
+var MERLIN_AT = [12.3, 9.7];          // 智者梅林：島中央、出生點旁（指揮塔南方空地），一登島就看得到
+var merlin = {near:false, face:1, lastCheck:0};
 var BOARD_FIELDS = [   // [程式用 key, 試算表 A 欄名稱, 字數上限]
   ['title', '標題', 8], ['sub', '副標', 16], ['l1', '內容1', 14], ['l2', '內容2', 14], ['l3', '內容3', 14],
   ['foot', '底部', 20], ['detail', '詳細說明', 300], ['link', '連結', 300], ['linkText', '連結文字', 10], ['color', '主色', 7]
@@ -1235,6 +1291,7 @@ function buildMap(){
     if (WATERS.some(function(w){ return Math.hypot(gx - w.at[0], gy - w.at[1]) < w.r + .45; })) return false;
     if (ZONES.some(function(z){ return z.id !== 'idea' && gx > z.box[0]-.15 && gx < z.box[2]+.15 && gy > z.box[1]-.15 && gy < z.box[3]+.15; })) return false;
     if (Math.hypot(gx - HILLS[0].at[0], gy - HILLS[0].at[1]) < 2.6) return false;
+    if (Math.hypot(gx - MERLIN_AT[0], gy - MERLIN_AT[1]) < 1) return false;
     return !trees.some(function(o){ return Math.hypot(o.gx - gx, o.gy - gy) < .6; });
   }
   function tryTree(gx, gy){ if (treeOK(gx, gy)) trees.push({gx:gx, gy:gy, elev:groundAt(gx, gy), big:tr() > .7}); }
@@ -1310,6 +1367,7 @@ function buildMap(){
   });
   L.boardTag = el('g', {class:'board-tag'}, svg);
   drawBoard2D();
+  drawMerlin2D();
   L.ptags = el('g', {'pointer-events':'none'}, svg);   // 人物名牌永遠在最上層，走到建築後面也看得到名字
   buildAvatar();
   L.clouds = el('g', {'pointer-events':'none', opacity:.4}, svg);
@@ -1345,6 +1403,54 @@ function drawBoard2D(){
   el('polygon', {class:'hit', points:'-34,4 34,4 34,-88 -34,-88'}, g);
   L.board = g;
   placeDepth(g, g._d);
+}
+
+// 智者梅林（平面）：紫色星星長袍、尖帽、白鬍子、拿著發光水晶的手杖；上方浮動紫色名牌「🧙 智者梅林」
+function drawMerlin2D(){
+  if (!L.blds) return;
+  if (L.merlin) L.merlin.remove();
+  if (L.merlinTop) L.merlinTop.remove();
+  var p = up(iso(MERLIN_AT[0], MERLIN_AT[1]), groundAt(MERLIN_AT[0], MERLIN_AT[1]));
+  var g = el('g', {class:'merlin', tabindex:0, role:'button', 'aria-label':'智者梅林：問島上的工具', transform:'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')'}, L.blds);
+  g._d = MERLIN_AT[0] + MERLIN_AT[1];
+  var INKC = '#2a1b5e', ROBE = '#5b3fc4', ROBE2 = '#4a32a8', GOLD = '#f7c948', SKIN = '#f6d2b8';
+  el('ellipse', {class:'ring', cx:0, cy:0, rx:30, ry:14, fill:'none', stroke:'#9b7bff', 'stroke-width':3}, g);
+  el('ellipse', {cx:2, cy:1, rx:18, ry:6, fill:'rgba(0,0,0,.18)'}, g);
+  var b0 = el('g', {transform:'scale(1.25)'}, g), b = el('g', {}, b0);
+  el('path', {d:'M-15 0 C-14 -14 -11 -30 -8 -42 L8 -42 C11 -30 14 -14 15 0 Q0 4 -15 0 Z', fill:ROBE, stroke:INKC, 'stroke-width':1.4}, b);
+  el('path', {d:'M-15 0 Q0 4 15 0 L14.4 -3 Q0 1 -14.4 -3 Z', fill:GOLD}, b);
+  el('rect', {x:-10, y:-27, width:20, height:3.2, rx:1.5, fill:GOLD}, b);
+  [[-8, -12, 7], [6, -7, 6], [-4, -34, 5.5], [8, -18, 5]].forEach(function(s){ el('text', {x:s[0], y:s[1], 'font-size':s[2], fill:GOLD, 'text-anchor':'middle'}, b).textContent = '✦'; });
+  el('line', {x1:16, y1:3, x2:17.5, y2:-63, stroke:'#8a5a2b', 'stroke-width':3.2, 'stroke-linecap':'round'}, b);
+  el('ellipse', {cx:10, cy:-31, rx:5, ry:8.5, fill:ROBE2, stroke:INKC, 'stroke-width':1.2, transform:'rotate(-25 10 -31)'}, b);
+  el('circle', {cx:15.5, cy:-25, r:3.2, fill:SKIN, stroke:INKC, 'stroke-width':1}, b);
+  el('circle', {class:'orb', cx:17.5, cy:-68, r:9.5, fill:'#9fe8ff', opacity:.55}, b);
+  el('circle', {cx:17.5, cy:-68, r:5, fill:'#d6f7ff', stroke:'#3b7fa8', 'stroke-width':1.2}, b);
+  el('circle', {cx:16, cy:-69.6, r:1.5, fill:'#fff'}, b);
+  el('circle', {cx:0, cy:-50, r:9, fill:SKIN, stroke:INKC, 'stroke-width':1.2}, b);
+  el('path', {d:'M-8.5 -49 Q-9.5 -36 -3 -23 Q0 -19 2.5 -23 Q9.5 -36 8.5 -49 Q4 -44.5 0 -45.5 Q-4 -44.5 -8.5 -49 Z', fill:'#ffffff', stroke:'#b9b2cc', 'stroke-width':1}, b);
+  el('path', {d:'M-6 -46 Q-2 -48.5 0 -46.5 Q2 -48.5 6 -46 Q3 -44 0 -45 Q-3 -44 -6 -46 Z', fill:'#f1eef7', stroke:'#b9b2cc', 'stroke-width':.8}, b);
+  el('path', {d:'M-5.5 -52 q2 -2.2 4 0 M1.5 -52 q2 -2.2 4 0', fill:'none', stroke:'#3b2f3a', 'stroke-width':1.4, 'stroke-linecap':'round'}, b);
+  el('path', {d:'M-7 -55 q3 -2.4 5 -.4 M2 -55.4 q2 -2 5 .4', fill:'none', stroke:'#ffffff', 'stroke-width':2, 'stroke-linecap':'round'}, b);
+  el('circle', {cx:1.6, cy:-48.6, r:2, fill:'#eab49a'}, b);
+  el('ellipse', {cx:0, cy:-58, rx:14.5, ry:4.2, fill:ROBE2, stroke:INKC, 'stroke-width':1.2}, b);
+  el('path', {d:'M-9 -59.5 Q-6 -72 -1 -84 Q4 -91 11 -88 Q4 -84.5 3 -76 Q5.5 -67 9 -59.5 Z', fill:ROBE, stroke:INKC, 'stroke-width':1.3, 'stroke-linejoin':'round'}, b);
+  el('path', {d:'M-8.6 -61.5 Q0 -58.5 8.6 -61.5', fill:'none', stroke:GOLD, 'stroke-width':3}, b);
+  el('text', {x:.5, y:-67, 'font-size':8, fill:GOLD, 'text-anchor':'middle'}, b).textContent = '★';
+  var top = el('g', {class:'merlin', transform:'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')'}, L.boardTag);   // 名牌放最上層，不會被後面的高樓擋住（外層定位、內層浮動）
+  var tg = el('g', {class:'merlin-flag', transform:'translate(0,-118)'}, top);
+  var fr = el('rect', {x:-46, y:-12, width:92, height:22, rx:11, fill:'#6c4bd8', stroke:INKC, 'stroke-width':1.4}, tg);
+  el('path', {d:'M-4 10 L0 15 L4 10 Z', fill:'#6c4bd8', stroke:INKC, 'stroke-width':1.2}, tg);
+  var ft = el('text', {x:0, y:4, 'text-anchor':'middle', 'font-size':12, 'font-weight':700, fill:'#fff', 'font-family':'var(--f-body)'}, tg);
+  el('polygon', {class:'hit', points:'-36,8 36,8 36,-122 -36,-122'}, g);
+  L.merlin = g; L.merlinTop = top; L.merlinBody = b; L.merlinFlag = ft; L.merlinFlagBox = fr;
+  merlinFlagText();
+  placeDepth(g, g._d);
+}
+function merlinFlagText(){
+  if (!L.merlinFlag) return;
+  var t = merlin.near ? '👋 點我發問！' : '🧙 智者梅林';
+  L.merlinFlag.textContent = t;
 }
 
 // 各場地的地面裝飾
@@ -1729,6 +1835,7 @@ function tick(ts){
   stepPeers(dt);
   netTick(ts);
   stepCreatures(dt);
+  merlinTick(ts);
   boats.forEach(function(b){
     var p = iso(C[0] + Math.cos(b.a)*b.r, C[1] + Math.sin(b.a)*b.r), bob = Math.sin(elapsed*2 + b.a*5) * 1.5;
     b.g.setAttribute('transform', 'translate('+p[0].toFixed(1)+','+(p[1]+bob).toFixed(1)+')' + (b.s < 0 ? ' scale(-1,1)' : ''));
@@ -2687,6 +2794,7 @@ svg.addEventListener('click', function(e){
   var g = e.target.closest && e.target.closest('.bld');
   if (g) openTool(g.getAttribute('data-id'));
   else if (e.target.closest && e.target.closest('.board')) openBoard();
+  else if (e.target.closest && e.target.closest('.merlin')) openMerlin();
   else if (e.target.closest && e.target.closest('.farland')) farGoClick();
   else { var pid = peerAtClient(e.clientX, e.clientY); if (pid){ openTalk(pid); return; } var q = clientToGrid(e.clientX, e.clientY); walker.goal = null; walkTo(q[0], q[1]); }
 });
@@ -2694,6 +2802,7 @@ svg.addEventListener('keydown', function(e){
   var g = e.target.closest && e.target.closest('.bld');
   if (g && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openTool(g.getAttribute('data-id')); }
   if (!g && e.target.closest && e.target.closest('.board') && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openBoard(); }
+  if (!g && e.target.closest && e.target.closest('.merlin') && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openMerlin(); }
   if (!g && e.target.closest && e.target.closest('.farland') && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); goFar(); }
 });
 svg.addEventListener('focusin', function(e){
@@ -2704,9 +2813,16 @@ svg.addEventListener('focusout', function(){ $('tip').classList.remove('show'); 
 function hoverTip(e){
   var g = e.target.closest && e.target.closest('.bld');
   if (!g && e.target.closest && e.target.closest('.board')){ showBoardTip(e.clientX, e.clientY - 12); return; }
+  if (!g && e.target.closest && e.target.closest('.merlin')){ showMerlinTip(e.clientX, e.clientY - 12); return; }
   if (!g && e.target.closest && e.target.closest('.farland')){ showFarTip(e.clientX, e.clientY - 12); return; }
   if (!g){ $('tip').classList.remove('show'); return; }
   showTip(toolById[g.getAttribute('data-id')], e.clientX, e.clientY - 12);
+}
+function showMerlinTip(x, y){
+  var tip = $('tip'); tip.textContent = '🧙 智者梅林：點我問島上的工具';
+  tip.style.left = Math.min(window.innerWidth - tip.offsetWidth - 8, Math.max(8, x - tip.offsetWidth/2)) + 'px';
+  tip.style.top = Math.max(8, y - 34) + 'px';
+  tip.classList.add('show');
 }
 function showBoardTip(x, y){
   var tip = $('tip'); tip.textContent = '📋 創業看板：' + board.title;
@@ -2856,7 +2972,7 @@ $('dBody').addEventListener('click', function(e){
 $('dBody').addEventListener('click', function(e){
   if (e.target.closest('.go')) addLog('前往 ' + toolById[state.sel].name);
 });
-function openDrawer(id){ if (innerWidth <= 820 && !$('chatBox').hidden) setChatOpen(false); $(id).classList.add('open'); if (id === 'logDrawer') $('tbLog').setAttribute('aria-pressed', 'true'); }
+function openDrawer(id){ if (innerWidth <= 820 && !$('chatBox').hidden) setChatOpen(false); if (id !== 'merlinDrawer') closeDrawer('merlinDrawer'); $(id).classList.add('open'); if (id === 'logDrawer') $('tbLog').setAttribute('aria-pressed', 'true'); }
 function openBoard(refresh){
   var c = board.color || '#2ec4b6';
   if (!refresh){
@@ -2881,12 +2997,13 @@ function openBoard(refresh){
 function closeDrawer(id){
   $(id).classList.remove('open');
   if (id === 'logDrawer') $('tbLog').setAttribute('aria-pressed', 'false');
+  if (id === 'merlinDrawer') $('tbMerlin').setAttribute('aria-pressed', 'false');
   if (id === 'detail') state.boardOpen = false;
   if (id === 'detail' && state.sel){ toolById[state.sel].g.classList.remove('sel'); state.sel = null; drawLinks(); }
 }
 document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click', function(){ closeDrawer(b.getAttribute('data-close')); }); });
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape'){ $('roomPop').hidden = true; closeNamePop(); closeDrawer('detail'); closeDrawer('logDrawer'); $('linkPop').hidden = true; $('tbLinks').setAttribute('aria-expanded', 'false'); }
+  if (e.key === 'Escape'){ $('roomPop').hidden = true; closeNamePop(); closeDrawer('detail'); closeDrawer('logDrawer'); closeDrawer('merlinDrawer'); $('linkPop').hidden = true; $('tbLinks').setAttribute('aria-expanded', 'false'); }
 });
 
 function renderSeen(){
@@ -2998,6 +3115,218 @@ $('sNext').addEventListener('click', function(){ if (storyI < STORY.length - 1){
 $('sPrev').addEventListener('click', function(){ if (storyI > 0){ storyI--; showStep(); } });
 $('sSkip').addEventListener('click', function(){ endStory(); setView('map'); birdview(); });
 
+/* ---------- 智者梅林：島上工具問答 ----------
+ * 規則式：只用本頁的 TOOLS／ZONES／LINKS 回答，不連 AI、問題不會送到任何地方。
+ * 判斷順序：打招呼 → 自我介紹 → 島上怎麼玩 → 序號 → 工具總覽 → 點名工具（功能／位置／前後一步）→ 場地 → 從哪開始 → 隨機 → 主題關鍵字打分 → 答不出來 */
+var M_ALIAS = {
+  'business-idea-generator':['商業點子', '創業點子'], 'innovation-matrix-studio':['打版'],
+  'six-thinking-hats-generator':['思考帽', '六帽'], 'mandala-thinking':['曼陀羅思考'],
+  'business-model-canvas-generator':['商業模式畫布', 'bmc'], 'business-model-pattern-studio':['商業模式大全'],
+  'where-what-how-strategy-studio':['策略工作室'], 'new-product-strategy-studio':['新品', '新產品'],
+  'swot-game':['swot'], 'mentors-panel':['顧問團', '人物顧問'],
+  'restaurant-feasibility-calculator':['餐飲店', '開餐廳'], 'restaurant-menu-mix-calculator':['菜單'],
+  'tourism-hotel-feasibility-calculator':['飯店', '民宿', '旅館'], 'amazon-cost-calculator':['亞馬遜成本', 'fba', 'fbm'],
+  'amazon-listing-mix-calculator':['商品組合'], 'loan-eligibility-checker':['貸款資格'], 'phoenix-loan-generator':['鳳凰'],
+  'industry-talent-generator':['產業人才', '開課申請'], 'coffee-ig-planner':['instagram', 'ig規劃'],
+  'social-post-grader':['貼文評分', '貼文打分'], 'ai-image-prompt-studio':['繪圖', '生圖'],
+  'ai-video-prompt-studio':['sora', 'veo'], 'ai-video-studio-play':['影音工坊', '配音'], 'line-sticker-studio':['貼圖'],
+  'traffic-rank-estimator':['流量', '燈塔'], 'amazon-logistics-game':['物流'], 'product-keyword-cloud':['文字雲'],
+  'product-title-generator':['商品標題'], 'amazon-listing-generator':['五點', '產品說明', 'listing'],
+  'amazon-ppc-advisor':['ppc', '關鍵字廣告'], 'ecommerce-health-dashboard':['健檢'],
+  'amazon-review-reply-generator':['客評', '客訴'], 'company-digital-transformation-analyzer':['數位轉型'],
+  'expense-tracker-pwa':['記帳'], 'private-domain-rfm-studio':['rfm', '私域'], 'IPA_Kano':['ipa', 'kano', '滿意度'],
+  'content-workflow-studio-cf':['工作流'], 'node-pack-designer-cf':['補充包'], 'animal-ecommerce-adventure':['大冒險', '動物朋友']
+};
+var M_ZONE_ALIAS = {idea:['點子公園', '公園'], strategy:['策略山丘', '山丘', '山頂'], school:['創業學校', '學校'], calc:['試算商辦區', '商辦', '試算區'],
+  fund:['資金廣場', '廣場'], brand:['品牌商店街', '商店街', '品牌街'], ecom:['河口碼頭', '碼頭'], ops:['營運社區', '社區'], hub:['指揮塔']};
+var M_TOPICS = [   // [問題裡出現的字, 拿來比對工具說明的字, 開場白]
+  [/開店|餐廳|餐飲|小吃|咖啡|早午餐|飲料|攤位|店面/, ['餐飲', '開店', '菜單', '損益', '成本'], '要開店，先把數字算清楚，這幾棟可以幫你：'],
+  [/借錢|貸款|資金|周轉|週轉|銀行|籌錢|資本/, ['貸款', '資格', '申請書'], '說到錢，資金廣場就是為這個蓋的：'],
+  [/補助|計畫書|政府|訓練|開課/, ['申請', '補助', '開課', '貸款'], '要寫申請書，這幾棟用得上：'],
+  [/亞馬遜|amazon|跨境|電商|上架|網店|網拍|蝦皮|賣場/, ['amazon', '亞馬遜', '電商', '跨境', '商品'], '做電商的話，河口碼頭和試算商辦區最常去：'],
+  [/社群|貼文|ig|fb|臉書|行銷|曝光|粉絲|文案|宣傳/, ['社群', '貼文', '行銷', '檔期'], '想讓更多人看見你，去品牌商店街：'],
+  [/影片|影音|短影|youtube|reels|抖音/, ['影片', '影音'], '做影片可以用這幾個：'],
+  [/圖片|海報|插圖|畫圖|設計/, ['繪圖', '貼圖', '圖'], '要做圖，這幾個幫得上：'],
+  [/定價|價格|售價|賣多少|訂價/, ['定價', '價格', '售價'], '定價的事，先看這幾個：'],
+  [/成本|損益|賺錢|利潤|毛利|划算|回本|收支|虧/, ['成本', '損益', '收支', '毛利'], '算賺不賺錢，去試算商辦區：'],
+  [/顧客|客人|會員|回購|客戶|滿意|評論|回饋/, ['顧客', '會員', '滿意', '評'], '跟顧客有關的，營運社區最多：'],
+  [/點子|靈感|創意|想法|發想|腦力激盪/, ['點子', '創意', '想法', '九宮格'], '想點子，去點子公園散步：'],
+  [/競爭|對手|定位|市場|策略|差異|優勢|劣勢/, ['策略', '定位', '差異', '競爭', '戰場'], '要想清楚怎麼贏，上策略山丘：'],
+  [/自動|流程|串起來|工作流|效率|節點/, ['流程', '節點', '串'], '想把工具串成會自己跑的流程，去指揮塔：'],
+  [/記帳|花費|支出|開銷|帳目/, ['記帳', '支出'], '記帳用這個：'],
+  [/練習|遊戲|學習|上課|教學|好玩/, ['遊戲', '練習', '配對', '冒險'], '想邊玩邊學，去創業學校：'],
+  [/數位|轉型|ai|人工智慧|自動化/, ['數位', 'ai'], '跟數位化、AI 有關的：']
+];
+var M_STOP = /什麼|怎麼|可以|工具|我想|要用|哪個|一個|如何|需要|請問|有沒|沒有|是不|不是|哪些|應該|推薦|這個|那個/g;
+var M_SUGG = ['我剛想創業，從哪開始？', '想開咖啡店要算什麼？', '哪些工具不用序號？', '怎麼申請創業貸款？', '做完商業模式圖下一步？', '想在亞馬遜賣東西', '社群貼文怎麼寫比較好？', '島上有哪些工具？', '隨便介紹一個工具', '這座島怎麼玩？'];
+var mState = {greeted:false, last:null, asked:0, busy:false};
+function mNorm(s){ return String(s || '').toLowerCase().replace(/[\s，。？！?!、,.：:；;「」『』（）()《》〈〉"'~～…]/g, ''); }
+function mMatchTools(q){
+  var hits = [];
+  TOOLS.forEach(function(t){
+    var keys = [t.short, t.name, t.id].concat(M_ALIAS[t.id] || []).map(mNorm), best = '';
+    keys.forEach(function(k){ if (k.length >= 2 && q.indexOf(k) >= 0 && k.length > best.length) best = k; });
+    if (best) hits.push({t:t, k:best});
+  });
+  hits = hits.filter(function(h){ return !hits.some(function(o){ return o !== h && o.k.length > h.k.length && o.k.indexOf(h.k) >= 0; }); });
+  hits.sort(function(a, b){ return b.k.length - a.k.length; });
+  return hits.map(function(h){ return h.t; });
+}
+function mMatchZone(q){
+  return ZONES.filter(function(z){ return (M_ZONE_ALIAS[z.id] || [z.name]).some(function(k){ return q.indexOf(mNorm(k)) >= 0; }); })[0] || null;
+}
+function mNext(id){
+  var out = [];
+  LINKS.forEach(function(Lk){
+    if (Lk.chain){ var i = Lk.chain.indexOf(id); if (i >= 0 && i < Lk.chain.length - 1) out.push(Lk.chain[i + 1]); }
+    else if (Lk.star && Lk.star[0] === id) out = out.concat(Lk.star.slice(1));
+  });
+  return out.filter(function(x, i){ return out.indexOf(x) === i; });
+}
+function mPrev(id){
+  var out = [];
+  LINKS.forEach(function(Lk){
+    if (Lk.chain){ var i = Lk.chain.indexOf(id); if (i > 0) out.push(Lk.chain[i - 1]); }
+    else if (Lk.star && Lk.star.indexOf(id) > 0) out.push(Lk.star[0]);
+  });
+  return out.filter(function(x, i){ return out.indexOf(x) === i; });
+}
+function mScore(q){
+  var topics = M_TOPICS.filter(function(tp){ return tp[0].test(q); }), words = [];
+  topics.forEach(function(tp){ words = words.concat(tp[1]); });
+  var core = q.replace(M_STOP, ' '), grams = [];
+  core.split(' ').forEach(function(w){ var a = Array.from(w); for (var i = 0; i < a.length - 1; i++) if (/[一-鿿]{2}/.test(a[i] + a[i + 1])) grams.push(a[i] + a[i + 1]); });
+  var scored = TOOLS.map(function(t){
+    var txt = mNorm(t.name + t.short + t.role + t.input + t.output + zoneById[t.zone].name), sc = 0;
+    words.forEach(function(w){ if (txt.indexOf(mNorm(w)) >= 0) sc += 3; });
+    grams.forEach(function(g){ if (txt.indexOf(g) >= 0) sc += 1; });
+    if (/amazon|亞馬遜|跨境/.test(txt) && !/亞馬遜|amazon|跨境|電商|上架|網店|網拍|蝦皮|賣場/.test(q)) sc -= 3;   // 沒提電商就別推亞馬遜工具
+    return {t:t, sc:sc};
+  }).filter(function(o){ return o.sc >= 3; }).sort(function(a, b){ return b.sc - a.sc; });
+  return {intro:topics.length ? topics[0][2] : '', tools:scored.slice(0, 3).map(function(o){ return o.t; })};
+}
+function mToolLine(t){ return '「' + t.name + '」在' + zoneById[t.zone].name + '。' + t.role; }
+function mLicLine(t){ return t.lic ? '這棟要課程序號才能用（名字前有紅點），請向授課講師索取。' : '這棟不用序號，打開就能用。'; }
+function mNames(ids){ return ids.map(function(x){ return '「' + toolById[x].short + '」'; }).join('、'); }
+function merlinAnswer(raw){
+  var q = mNorm(raw), r = {text:'', tools:[], asks:null, links:null};
+  var name = me && me.name ? me.name : '旅人';
+  if (!q){ r.text = '嗯？想問什麼都可以，我在聽。'; return r; }
+  var tools = mMatchTools(q), zone = mMatchZone(q);
+  var wantNext = /下一步|接著|之後|然後|做完|下一個|再來/.test(q), wantPrev = /之前|前一步|先用|前面/.test(q) && !/從哪|開始/.test(q);
+  var wantWhere = /在哪|哪裡|怎麼去|怎麼走|帶我/.test(q);
+  if (!tools.length && mState.last && /它|這個|那個|這棟|那棟|這工具/.test(q)) tools = [toolById[mState.last]];
+  if (!tools.length && mState.last && wantNext && q.length <= 8) tools = [toolById[mState.last]];
+  if (/^(你好|您好|嗨|哈囉|hi|hello|hey|安安|早安|午安|晚安|梅林)/.test(q) && q.length <= 8 && !tools.length){
+    r.text = name + '，你好呀。我是智者梅林，這座島上 ' + TOOLS.length + ' 棟建築我都走過。告訴我你想做什麼，我幫你找該去哪一棟。'; return r; }
+  if (/謝|感謝|thank|3q/.test(q) && q.length <= 10){ r.text = '不客氣。路上有疑問，隨時回來找我，我一直站在島中央。'; return r; }
+  if (/再見|掰|bye|下次見/.test(q) && q.length <= 8){ r.text = '一路順風。別忘了，每一棟建築都只是工具，真正的答案在你走過的路上。'; return r; }
+  if (/你是誰|梅林是誰|你叫|你會什麼|你能做什麼|你可以做什麼/.test(q)){
+    r.text = '我是島上的智者梅林。我能告訴你：每個工具能做什麼、要帶什麼進去、會帶出什麼、在哪個地點、用完下一步接什麼，還有哪些要序號。我只看得懂島上的工具，你問的問題不會傳到別的地方。'; return r; }
+  if (/怎麼玩|怎麼操作|怎麼移動|這座島|這個島|地圖怎麼|立體|小地圖|聊天|足跡|小旗/.test(q) && !tools.length && !zone){
+    r.text = '點空地，你的角色就會走過去；點建築會打開說明，再按「前往工具」就會開新分頁。工具列有「接力線」看工具之間的建議順序、「時間軸」看一天和兩年裡什麼時候用、「立體」可以走進 3D 島。去過的建築會插小旗，紀錄在「足跡」。也可以按「聊天」和島上其他人說話。'; return r; }
+  if (/免費|不用序號|不需序號|不要序號|不必序號|不用錢|免序號/.test(q)){
+    var free = TOOLS.filter(function(t){ return !t.lic; });
+    r.text = '不用序號、打開就能用的有 ' + free.length + ' 個。點名字就帶你過去：'; r.links = free.map(function(t){ return t.id; }); return r; }
+  if (/序號|授權|付費|要錢|收費|紅點/.test(q) && !tools.length){
+    var lic = TOOLS.filter(function(t){ return t.lic; });
+    r.text = '名字前面有紅點的 ' + lic.length + ' 個工具需要課程序號，請向授課講師索取；其他 ' + (TOOLS.length - lic.length) + ' 個不用序號。需要序號的是：'; r.links = lic.map(function(t){ return t.id; }); return r; }
+  if (/有哪些工具|有什麼工具|所有工具|全部工具|幾個工具|多少工具|工具清單|介紹這座島|島上有什麼|島上有哪些/.test(q) && !zone){
+    r.text = '島上有 ' + TOOLS.length + ' 個工具，分在 ' + ZONES.length + ' 個地點。點一個地點，我再細說：';
+    r.asks = ZONES.map(function(z){ return [z.name + '（' + z.tools.length + '）', z.name + '有什麼工具？']; }); return r; }
+  if (tools.length === 1 || (tools.length > 1 && (wantNext || wantPrev || wantWhere))){
+    var t = tools[0]; mState.last = t.id;
+    if (wantNext){
+      var nx = mNext(t.id);
+      r.text = nx.length ? '用完「' + t.short + '」，可以接著用' + mNames(nx) + '。這是課程整理的建議順序，工具之間不會自動傳資料，要自己把結果帶過去。' : '「' + t.short + '」通常是一段路的終點，沒有固定的下一步。回頭看看還有哪個地點沒去過吧。';
+      r.tools = nx.length ? nx.slice(0, 3) : [t.id]; return r; }
+    if (wantPrev){
+      var pv = mPrev(t.id);
+      r.text = pv.length ? '用「' + t.short + '」之前，建議先用' + mNames(pv) + '，把要帶進去的東西準備好。' : '「' + t.short + '」可以直接開始，不用先準備其他工具的結果。它要你帶進來的是：' + t.input + '。';
+      r.tools = pv.length ? pv.slice(0, 3) : [t.id]; return r; }
+    if (wantWhere){ r.text = '「' + t.name + '」在' + zoneById[t.zone].name + '。按下面的「帶我去」，我讓你走過去。'; r.tools = [t.id]; return r; }
+    var nx2 = mNext(t.id);
+    r.text = mToolLine(t) + '帶進來：' + t.input + '；帶出去：' + t.output + '。' + mLicLine(t) + (nx2.length ? '用完可以接著用' + mNames(nx2.slice(0, 3)) + '。' : '');
+    r.tools = [t.id]; return r;
+  }
+  if (tools.length > 1){ r.text = '你說的可能是這幾個：'; r.tools = tools.slice(0, 4).map(function(t){ return t.id; }); mState.last = tools[0].id; return r; }
+  if (zone){ r.text = zone.name + '：' + zone.desc + '這裡有 ' + zone.tools.length + ' 棟：'; r.tools = zone.tools.map(function(t){ return t.id; }); return r; }
+  if (/第一步|從哪|開始|新手|剛創業|想創業|要創業|不知道|迷路|怎麼起步|起步/.test(q)){
+    r.text = '從一個點子出發，照這個順序走：點子公園（想點子）→ 策略山丘（想清楚怎麼贏）→ 試算商辦區（算賺不賺錢）→ 資金廣場（找錢）→ 品牌商店街／河口碼頭（讓人看見、開始賣）→ 營運社區（顧好客人與帳）→ 指揮塔（把流程串起來）。第一步，先從這兩棟開始：';
+    r.tools = ['business-idea-generator', 'mandala-thinking']; return r; }
+  if (/隨便|隨機|驚喜|介紹一個|推薦一個|抽一個/.test(q)){
+    var rt = TOOLS[Math.floor(Math.random() * TOOLS.length)]; mState.last = rt.id;
+    r.text = '那就這棟吧。' + mToolLine(rt) + mLicLine(rt); r.tools = [rt.id]; return r; }
+  var sc = mScore(q);
+  if (sc.tools.length){ r.text = sc.intro || '我想到這幾棟，也許幫得上：'; r.tools = sc.tools.map(function(t){ return t.id; }); mState.last = sc.tools[0].id; return r; }
+  r.text = '這個問題考倒我了。我只認得島上的工具，換個說法試試：說出你想做的事（開店、貸款、寫貼文、上架亞馬遜），或直接說工具的名字。';
+  r.asks = [['島上有哪些工具？', '島上有哪些工具？'], ['從哪開始？', '我剛想創業，從哪開始？']];
+  return r;
+}
+function mCard(id){
+  var t = toolById[id], z = zoneById[t.zone];
+  return '<div class="m-card"><span class="zone-chip" style="background:' + z.color + '">' + z.name + '</span><b>' + (t.lic ? '<i class="lic-dot sm" aria-label="需序號"></i>' : '') + escHtml(t.name) + '</b><small>' + escHtml(t.role) + '</small>' +
+    '<div class="m-acts"><button type="button" data-go="' + t.id + '">帶我去</button><a href="' + toolUrl(t) + '" target="_blank" rel="noopener">前往工具 ↗</a></div></div>';
+}
+function mAppend(cls, html){
+  var li = document.createElement('li'); li.className = cls; li.innerHTML = html; $('mLog').appendChild(li);
+  var b = $('mBody'); b.scrollTop = b.scrollHeight; return li;
+}
+function mRender(r){
+  var h = escHtml(r.text);
+  if (r.tools && r.tools.length) h += '<div class="m-cards">' + r.tools.map(mCard).join('') + '</div>';
+  if (r.links) h += '<div class="m-sugg" style="margin:8px 0 0">' + r.links.map(function(id){ var t = toolById[id]; return '<button type="button" data-go="' + id + '">' + (t.lic ? '<i class="lic-dot sm"></i>' : '') + escHtml(t.short) + '</button>'; }).join('') + '</div>';
+  if (r.asks) h += '<div class="m-sugg" style="margin:8px 0 0">' + r.asks.map(function(a){ return '<button type="button" data-ask="' + escHtml(a[1]) + '">' + escHtml(a[0]) + '</button>'; }).join('') + '</div>';
+  return h;
+}
+function mSuggest(){
+  var list = [];
+  if (mState.last){ var t = toolById[mState.last]; list.push('「' + t.short + '」的下一步？', '「' + t.short + '」在哪裡？'); }
+  var pool = M_SUGG.slice();
+  while (list.length < 4 && pool.length) list.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  $('mSugg').innerHTML = list.map(function(s){ return '<button type="button" data-ask="' + escHtml(s) + '">' + escHtml(s) + '</button>'; }).join('');
+}
+function merlinAsk(text){
+  text = Array.from(String(text || '').replace(/[\u0000-\u001f]/g, '').trim()).slice(0, 60).join('');
+  if (!text || mState.busy) return;
+  mAppend('m-you', escHtml(text));
+  if (!mState.asked++) addLog('向智者梅林請教：' + Array.from(text).slice(0, 16).join(''));
+  var r = merlinAnswer(text), wait = mAppend('m-say m-wait', '…');
+  mState.busy = true;
+  setTimeout(function(){ wait.className = 'm-say'; wait.innerHTML = mRender(r); mState.busy = false; mSuggest(); var b = $('mBody'); b.scrollTop = b.scrollHeight; }, REDUCED ? 0 : 420);
+}
+function openMerlin(){
+  closeDrawer('detail'); closeDrawer('logDrawer');
+  openDrawer('merlinDrawer'); $('tbMerlin').setAttribute('aria-pressed', 'true');
+  if (!mState.greeted){
+    mState.greeted = true;
+    mAppend('m-say', escHtml((me && me.name ? me.name : '旅人') + '，歡迎來到創業島。想做什麼、卡在哪裡，直接問我；或點下面的問題試試。'));
+    mSuggest();
+  }
+  if (Math.hypot(walker.gx - MERLIN_AT[0], walker.gy - MERLIN_AT[1]) > 1.4){ walker.goal = null; walkTo(MERLIN_AT[0] - .7, MERLIN_AT[1] + .5); }
+  if (state.view === 'map' || state.view === 'time'){
+    var mp = iso(MERLIN_AT[0], MERLIN_AT[1]), box = padBox({x:mp[0] - 420, y:mp[1] - 340, w:840, h:560});
+    if (svg.getBoundingClientRect().width > 820) box.x += (200 * box.w / svg.getBoundingClientRect().width);
+    animateTo(box);
+  }
+  if (innerWidth > 820) setTimeout(function(){ $('mInput').focus(); }, 380);
+}
+function merlinTick(ts){                       // 每 0.3 秒：你走近時名牌改成「點我發問」，平面的梅林轉頭看你
+  if (ts - merlin.lastCheck < 300) return;
+  merlin.lastCheck = ts;
+  var d = Math.hypot(walker.gx - MERLIN_AT[0], walker.gy - MERLIN_AT[1]), near = merlin.near ? d < 2.1 : d < 1.7;
+  if (near !== merlin.near){ merlin.near = near; merlinFlagText(); }
+  var face = iso(walker.gx, walker.gy)[0] >= iso(MERLIN_AT[0], MERLIN_AT[1])[0] ? 1 : -1;
+  if (face !== merlin.face && L.merlinBody){ merlin.face = face; L.merlinBody.setAttribute('transform', face < 0 ? 'scale(-1,1)' : ''); }
+}
+$('tbMerlin').addEventListener('click', function(){ if ($('merlinDrawer').classList.contains('open')) closeDrawer('merlinDrawer'); else openMerlin(); });
+$('tcMerlin').addEventListener('click', openMerlin);
+$('mForm').addEventListener('submit', function(e){ e.preventDefault(); var v = $('mInput').value; $('mInput').value = ''; merlinAsk(v); });
+$('merlinDrawer').addEventListener('click', function(e){
+  var a = e.target.closest('[data-ask]'); if (a){ merlinAsk(a.getAttribute('data-ask')); return; }
+  var g = e.target.closest('[data-go]'); if (g){ if (state.view === 'list') setView('map'); openTool(g.getAttribute('data-go')); }
+});
+
 /* ---------- 啟動 ---------- */
 $('stTools').textContent = TOOLS.length;
 $('stZones').textContent = ZONES.length;
@@ -3010,6 +3339,7 @@ buildWalk();
 placeAvatarDepth();
 if (firstVisit) addLog(me.name + ' 登上了創業島');
 blockArea(BOARD_AT[0], BOARD_AT[1], .75);
+blockArea(MERLIN_AT[0], MERLIN_AT[1], .32);
 loadBoard(); setInterval(loadBoard, 10 * 60 * 1000);
 /* ---------- 一個瀏覽器只有一個角色在線上 ----------
  * 創業島與創作者小鎮同網域（m255525.github.io），角色資料互通；為了不讓同一個角色同時出現兩次，

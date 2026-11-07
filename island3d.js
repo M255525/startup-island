@@ -635,8 +635,58 @@ function farLabel(text, y){
   d.addEventListener('click', function(e){ e.stopPropagation(); farGoClick(); }); d.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
   labRoot.appendChild(d); O.zoneTags.push({el:d, x:FAR.at[0], z:FAR.at[1], y:LAND + y});
 }
+// 智者梅林（立體）：紫色星星長袍、尖帽、白鬍子、手杖頂端發光水晶；會轉身面向你，點他就開問答（index.html openMerlin）
+function buildMerlin(){
+  var x0 = MERLIN_AT[0], z0 = MERLIN_AT[1], g = new T3.Group(); g.position.set(x0, landY(x0, z0) - .01, z0); scene.add(g);
+  var body = new T3.Group(); g.add(body);
+  var robe = std('#5b3fc4'), robe2 = std('#4a32a8'), gold = std('#f7c948', {emissive:'#f7c948', emissiveIntensity:.18}), skin = std('#f6d2b8'), beardM = std('#fbfaff'), wood = std('#8a5a2b');
+  mesh(new T3.CylinderGeometry(.13, .27, .56, 24), robe, 0, .28, 0, body);                          // 長袍
+  mesh(new T3.TorusGeometry(.268, .022, 8, 32), gold, 0, .025, 0, body).rotation.x = Math.PI / 2;     // 下擺金邊
+  mesh(new T3.CylinderGeometry(.188, .192, .045, 24), gold, 0, .36, 0, body);                        // 腰帶
+  for (var i = 0; i < 9; i++){                                                                     // 袍子上的小星星
+    var a = i * 2.4 + .3, y = .08 + (i % 3) * .1 + (i * .013), r = .27 - .14 * (y / .56) + .006;
+    var st = mesh(new T3.OctahedronGeometry(.024, 0), gold, Math.sin(a) * r, y, Math.cos(a) * r, body); st.userData.noInk = true;
+  }
+  [-1, 1].forEach(function(s){                                                                     // 袖子＋手
+    var sl = mesh(new T3.CylinderGeometry(.05, .085, .27, 12), robe2, s * .17, .42, .05, body); sl.rotation.z = s * .55; sl.rotation.x = -.35;
+    mesh(new T3.SphereGeometry(.045, 12, 10), skin, s * .245, .33, .12, body);
+  });
+  mesh(new T3.SphereGeometry(.12, 22, 18), skin, 0, .67, 0, body);                                   // 頭
+  var beard = mesh(new T3.ConeGeometry(.105, .34, 18), beardM, 0, .5, .07, body); beard.rotation.x = Math.PI + .25;   // 長白鬍子
+  mesh(new T3.SphereGeometry(.07, 14, 10), beardM, 0, .62, .085, body).scale.set(1.4, .55, .8);       // 八字鬍
+  mesh(new T3.SphereGeometry(.028, 10, 8), std('#eab49a'), 0, .665, .118, body);                     // 鼻子
+  [-1, 1].forEach(function(s){
+    var e = mesh(new T3.CapsuleGeometry(.011, .03, 4, 8), flatM('#3b2f3a'), s * .045, .7, .105, body); e.rotation.z = Math.PI / 2; e.userData.noInk = true;   // 瞇瞇眼
+    var br = mesh(new T3.CapsuleGeometry(.016, .05, 4, 8), beardM, s * .05, .735, .1, body); br.rotation.z = Math.PI / 2 + s * .25;                       // 白眉毛
+  });
+  var hat = new T3.Group(); hat.position.y = .76; body.add(hat);
+  mesh(new T3.CylinderGeometry(.215, .215, .028, 28), robe2, 0, 0, 0, hat);                         // 帽簷
+  var cone = mesh(new T3.ConeGeometry(.135, .46, 22), robe, 0, .23, -.02, hat); cone.rotation.x = -.22;
+  mesh(new T3.TorusGeometry(.128, .02, 8, 26), gold, 0, .035, 0, hat).rotation.x = Math.PI / 2;     // 帽帶
+  var hs = mesh(new T3.OctahedronGeometry(.04, 0), gold, 0, .17, .09, hat); hs.userData.noInk = true;
+  var staff = new T3.Group(); staff.position.set(.27, 0, .1); body.add(staff);                      // 手杖＋水晶
+  mesh(new T3.CylinderGeometry(.017, .022, 1.08, 8), wood, 0, .54, 0, staff);
+  mesh(new T3.TorusGeometry(.05, .014, 6, 14), wood, 0, 1.1, 0, staff);
+  var orb = mesh(new T3.SphereGeometry(.065, 18, 14), glow('#9fe8ff', .7, 2.2), 0, 1.15, 0, staff); orb.userData.noInk = true;
+  var halo = new T3.Sprite(new T3.SpriteMaterial({map:glowTex('rgba(190,240,255,.9)', 'rgba(150,120,255,0)'), transparent:true, depthWrite:false, blending:T3.AdditiveBlending}));
+  halo.scale.set(.42, .42, 1); halo.position.y = 1.15; halo.raycast = noPick; staff.add(halo);
+  g.scale.setScalar(1.15);
+  inkAll(shadowAll(g), .01);
+  g.traverse(function(m){ if (m.isMesh && !m.userData.ink){ m.userData.id = '__merlin'; O.pick.push(m); } });
+  var ring = mesh(new T3.RingGeometry(.36, .43, 40), new T3.MeshBasicMaterial({color:'#9b7bff', transparent:true, opacity:.75, depthWrite:false}), x0, landY(x0, z0) + .03, z0);   // 腳下脈動光圈
+  ring.rotation.x = -Math.PI / 2; ring.raycast = noPick; scene.add(ring);
+  O.merlin = {g:g};
+  O.anim.push(function(tm, dt){
+    var want = Math.atan2(walker.gx - x0, walker.gy - z0), d = want - g.rotation.y;
+    d = Math.atan2(Math.sin(d), Math.cos(d)); g.rotation.y += d * Math.min(1, (dt || .016) * 3);
+    body.position.y = Math.sin(tm * 1.6) * .012; body.rotation.z = Math.sin(tm * .8) * .025;
+    orb.scale.setScalar(1 + Math.sin(tm * 3) * .12); halo.material.opacity = .6 + Math.sin(tm * 3) * .3;
+    hs.rotation.y = tm * 2;
+    var k = 1 + (Math.sin(tm * 3.2) * .5 + .5) * .22; ring.scale.set(k, k, 1); ring.material.opacity = .85 - (k - 1) * 2.4;
+  });
+}
 function buildZoneMarks(){
-  O.glows = O.glows || []; O.markSpots = [];
+  O.glows = O.glows || []; O.markSpots = [[MERLIN_AT[0], MERLIN_AT[1], .7]];   // 梅林的位置先占好，地標、樹、花都會讓開
   var hub = zoneById.hub, gates = [];
   ZONES.forEach(function(z){
     if (z.id === 'hub') return;
@@ -734,6 +784,7 @@ function buildFlowers(){
     var a = r() * Math.PI * 2, d = Math.sqrt(r()) * 12, gx = C[0] + Math.cos(a) * d, gy = C[1] + Math.sin(a) * d;
     if (edgeD(gx, gy) > -.8 || landY(gx, gy) < LAND - .05 || riverDist(gx, gy) < 1.0 || minDist(ROAD_S, gx, gy) < .35) continue;
     var z = zoneOfPoint(gx, gy); if (z && z.id !== 'idea') continue;
+    if (Math.hypot(gx - MERLIN_AT[0], gy - MERLIN_AT[1]) < .6) continue;
     if (TOOLS.some(function(t){ return Math.abs(gx - t.gx) < t.s + .2 && Math.abs(gy - t.gy) < t.s + .2; })) continue;
     pts.push([gx, gy]);
   }
@@ -1396,6 +1447,9 @@ function buildLabels(){
   var bd = document.createElement('button'); bd.type = 'button'; bd.className = 'tag3 board3'; bd.textContent = '📋 創業看板';   // 看板的醒目標籤
   bd.addEventListener('click', function(e){ e.stopPropagation(); openBoard(); }); bd.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
   labRoot.appendChild(bd); O.zoneTags.push({el:bd, x:BOARD_AT[0], z:BOARD_AT[1], y:landY(BOARD_AT[0], BOARD_AT[1]) + 2.5});
+  var mt = document.createElement('button'); mt.type = 'button'; mt.className = 'tag3 merlin3'; mt.textContent = '🧙 智者梅林';   // 梅林的醒目標籤；走近時改成「點我發問」
+  mt.addEventListener('click', function(e){ e.stopPropagation(); openMerlin(); }); mt.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+  labRoot.appendChild(mt); O.zoneTags.push({el:mt, x:MERLIN_AT[0], z:MERLIN_AT[1], y:landY(MERLIN_AT[0], MERLIN_AT[1]) + 1.6}); O.merlinTag = mt;
   var rv = document.createElement('div'); rv.className = 'zone3 decor'; rv.innerHTML = '<b>創業河</b>'; labRoot.appendChild(rv);
   O.zoneTags.push({el:rv, x:RIVER[4][0] + .2, z:RIVER[4][1] - .9, y:.9});
 }
@@ -1422,6 +1476,7 @@ function placeLabels(){
     o.el.classList.toggle('sel', state.sel === o.b.t.id); o.el.classList.toggle('dim', !!dim);
   });
   O.zoneTags.forEach(function(o){ put(o.el, o.x, o.y, o.z, 30, 60, .7); });
+  if (O.merlinTag){ var mtx = merlin.near ? '👋 點我發問！' : '🧙 智者梅林'; if (O.merlinTag.textContent !== mtx) O.merlinTag.textContent = mtx; }
   var nowMs = Date.now();
   Object.keys(O.avs).forEach(function(id){
     var a = O.avs[id], x = a.g.position.x, y = a.g.position.y + .7, z = a.g.position.z;
@@ -1573,7 +1628,7 @@ function bindInput(){
       var now = performance.now(); if (now - lastHover < 60) return; lastHover = now;
       var h = pickAt(e.clientX, e.clientY, O.pick), id = h ? h.object.userData.id : null;
       hoverId = id; canvas.style.cursor = id ? 'pointer' : 'grab';
-      if (id === '__far') showFarTip(e.clientX, e.clientY - 12); else if (id === '__board') showBoardTip(e.clientX, e.clientY - 12); else if (id) showTip(toolById[id], e.clientX, e.clientY - 12); else $('tip').classList.remove('show');
+      if (id === '__far') showFarTip(e.clientX, e.clientY - 12); else if (id === '__merlin') showMerlinTip(e.clientX, e.clientY - 12); else if (id === '__board') showBoardTip(e.clientX, e.clientY - 12); else if (id) showTip(toolById[id], e.clientX, e.clientY - 12); else $('tip').classList.remove('show');
       return;
     }
     ptr[e.pointerId] = {x:e.clientX, y:e.clientY};
@@ -1595,7 +1650,7 @@ function bindInput(){
     if (e.type !== 'pointerup' || !d || d.moved) return;
     var pid = peerAt(e.clientX, e.clientY); if (pid){ openTalk(pid); return; }   // 點到別人的動物
     var hb = pickAt(e.clientX, e.clientY, O.pick);
-    if (hb){ if (hb.object.userData.id === '__far') farGoClick(); else if (hb.object.userData.id === '__board') openBoard(); else openTool(hb.object.userData.id); return; }
+    if (hb){ if (hb.object.userData.id === '__far') farGoClick(); else if (hb.object.userData.id === '__merlin') openMerlin(); else if (hb.object.userData.id === '__board') openBoard(); else openTool(hb.object.userData.id); return; }
     var hg = pickAt(e.clientX, e.clientY, [O.terrain]);
     if (hg){ if (cam.overview) setOverview(false); walker.goal = null; walkTo(hg.point.x, hg.point.z); }
   }
@@ -1725,7 +1780,7 @@ function build(){
   var sc = sun.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 70; sun.shadow.bias = -.0004; sun.shadow.normalBias = .02;
   scene.add(sun); scene.add(sun.target);
   raycaster = new T3.Raycaster(); ndc = new T3.Vector2(); V = new T3.Vector3();
-  buildTerrain(); buildWater(); buildRoads(); TOOLS.forEach(buildBuilding); buildDecor(); buildZoneMarks(); buildTrees(); buildFlowers(); buildSkyStuff(); buildScenery(); buildLabels(); buildFar();
+  buildTerrain(); buildWater(); buildRoads(); TOOLS.forEach(buildBuilding); buildDecor(); buildZoneMarks(); buildTrees(); buildFlowers(); buildSkyStuff(); buildScenery(); buildMerlin(); buildLabels(); buildFar();
   O.ring = new T3.Mesh(new T3.RingGeometry(.42, .5, 40), new T3.MeshBasicMaterial({color:'#ff6f59', transparent:true, opacity:.9, side:T3.DoubleSide, depthWrite:false}));
   O.ring.rotation.x = -Math.PI / 2; scene.add(O.ring);
   built = true;
@@ -1829,6 +1884,11 @@ function drawMini(){
   x.fillStyle = '#ffd23f'; x.strokeStyle = INK; x.lineWidth = 2; roundRect(x, bp[0] - 30, bp[1] - 44 + bob, 60, 26, 12); x.fill(); x.stroke();
   x.beginPath(); x.moveTo(bp[0] - 5, bp[1] - 19 + bob); x.lineTo(bp[0], bp[1] - 11 + bob); x.lineTo(bp[0] + 5, bp[1] - 19 + bob); x.fill();
   x.fillStyle = INK; x.font = '700 15px "Noto Sans TC", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('📋 看板', bp[0], bp[1] - 31 + bob); x.textBaseline = 'alphabetic';
+  var mp = miniP(MERLIN_AT[0], MERLIN_AT[1]);                                       // 梅林：紫色標籤
+  x.beginPath(); x.arc(mp[0], mp[1], 8 + Math.sin(now * 4 + 1) * 2, 0, Math.PI * 2); x.fillStyle = 'rgba(124,92,240,.5)'; x.fill();
+  x.fillStyle = '#6c4bd8'; x.strokeStyle = INK; x.lineWidth = 2; roundRect(x, mp[0] - 34, mp[1] - 44 - bob, 68, 26, 12); x.fill(); x.stroke();
+  x.beginPath(); x.moveTo(mp[0] - 5, mp[1] - 19 - bob); x.lineTo(mp[0], mp[1] - 11 - bob); x.lineTo(mp[0] + 5, mp[1] - 19 - bob); x.fill();
+  x.fillStyle = '#ffffff'; x.font = '700 15px "Noto Sans TC", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('🧙 梅林', mp[0], mp[1] - 31 - bob); x.textBaseline = 'alphabetic';
   if (state.sel && toolById[state.sel]){ var t = toolById[state.sel], sp = miniP(t.gx, t.gy); x.beginPath(); x.arc(sp[0], sp[1], 11 + Math.sin(now * 5) * 2, 0, Math.PI * 2); x.strokeStyle = '#ff6f59'; x.lineWidth = 3; x.stroke(); }
   if (active && !cam.overview){                                   // 鏡頭看的方向（扇形）
     var me0 = miniP(walker.gx, walker.gy), fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw);
