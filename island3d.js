@@ -25,7 +25,7 @@ var THEME = {id:'tropic', top:'#1677e6', hor:'#b4f0ff', topN:'#061233', horN:'#1
   shallow:'#6ff5df', mid:'#1fb5d6', deep:'#1767b8', lagoon:3.4, waterOp:.76, waterNight:'#2a4a8a', waterDusk:'#ffb3a0',
   glint:'#ffffff', glintNight:'#cfe0ff', glints:260, glintK:1};
 var INK = '#3b2f3a';                                              // 描邊色：深褐紫，比純黑柔和
-var CREAM = {house:1, pavilion:1, school:1, civic:1, lighthouse:1};
+var CREAM = {house:1, pavilion:1, school:1, civic:1, lighthouse:1, tent:1};
 
 function smooth(a, b, x){ var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
 function col(h){ return new T3.Color(h); }
@@ -271,6 +271,18 @@ function buildBuilding(t){
     var lantern = new T3.Mesh(new T3.SphereGeometry(.07, 12, 10), std('#fff1c9', {emissive:'#ffc35c', emissiveIntensity:0})); lantern.position.y = h - .12; g.add(lantern);
     t.emis = [lantern.material];
     var r = pyramid(w * 1.25, rh, roofM); r.position.y += h; g.add(r); top = h + rh;
+  } else if (st === 'tent'){                                     // 歡樂遊樂園：直條紋馬戲帳篷＋三角旗
+    var tc = z.color, stripe = function(n, wd){ return canvasTex(256, 64, function(x, W, H){ x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); x.fillStyle = tc; for (var i = 0; i < n; i++) if (i % 2 === 0) x.fillRect(i * W / n, 0, W / n + 1, H); if (wd){ x.fillStyle = '#ffd23f'; x.fillRect(0, H - 6, W, 6); } }); };
+    var wallT = mesh(new T3.CylinderGeometry(w * .62, w * .66, h, 16, 1, true), std('#ffffff', {map:stripe(16, true), side:T3.DoubleSide}), 0, h / 2, 0, g);
+    mesh(new T3.CylinderGeometry(w * .6, w * .6, .02, 16), std('#e8dcc6'), 0, .01, 0, g);
+    var cone = mesh(new T3.ConeGeometry(w * .8, rh, 16, 1, true), std('#ffffff', {map:stripe(16), side:T3.DoubleSide}), 0, h + rh / 2, 0, g);
+    var trim = mesh(new T3.TorusGeometry(w * .78, .03, 6, 24), std('#ffd23f'), 0, h + .01, 0, g); trim.rotation.x = Math.PI / 2;
+    var door = mesh(new T3.BoxGeometry(.2, .3, .04), std(hexMix(tc, '#14303d', .45)), 0, .15, w * .64, g);
+    mesh(new T3.CylinderGeometry(.01, .01, .35, 5), std('#14303d'), 0, h + rh + .17, 0, g);
+    var pen = mesh(new T3.PlaneGeometry(.2, .12), std(['#ffd23f', '#4f9dff', '#6fcf5a', '#ff6f59'][hv % 4], {side:T3.DoubleSide}), .1, h + rh + .28, 0, g); pen.userData.noInk = true;
+    O.anim.push(function(tm){ pen.rotation.y = Math.sin(tm * 3 + hv) * .3; });
+    var lampT = mesh(new T3.SphereGeometry(.05, 10, 8), std('#fff1c9', {emissive:'#ffc35c', emissiveIntensity:0}), 0, .36, w * .66, g);
+    t.emis = [lampT.material]; top = h + rh + .35;
   } else if (st === 'lighthouse'){
     var tower = new T3.Mesh(new T3.CylinderGeometry(.17, .27, h, 18), wallPlain); tower.position.y = h / 2; g.add(tower);
     [.25, .6].forEach(function(f){ var band = new T3.Mesh(new T3.CylinderGeometry(.27 - f * .1 + .006, .27 - (f + .12) * .1 + .006, h * .12, 18), std('#e05a47')); band.position.y = h * (f + .06); g.add(band); });
@@ -568,6 +580,27 @@ var MARKS = {
     O.anim.push(function(tm){ jib.rotation.y = Math.sin(tm * .35) * .9; });
     return .7;
   },
+  play:function(g, z){                                            // 摩天輪：慢慢轉，車廂保持水平，晚上亮燈
+    var legM = std('#b98a5a');
+    [-1, 1].forEach(function(s){ [-1, 1].forEach(function(f){ var leg = mesh(new T3.CylinderGeometry(.025, .035, 1.25, 6), legM, s * .32, .58, f * .14, g); leg.rotation.z = -s * .27; }); });
+    mesh(new T3.BoxGeometry(.9, .06, .45), std('#e8dcc6'), 0, .03, 0, g);
+    var wheel = new T3.Group(); wheel.position.y = 1.15; g.add(wheel);
+    var rimM = glow(z.color, .15, 1.2), spokeM = std('#f6d6ee');
+    [-.07, .07].forEach(function(zz){ mesh(new T3.TorusGeometry(.75, .025, 8, 40), rimM, 0, 0, zz, wheel); });
+    mesh(new T3.CylinderGeometry(.07, .07, .24, 12), std('#ffd23f'), 0, 0, 0, wheel).rotation.x = Math.PI / 2;
+    var cars = [], CC = ['#ffd23f', '#4f9dff', '#6fcf5a', '#ff6f59', '#9d8cf2', '#2ec4b6'];
+    for (var i = 0; i < 12; i++){
+      var a = i / 12 * Math.PI * 2, sp = mesh(new T3.BoxGeometry(.015, .75, .015), spokeM, Math.cos(a) * .375, Math.sin(a) * .375, 0, wheel); sp.rotation.z = a - Math.PI / 2;
+      mesh(new T3.SphereGeometry(.03, 8, 6), glow('#fff3a8', .3, 2), Math.cos(a) * .75, Math.sin(a) * .75, .1, wheel).userData.noInk = true;
+      if (i % 2) continue;
+      var car = new T3.Group(); car.position.set(Math.cos(a) * .75, Math.sin(a) * .75, 0); wheel.add(car);
+      mesh(new T3.CylinderGeometry(.1, .08, .14, 10), std(CC[i / 2 % 6]), 0, -.1, 0, car);
+      mesh(new T3.ConeGeometry(.11, .07, 10), std('#ffffff'), 0, .0, 0, car);
+      cars.push(car);
+    }
+    O.anim.push(function(tm){ wheel.rotation.z = tm * .2; cars.forEach(function(c){ c.rotation.z = -wheel.rotation.z; }); });
+    return .5;
+  },
   ops:function(g, z){                                             // 大齒輪＋菜園
     var gear = new T3.Group(); gear.position.y = .42; g.add(gear);
     var gm = std(hexMix(z.color, '#ffffff', .1));
@@ -713,11 +746,11 @@ function buildZoneMarks(){
     [-1, 1].forEach(function(s){ var c = Math.cos(gate.rotation.y), sn = Math.sin(gate.rotation.y); blockWalk(gx + s * .52 * c, gy - s * .52 * sn, .12); });
     // 地標
     var mk = MARKS[z.id]; if (!mk) return;
-    var spot = z.id === 'calc' ? {at:BOARD_AT, room:.55} : freeSpot(z, gates); if (!spot.at || spot.room < .05) return;   // 看板位置固定，平面地圖和小地圖才對得上
+    var spot = z.id === 'calc' ? {at:BOARD_AT, room:.55} : z.id === 'play' ? {at:PLAY_WHEEL, room:.35} : freeSpot(z, gates); if (!spot.at || spot.room < .05) return;   // 看板位置固定，平面地圖和小地圖才對得上
     var g = new T3.Group(); scene.add(g);
     var r = mk(g, z), k = Math.max(1.1, Math.min(2.1, (spot.room + .2) / r));
     g.scale.setScalar(k); g.position.set(spot.at[0], landY(spot.at[0], spot.at[1]) - .01, spot.at[1]);
-    g.rotation.y = Math.atan2(C[0] - spot.at[0], C[1] - spot.at[1]) - Math.PI / 2 + (z.id === 'calc' || z.id === 'ops' ? Math.PI / 2 : 0);
+    g.rotation.y = Math.atan2(C[0] - spot.at[0], C[1] - spot.at[1]) - Math.PI / 2 + (z.id === 'calc' || z.id === 'ops' || z.id === 'play' ? Math.PI / 2 : 0);
     if (z.id === 'idea') g.rotation.y = 0;
     inkAll(shadowAll(g), .012);
     if (g.userData.board) g.traverse(function(m){ if (m.isMesh && !m.userData.ink){ m.userData.id = '__board'; O.pick.push(m); } });

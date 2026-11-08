@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>創業島 · 從一個點子出發，走完整座島</title>
-<meta name="description" content="把 42 個線上創業工具放進一座可以探索的島：公園、山丘、學校、河口碼頭等九個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
+<meta name="description" content="把 49 個線上創業工具與遊戲放進一座可以探索的島：公園、山丘、學校、河口碼頭、遊樂園等十個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
 <meta name="theme-color" content="#1c6e8c">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -99,6 +99,10 @@ a{color:inherit}
 @keyframes bobM{0%,100%{transform:translate(0,-118px)}50%{transform:translate(0,-123px)}}
 .merlin .orb{animation:orb 2.2s ease-in-out infinite}
 @keyframes orb{50%{opacity:.35}}
+.fw-rot{animation:fwspin 30s linear infinite}
+@keyframes fwspin{to{transform:rotate(360deg)}}
+svg.paused .fw-rot{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.fw-rot{animation:none}}
 .paused .merlin .ring,.paused .merlin-flag,.paused .merlin .orb{animation-play-state:paused}
 .merlin:hover .merlin-flag rect,.merlin:focus .merlin-flag rect{fill:#7d5cf0}
 .toolbar button.tb-merlin{background:#6c4bd8;color:#fff;font-weight:700}
@@ -662,10 +666,11 @@ var ZONES = [
   {id:'strategy', name:'策略山丘',   en:'STRATEGY HILL',   color:'#9d8cf2', ground:null, label:[6.4,4.3,13],            desc:'爬上山頂看清楚：賣給誰、靠什麼贏、怎麼落地。'},
   {id:'school',   name:'創業學校',   en:'STARTUP SCHOOL',  color:'#6672e0', ground:'var(--yard)',   extra:[10.15,.45,11.85,2.15], desc:'用遊戲練功，也替團隊開課申請訓練補助。'},
   {id:'calc',     name:'試算商辦區', en:'NUMBERS OFFICES', color:'#2ec4b6', ground:'var(--paving)', desc:'開店、上架前，先把成本和損益算清楚。'},
-  {id:'fund',     name:'資金廣場',   en:'FUNDING PLAZA',   color:'#f08a4b', ground:'var(--paving)', extra:[15.4,10.7,16.6,11.9], desc:'銀行與公所前的廣場：確認貸款資格，送出申請書。'},
+  {id:'fund',     name:'資金廣場',   en:'FUNDING PLAZA',   color:'#f08a4b', ground:'var(--paving)', label:[15.3,12.9,0], extra:[15.4,10.7,16.6,11.9], desc:'銀行與公所前的廣場：確認貸款資格，送出申請書。'},
   {id:'brand',    name:'品牌商店街', en:'BRAND STREET',    color:'#ef6b8a', ground:'var(--paving)', desc:'社群、檔期、素材：讓人看見你。'},
   {id:'ecom',     name:'河口碼頭',   en:'RIVER DOCK',      color:'#4f9dff', ground:'var(--wood)',   desc:'貨從這裡出海：關鍵字、商品頁、廣告；燈塔替你看市場流量。'},
   {id:'ops',      name:'營運社區',   en:'OPS TOWN',        color:'#6bbf59', ground:'var(--lawn)',   desc:'顧客回饋、會員經營、流程與記帳。'},
+  {id:'play',     name:'歡樂遊樂園', en:'FUN PARK',        color:'#e84fc7', ground:'var(--lawn)',   desc:'忙完了來玩一下：體感遊戲、桌遊、懷舊遊戲和台灣自然圖鑑，不用序號直接玩。'},
   {id:'hub',      name:'指揮塔',     en:'CONTROL TOWER',   color:'#e05a47', ground:'var(--paving)', desc:'河邊的高塔與工作坊：把一路上的工具串成會自己跑的流程。'}
 ];
 
@@ -763,7 +768,22 @@ var TOOLS = [
    url:'https://node-pack-designer-cf.content-workflow.workers.dev/',
    role:'替內容工作流設計自己的節點補充包，把常用步驟做成新節點。', input:'想自動化的步驟', output:'節點補充包'},
   {id:'animal-ecommerce-adventure', zone:'school', short:'電商大冒險', name:'動物朋友的跨境電商大冒險', lic:true, hour:[9,10], month:[6,12],
-   role:'跟著動物朋友把跨境電商工具一關一關走完。', input:'不需準備', output:'跨境電商學習路徑'}
+   role:'跟著動物朋友把跨境電商工具一關一關走完。', input:'不需準備', output:'跨境電商學習路徑'},
+
+  {id:'fruit-ninja-cam', zone:'play', short:'體感切水果', name:'體感切水果', hour:[20,22], month:[0,24],
+   role:'打開攝影機揮手切水果，動一動活絡筋骨；沒有攝影機也能用滑鼠玩。', input:'攝影機（可改用滑鼠）', output:'分數與排行榜'},
+  {id:'ball-throw-cam', zone:'play', short:'體感丟球', name:'體感丟球大作戰', hour:[20,22], month:[0,24],
+   role:'甩手把球丟向左右移動的角色，三關 3D 情境背景，還能換上自己的臉。', input:'攝影機（可改用滑鼠）', output:'過關與排行榜'},
+  {id:'jetski-cam', zone:'play', short:'水上摩托車', name:'體感水上摩托車', hour:[20,22], month:[0,24],
+   role:'雙手當把手騎水上摩托車，穿過港灣、紅樹林和外海的浮標門。', input:'攝影機（可改用鍵盤、滑鼠）', output:'完賽時間'},
+  {id:'Rummikub', zone:'play', short:'拉密', name:'拉密 Rummikub', hour:[21,23], month:[0,24],
+   role:'經典數字牌桌遊單機版，練習組合與算牌。', input:'不需準備', output:'對局與排行榜'},
+  {id:'nostalgia-memory-game', zone:'play', short:'懷舊回憶', name:'懷舊回憶遊戲', hour:[14,16], month:[0,24],
+   role:'柑仔店戳戳樂：戳一個洞猜老東西、老照片和老歌，適合帶長輩一起玩。', input:'不需準備', output:'回憶話題'},
+  {id:'taiwan-fish-atlas', zone:'play', short:'魚汛圖鑑', name:'台灣漁港魚汛圖鑑', hour:[6,8], month:[0,24],
+   role:'3D 台灣海圖：看各漁港每個月抓到什麼魚，附產季月曆和食譜。', input:'月份、漁港', output:'當季漁獲與食譜'},
+  {id:'taiwan-bird-atlas', zone:'play', short:'賞鳥地圖', name:'台灣賞鳥地圖', hour:[6,8], month:[0,24],
+   role:'依月份和棲地看台灣各賞鳥熱點有哪些鳥，附實景照片圖鑑與賞鳥須知。', input:'月份、熱點', output:'當月鳥種與賞鳥須知'}
 ];
 
 // 接力線：chain 依序相連；star 由第一個連到其餘每一個
@@ -807,6 +827,7 @@ var DAY_SCRIPT = [
   {t:16, text:'品牌商店街開門：規劃社群、排行銷檔期、寫今天的貼文。'},
   {t:18, text:'傍晚是素材時間：生圖提示詞、短影片、LINE 貼圖。'},
   {t:19, text:'河口碼頭亮燈：整理關鍵字，寫標題和五點說明。'},
+  {t:20, text:'忙了一天，到東岸的歡樂遊樂園切個水果、騎一圈水上摩托車，動一動再繼續。'},
   {t:21, text:'看廣告出價和店鋪健檢，再用 RFM 找出該回購的熟客。'},
   {t:22, text:'回指揮塔把今天的流程串起來，問問 AI 顧問團明天的計畫。'}
 ];
@@ -825,7 +846,7 @@ var MONTH_SCRIPT = [
 
 var STORY = [
   {chap:'01 創業者的一天', eb:'Welcome Aboard', title:'歡迎來到創業島',
-   body:'你是「{name}」（可以在說明卡或「足跡」裡改名字）。滑鼠移到哪，你就走到哪；島上每一棟建築都是一個真的線上工具，分在九個地點，點建築看它做什麼，再一鍵打開。', act:function(){ setView('map'); birdview(); }},
+   body:'你是「{name}」（可以在說明卡或「足跡」裡改名字）。滑鼠移到哪，你就走到哪；島上每一棟建築都是一個真的線上工具，分在十個地點，點建築看它做什麼，再一鍵打開。', act:function(){ setView('map'); birdview(); }},
   {chap:'01 創業者的一天', eb:'07:00', title:'一天從點子公園開始',
    body:'早上腦袋最清楚。先把點子丟進商業創意產生器，用曼陀羅九宮格展開。沒亮的建築，是這個時段用不太到的工具。', act:function(){ setView('time'); setTimeMode('day'); setT(7); focusZones(['idea','strategy']); }},
   {chap:'01 創業者的一天', eb:'14:00', title:'下午算數字、找資金',
@@ -896,6 +917,7 @@ var HILLS = [
 var BOARD_SHEET = '1reL32KcSUL-YNh4ICVxm-fROcjBzRiKVLjy05t7q_bs', KEY_BOARD = 'startupIslandBoard';
 var FAR = {self:'startup', shape:'square', bridge:[[20.4, 5.82], [24.75, 4.62]], sign:'🏭 創作者小鎮 →', at:[26.2, 4.2], r:1.7, url:'https://m255525.github.io/creator-town/', name:'創作者小鎮', host:'另一個網站', emoji:'🏭'};
 var BOARD_AT = [18.55, 5.6];
+var PLAY_WHEEL = [20.3, 6.95];      // 歡樂遊樂園的摩天輪（平面、立體共用）
 var MERLIN_AT = [12.3, 9.7];          // 智者梅林：島中央、出生點旁（指揮塔南方空地），一登島就看得到
 var merlin = {gx:MERLIN_AT[0], gy:MERLIN_AT[1], elev:0, path:[], phase:0, dirX:1, dirY:0, moving:false, mode:'idle', wait:3, born:0, near:false, face:1, lastCheck:0, say:'', sayUntil:0, label:''};   // 會四處走，MERLIN_AT 是家
 var BOARD_FIELDS = [   // [程式用 key, 試算表 A 欄名稱, 字數上限]
@@ -962,15 +984,17 @@ var POS = {
   'product-keyword-cloud':[11.0,16.0], 'product-title-generator':[12.6,16.0], 'amazon-listing-generator':[11.0,17.7], 'amazon-ppc-advisor':[12.6,17.7],
   'traffic-rank-estimator':[17.3,14.6],
   'amazon-review-reply-generator':[1.9,13.4], 'company-digital-transformation-analyzer':[3.4,13.4], 'expense-tracker-pwa':[1.9,14.8],
-  'private-domain-rfm-studio':[3.4,14.8], 'IPA_Kano':[2.65,16.2]
+  'private-domain-rfm-studio':[3.4,14.8], 'IPA_Kano':[2.65,16.2],
+  'taiwan-fish-atlas':[18.6,7.6], 'taiwan-bird-atlas':[20.15,8.4], 'fruit-ninja-cam':[18.6,9.2], 'ball-throw-cam':[20.15,10.0],
+  'jetski-cam':[18.6,10.8], 'Rummikub':[20.1,11.6], 'nostalgia-memory-game':[18.6,12.4]
 };
 var FREE = {'traffic-rank-estimator':true};                          // 不併入場地地塊（河口燈塔）
-var STYLE = {idea:'pavilion', strategy:'office', school:'school', calc:'tower', fund:'civic', brand:'shop', ecom:'warehouse', ops:'house', hub:'office'};
+var STYLE = {idea:'pavilion', strategy:'office', school:'school', calc:'tower', fund:'civic', brand:'shop', ecom:'warehouse', ops:'house', hub:'office', play:'tent'};
 var SPECIAL = {'mentors-panel':'observatory', 'traffic-rank-estimator':'lighthouse', 'content-workflow-studio-cf':'spire', 'node-pack-designer-cf':'warehouse'};
 var SHAPE = {   // s 足跡半寬、h 牆高、roof 屋頂高（px）
   pavilion:{s:.36, h:14, roof:14}, house:{s:.4, h:16, roof:12}, warehouse:{s:.55, h:20, roof:12}, school:{s:.55, h:30, roof:0},
   civic:{s:.55, h:30, roof:0}, shop:{s:.42, h:22, roof:0}, tower:{s:.42, h:46, roof:0}, office:{s:.46, h:28, roof:0},
-  lighthouse:{s:.26, h:60, roof:10}, observatory:{s:.46, h:26, roof:18}, spire:{s:.46, h:96, roof:0}
+  lighthouse:{s:.26, h:60, roof:10}, observatory:{s:.46, h:26, roof:18}, spire:{s:.46, h:96, roof:0}, tent:{s:.36, h:14, roof:20}
 };
 function groundAt(gx, gy){
   var e = 0;
@@ -1311,9 +1335,10 @@ function buildMap(){
   var things = [];
   trees.forEach(function(t){ things.push({kind:'tree', t:t, d:t.gx + t.gy}); });
   TOOLS.forEach(function(t){ things.push({kind:'bld', t:t, d:t.gx + t.gy}); });
+  things.push({kind:'wheel', d:PLAY_WHEEL[0] + PLAY_WHEEL[1]});
   things.sort(function(a, b){ return a.d - b.d; });
   L.blds = el('g', {}, svg);
-  things.forEach(function(o){ if (o.kind === 'tree') drawTree(o.t); else drawBuilding(o.t); });
+  things.forEach(function(o){ if (o.kind === 'tree') drawTree(o.t); else if (o.kind === 'wheel') drawWheel2D(); else drawBuilding(o.t); });
 
   // 地點名稱：放在地塊朝外（遠離島中心）的那一側；指揮塔放前方
   L.zoneTags = el('g', {'pointer-events':'none'}, svg);
@@ -1389,6 +1414,20 @@ function buildMap(){
 }
 
 // 創業看板（平面）：兩根柱子＋看板，上方有醒目的「📋 看板」標籤；內容換了就重畫
+function drawWheel2D(){                                          // 歡樂遊樂園的摩天輪（平面）：輪框＋車廂慢慢轉
+    var fw = up(iso(PLAY_WHEEL[0], PLAY_WHEEL[1]), 0), R = 30, wg = el('g', {'pointer-events':'none'}, L.blds); wg._d = PLAY_WHEEL[0] + PLAY_WHEEL[1];
+    el('ellipse', {cx:fw[0], cy:fw[1], rx:16, ry:7, fill:'rgba(0,0,0,.12)'}, wg);
+    el('path', {d:'M' + (fw[0] - 12) + ' ' + fw[1] + ' L' + fw[0] + ' ' + (fw[1] - R - 8) + ' L' + (fw[0] + 12) + ' ' + fw[1], fill:'none', stroke:'#8a5f37', 'stroke-width':3.5, 'stroke-linejoin':'round'}, wg);
+    var rot = el('g', {class:'fw-rot', style:'transform-origin:' + fw[0] + 'px ' + (fw[1] - R - 8) + 'px'}, wg);
+    el('circle', {cx:fw[0], cy:fw[1] - R - 8, r:R, fill:'none', stroke:'#b8329b', 'stroke-width':3.5}, rot);
+    el('circle', {cx:fw[0], cy:fw[1] - R - 8, r:R - 4, fill:'none', stroke:'#f28ad9', 'stroke-width':1.2}, rot);
+    for (var i = 0; i < 8; i++){
+      var a = i / 8 * Math.PI * 2, cx = fw[0] + Math.cos(a) * R, cy = fw[1] - R - 8 + Math.sin(a) * R;
+      el('line', {x1:fw[0], y1:fw[1] - R - 8, x2:cx, y2:cy, stroke:'#c9579f', 'stroke-width':1.2}, rot);
+      el('circle', {cx:cx, cy:cy, r:4, fill:['#ffd23f', '#4f9dff', '#6fcf5a', '#ff6f59'][i % 4], stroke:'#14303d', 'stroke-width':.8}, rot);
+    }
+    el('circle', {cx:fw[0], cy:fw[1] - R - 8, r:3, fill:'#ffd23f', stroke:'#14303d', 'stroke-width':.8}, wg);
+  }
 function drawBoard2D(){
   if (!L.blds) return;
   if (L.board) L.board.remove();
@@ -1529,6 +1568,11 @@ function drawBuilding(t){
   if (st === 'lighthouse') faces.forEach(function(fc){ [[14, 22], [36, 44]].forEach(function(b){ el('polygon', {points:pts(onFace(fc[0], fc[1], 0, 1, b[0], b[1])), fill:'#e05a47'}, g); }); });
   if (st === 'civic') faces.forEach(function(fc){ [.14, .38, .62, .86].forEach(function(a){ el('polygon', {points:pts(onFace(fc[0], fc[1], a - .04, a + .04, 3, h - 5)), fill:'#ffffff', opacity:.85}, g); }); el('polygon', {points:pts(onFace(fc[0], fc[1], 0, 1, h - 5, h)), fill:mix(z.color, '#14303d', .2)}, g); });
   if (st === 'warehouse') el('polygon', {points:pts(onFace(f.B, f.R, .3, .7, 0, 12)), fill:'#5a4632'}, g);
+  if (st === 'tent'){                                             // 馬戲帳篷：直條紋牆＋布簾門
+    faces.forEach(function(fc){ [0,1,2,3,4,5].forEach(function(i){ if (i % 2) el('polygon', {points:pts(onFace(fc[0], fc[1], i/6, (i+1)/6, 0, h)), fill:'#ffffff', opacity:.8}, g); }); });
+    el('polygon', {points:pts(onFace(f.B, f.R, .36, .64, 0, 10)), fill:mix(z.color, '#14303d', .45)}, g);
+    el('polygon', {points:pts(onFace(f.B, f.R, .36, .64, 9, 11)), fill:'#ffd23f'}, g);
+  }
   if (st === 'shop') faces.forEach(function(fc){
     el('polygon', {points:pts(onFace(fc[0], fc[1], .08, .92, 0, 10)), fill:'rgba(255,255,255,.75)'}, g);
     [0,1,2,3,4,5].forEach(function(i){ el('polygon', {points:pts(onFace(fc[0], fc[1], i/6, (i+1)/6, 10, 15)), fill:i % 2 ? '#fff' : z.color}, g); });
@@ -1545,6 +1589,11 @@ function drawBuilding(t){
     el('polygon', {points:pts([F(f.T, h), F(f.R, h), A]), fill:mix(z.color, '#14303d', .2)}, g);
     el('polygon', {class:'roof', points:pts([F(f.R, h), F(f.B, h), A]), fill:mix(z.color, '#ffffff', .2)}, g);
     el('polygon', {class:'roof', points:pts([F(f.B, h), F(f.Lp, h), A]), fill:st === 'lighthouse' ? '#e05a47' : z.color}, g);
+    if (st === 'tent'){
+      [[f.R, f.B], [f.B, f.Lp]].forEach(function(e2){ var M2 = [(e2[0][0] + e2[1][0]) / 2, (e2[0][1] + e2[1][1]) / 2]; el('polygon', {points:pts([F(e2[0], h), F(M2, h), A]), fill:'#ffffff', opacity:.85}, g); });
+      el('line', {x1:A[0], y1:A[1], x2:A[0], y2:A[1] - 12, stroke:'#14303d', 'stroke-width':1.4}, g);
+      el('polygon', {points:pts([[A[0], A[1] - 12], [A[0] + 10, A[1] - 9], [A[0], A[1] - 6]]), fill:['#ffd23f', '#4f9dff', '#6fcf5a', '#ff6f59'][hash(t.id) % 4]}, g);
+    }
   } else {
     el('polygon', {class:'roof', points:pts([F(f.T, h), F(f.R, h), F(f.B, h), F(f.Lp, h)]), fill:z.color}, g);
     if (st === 'spire'){
@@ -1574,7 +1623,7 @@ function drawBuilding(t){
 
 function drawWindows(t, g, lit, frame){
   var st = t.style;
-  if (st === 'civic' || st === 'lighthouse') return;
+  if (st === 'civic' || st === 'lighthouse' || st === 'tent') return;
   var f = footprint(t, t.s), e = t.elev;
   var rows = st === 'house' || st === 'pavilion' || st === 'warehouse' ? 1 : Math.max(1, Math.floor((t.h - 8) / 13));
   var z0 = st === 'shop' ? 16 : st === 'warehouse' ? 13 : st === 'pavilion' ? 4 : 7;
@@ -3146,10 +3195,12 @@ var M_ALIAS = {
   'amazon-ppc-advisor':['ppc', '關鍵字廣告'], 'ecommerce-health-dashboard':['健檢'],
   'amazon-review-reply-generator':['客評', '客訴'], 'company-digital-transformation-analyzer':['數位轉型'],
   'expense-tracker-pwa':['記帳'], 'private-domain-rfm-studio':['rfm', '私域'], 'IPA_Kano':['ipa', 'kano', '滿意度'],
-  'content-workflow-studio-cf':['工作流'], 'node-pack-designer-cf':['補充包'], 'animal-ecommerce-adventure':['大冒險', '動物朋友']
+  'content-workflow-studio-cf':['工作流'], 'node-pack-designer-cf':['補充包'], 'animal-ecommerce-adventure':['大冒險', '動物朋友'],
+  'fruit-ninja-cam':['切水果'], 'ball-throw-cam':['丟球'], 'jetski-cam':['摩托車', '水上摩托'], 'Rummikub':['rummikub', '拉密桌遊'],
+  'nostalgia-memory-game':['懷舊', '戳戳樂', '長輩遊戲'], 'taiwan-fish-atlas':['魚汛', '漁港', '海鮮'], 'taiwan-bird-atlas':['賞鳥', '鳥類']
 };
 var M_ZONE_ALIAS = {idea:['點子公園', '公園'], strategy:['策略山丘', '山丘', '山頂'], school:['創業學校', '學校'], calc:['試算商辦區', '商辦', '試算區'],
-  fund:['資金廣場', '廣場'], brand:['品牌商店街', '商店街', '品牌街'], ecom:['河口碼頭', '碼頭'], ops:['營運社區', '社區'], hub:['指揮塔']};
+  fund:['資金廣場', '廣場'], brand:['品牌商店街', '商店街', '品牌街'], ecom:['河口碼頭', '碼頭'], ops:['營運社區', '社區'], hub:['指揮塔'], play:['歡樂遊樂園', '遊樂園', '娛樂區', '娛樂']};
 var M_TOPICS = [   // [問題裡出現的字, 拿來比對工具說明的字, 開場白]
   [/開店|餐廳|餐飲|小吃|咖啡|早午餐|飲料|攤位|店面/, ['餐飲', '開店', '菜單', '損益', '成本'], '要開店，先把數字算清楚，這幾棟可以幫你：'],
   [/借錢|貸款|資金|周轉|週轉|銀行|籌錢|資本/, ['貸款', '資格', '申請書'], '說到錢，資金廣場就是為這個蓋的：'],
@@ -3165,7 +3216,8 @@ var M_TOPICS = [   // [問題裡出現的字, 拿來比對工具說明的字, �
   [/競爭|對手|定位|市場|策略|差異|優勢|劣勢/, ['策略', '定位', '差異', '競爭', '戰場'], '要想清楚怎麼贏，上策略山丘：'],
   [/自動|流程|串起來|工作流|效率|節點/, ['流程', '節點', '串'], '想把工具串成會自己跑的流程，去指揮塔：'],
   [/記帳|花費|支出|開銷|帳目/, ['記帳', '支出'], '記帳用這個：'],
-  [/練習|遊戲|學習|上課|教學|好玩/, ['遊戲', '練習', '配對', '冒險'], '想邊玩邊學，去創業學校：'],
+  [/放鬆|休息|紓壓|運動|體感|桌遊|好玩|玩什麼|娛樂|無聊|長輩|圖鑑/, ['體感', '桌遊', '遊戲', '圖鑑', '長輩'], '想放鬆一下，去東岸的歡樂遊樂園：'],
+  [/練習|遊戲|學習|上課|教學/, ['遊戲', '練習', '配對', '冒險'], '想邊玩邊學，去創業學校：'],
   [/數位|轉型|ai|人工智慧|自動化/, ['數位', 'ai'], '跟數位化、AI 有關的：']
 ];
 var M_STOP = /什麼|怎麼|可以|工具|我想|要用|哪個|一個|如何|需要|請問|有沒|沒有|是不|不是|哪些|應該|推薦|這個|那個/g;
@@ -3470,6 +3522,7 @@ buildWalk();
 placeAvatarDepth();
 if (firstVisit) addLog(me.name + ' 登上了創業島');
 blockArea(BOARD_AT[0], BOARD_AT[1], .75);
+blockArea(PLAY_WHEEL[0], PLAY_WHEEL[1], .4);
 loadBoard(); setInterval(loadBoard, 10 * 60 * 1000);
 /* ---------- 一個瀏覽器只有一個角色在線上 ----------
  * 創業島與創作者小鎮同網域（m255525.github.io），角色資料互通；為了不讓同一個角色同時出現兩次，
