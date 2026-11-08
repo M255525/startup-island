@@ -123,8 +123,8 @@ export class Island extends DurableObject {
         shirt: cleanColor(m.shirt, '#ff6f59'),
         hair: cleanColor(m.hair, '#3b2a20'),
         animal: cleanAnimal(m.animal, ''),
-        gx: clampNum(m.gx, -5, 25) ?? 11,
-        gy: clampNum(m.gy, -5, 25) ?? 9,
+        gx: clampNum(m.gx, -15, 45) ?? 11,
+        gy: clampNum(m.gy, -15, 45) ?? 9,
       };
       // 同一個分頁重新連線：把舊連線踢掉，避免出現兩個自己
       for (const other of this.ctx.getWebSockets()) {
@@ -140,7 +140,7 @@ export class Island extends DurableObject {
     if (!a.id) return;
 
     if (m.t === 'move') {
-      const gx = clampNum(m.gx, -5, 25), gy = clampNum(m.gy, -5, 25);
+      const gx = clampNum(m.gx, -15, 45), gy = clampNum(m.gy, -15, 45);
       if (gx === null || gy === null) return;
       a.gx = gx; a.gy = gy;
       ws.serializeAttachment(a);

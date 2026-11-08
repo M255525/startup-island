@@ -364,7 +364,7 @@ function buildBuilding(t){
 
 function buildDecor(){
   // 學校操場
-  var tc = [11.0, 1.3], ty = landY(tc[0], tc[1]);
+  var tc = SCHOOL_TRACK, ty = landY(tc[0], tc[1]);
   var track = new T3.Mesh(new T3.RingGeometry(.56, .86, 40), std('#cf7458', {polygonOffset:true, polygonOffsetFactor:-2}));
   track.rotation.x = -Math.PI / 2; track.position.set(tc[0], ty + .02, tc[1]); track.receiveShadow = true; scene.add(track);
   var field = new T3.Mesh(new T3.CircleGeometry(.56, 40), std('#79c266', {polygonOffset:true, polygonOffsetFactor:-2}));
@@ -391,7 +391,7 @@ function buildDecor(){
   var w0 = WATERS[0];
   for (var k = 0; k < 4; k++){ var pad = new T3.Mesh(new T3.CircleGeometry(.09 + k * .015, 14), std('#6fb85c', {side:T3.DoubleSide})); pad.rotation.x = -Math.PI / 2; pad.position.set(w0.at[0] - .25 + k * .17, SEA + .01, w0.at[1] + .1 - (k % 2) * .25); scene.add(pad); }
   // 河口碼頭的木棧橋
-  var pier = new T3.Group(); pier.position.set(14.07, DECK - .05, 16.52);
+  var pier = new T3.Group(); pier.position.set((DOCK_PIER[0][0] + DOCK_PIER[1][0]) / 2, DECK - .05, (DOCK_PIER[0][1] + DOCK_PIER[2][1]) / 2);
   pier.add(new T3.Mesh(new T3.BoxGeometry(1.55, .06, .65), std('#d0a46e')));
   [-.7, 0, .7].forEach(function(x){ [-.28, .28].forEach(function(zz){ var p = new T3.Mesh(new T3.CylinderGeometry(.03, .03, .8, 6), std('#7d5530')); p.position.set(x, -.38, zz); pier.add(p); }); });
   scene.add(inkAll(shadowAll(pier), .014));
@@ -762,13 +762,13 @@ function buildZoneMarks(){
   var tri = new T3.Shape(); tri.moveTo(-.05, 0); tri.lineTo(.05, 0); tri.lineTo(0, -.1); tri.lineTo(-.05, 0);
   var tg = new T3.ShapeGeometry(tri);
   for (var gy = bz.box[1] + .6; gy < bz.box[3] - .3; gy += 1.1){
-    var y0 = landY(7.3, gy) + .95;
-    [6.75, 7.85].forEach(function(x){ var pole = mesh(new T3.CylinderGeometry(.015, .015, 1, 6), std('#3c4a52'), x, y0 - .45, gy); pole.castShadow = true; scene.add(pole); });
+    var sx = bz.cx, y0 = landY(sx, gy) + .95;
+    [sx - .55, sx + .55].forEach(function(x){ var pole = mesh(new T3.CylinderGeometry(.015, .015, 1, 6), std('#3c4a52'), x, y0 - .45, gy); pole.castShadow = true; scene.add(pole); });
     for (var i = 0; i <= 10; i++){
-      var u = i / 10, x = 6.75 + u * 1.1, sag = Math.sin(u * Math.PI) * .12;
+      var u = i / 10, x = sx - .55 + u * 1.1, sag = Math.sin(u * Math.PI) * .12;
       var f = mesh(tg, std(FLG[i % FLG.length], {side:T3.DoubleSide}), x, y0 - sag, gy); scene.add(f);
     }
-    var line = mesh(new T3.CylinderGeometry(.004, .004, 1.12, 4), std('#3b2f3a'), 7.3, y0 - .06, gy); line.rotation.z = Math.PI / 2; scene.add(line);
+    var line = mesh(new T3.CylinderGeometry(.004, .004, 1.12, 4), std('#3b2f3a'), sx, y0 - .06, gy); line.rotation.z = Math.PI / 2; scene.add(line);
   }
   // 指揮塔：繞塔旋轉的光環
   var sp = O.blds['content-workflow-studio-cf'];
@@ -817,7 +817,7 @@ function buildTrees(){
 function buildFlowers(){
   var pts = [], r = rng(7), tries = 0;
   while (pts.length < 520 && tries++ < 9000){
-    var a = r() * Math.PI * 2, d = Math.sqrt(r()) * 12, gx = C[0] + Math.cos(a) * d, gy = C[1] + Math.sin(a) * d;
+    var a = r() * Math.PI * 2, d = Math.sqrt(r()) * 12 * SPREAD, gx = C[0] + Math.cos(a) * d, gy = C[1] + Math.sin(a) * d;
     if (edgeD(gx, gy) > -.8 || landY(gx, gy) < LAND - .05 || riverDist(gx, gy) < 1.0 || minDist(ROAD_S, gx, gy) < .35) continue;
     var z = zoneOfPoint(gx, gy); if (z && z.id !== 'idea') continue;
     if (Math.hypot(gx - MERLIN_AT[0], gy - MERLIN_AT[1]) < .6) continue;
@@ -861,7 +861,7 @@ function buildSkyStuff(){
   scene.add(O.stars);
   // 螢火蟲（夜晚在公園與綠地）
   var NF = 70, fp = new Float32Array(NF * 3), seeds = [];
-  for (var f = 0; f < NF; f++){ var G = f % 2 ? {at:[1.0, 9.6], r:2.6} : GREENS[0]; var a2 = Math.random() * 6.28, r2 = Math.sqrt(Math.random()) * G.r; seeds.push([G.at[0] + Math.cos(a2) * r2, G.at[1] + Math.sin(a2) * r2, Math.random() * 6.28]); }
+  for (var f = 0; f < NF; f++){ var G = f % 2 ? {at:spr([1.0, 9.6]), r:2.6 * SPREAD} : GREENS[0]; var a2 = Math.random() * 6.28, r2 = Math.sqrt(Math.random()) * G.r; seeds.push([G.at[0] + Math.cos(a2) * r2, G.at[1] + Math.sin(a2) * r2, Math.random() * 6.28]); }
   var fg = new T3.BufferGeometry(); fg.setAttribute('position', new T3.BufferAttribute(fp, 3));
   O.flies = new T3.Points(fg, new T3.PointsMaterial({color:'#e8ff8a', size:.09, transparent:true, opacity:0, depthWrite:false, blending:T3.AdditiveBlending}));
   scene.add(O.flies);
@@ -871,7 +871,7 @@ function buildSkyStuff(){
     fg.attributes.position.needsUpdate = true;
   });
   // 小船
-  O.boats = [{a:0, r:14.4, s:.03}, {a:2.3, r:15.2, s:-.022}, {a:4.4, r:14.8, s:.026}].map(function(b){
+  O.boats = [{a:0, r:14.4 * SPREAD, s:.024}, {a:2.3, r:15.2 * SPREAD, s:-.018}, {a:4.4, r:14.8 * SPREAD, s:.02}].map(function(b){
     var g = new T3.Group(), hull = new T3.Mesh(new T3.BoxGeometry(.9, .2, .34), std('#ffffff')); hull.position.y = .1; g.add(hull);
     var sail = new T3.Mesh(new T3.ConeGeometry(.28, .8, 3), std('#ff6f59', {flatShading:true})); sail.scale.z = .15; sail.position.set(.05, .6, 0); g.add(sail);
     b.g = inkAll(shadowAll(g), .014); scene.add(g); return b;
@@ -882,7 +882,7 @@ function buildSkyStuff(){
     var bg = new T3.Group(), wm = std('#ffffff', {side:T3.DoubleSide});
     var wl = new T3.Mesh(new T3.PlaneGeometry(.28, .08), wm), wr = wl.clone(); wl.geometry.translate(-.14, 0, 0); wr.geometry = wl.geometry.clone(); wr.geometry.translate(.28, 0, 0);
     wl.rotation.x = wr.rotation.x = -Math.PI / 2; var pl = new T3.Group(), pr = new T3.Group(); pl.add(wl); pr.add(wr); bg.add(pl); bg.add(pr);
-    bg.userData = {pl:pl, pr:pr, a:bi * 1.05, r:4 + (bi % 3) * 1.6, y:4 + (bi % 2) * .9, sp:.25 + (bi % 3) * .05};
+    bg.userData = {pl:pl, pr:pr, a:bi * 1.05, r:(4 + (bi % 3) * 1.6) * SPREAD, y:4 + (bi % 2) * .9, sp:.25 + (bi % 3) * .05};
     scene.add(bg); O.birds.push(bg);
   }
 }
@@ -1073,7 +1073,7 @@ function buildScenery(){
   // 水面波光：兩組點輪流閃爍
   S.glints = [0, 1].map(function(k){
     var N = THEME.glints, p = new Float32Array(N * 3), n = 0;
-    while (n < N){ var a = r() * 6.28, d = 13 + r() * 22, gx = C[0] + Math.cos(a) * d, gy = C[1] + Math.sin(a) * d; if (edgeD(gx, gy) < .8 || farEdge(gx, gy) < .8) continue; p[n * 3] = gx; p[n * 3 + 1] = SEA + .05; p[n * 3 + 2] = gy; n++; }
+    while (n < N){ var a = r() * 6.28, d = 13 * SPREAD + r() * 22, gx = C[0] + Math.cos(a) * d, gy = C[1] + Math.sin(a) * d; if (edgeD(gx, gy) < .8 || farEdge(gx, gy) < .8) continue; p[n * 3] = gx; p[n * 3 + 1] = SEA + .05; p[n * 3 + 2] = gy; n++; }
     var g = new T3.BufferGeometry(); g.setAttribute('position', new T3.BufferAttribute(p, 3));
     var pts = new T3.Points(g, new T3.PointsMaterial({color:THEME.glint, size:.16, transparent:true, opacity:.6, depthWrite:false, blending:T3.AdditiveBlending}));
     pts.raycast = noPick; scene.add(pts); return pts;
@@ -1130,7 +1130,7 @@ function buildTropicScene(S, r){
     mesh(new T3.BoxGeometry(.2, .14, .2), std('#b07a45'), 0, .12, 0, g);
     [-1, 1].forEach(function(sx){ [-1, 1].forEach(function(sz){ var rp = mesh(new T3.CylinderGeometry(.006, .006, .3, 4), std('#5a4030'), sx * .09, .3, sz * .09, g); rp.userData.noInk = true; }); });
     inkAll(shadowAll(g), .012); scene.add(g);
-    return {g:g, a:i / BAL.length * 6.28, rad:9 + (i % 3) * 2.2, h:4.6 + (i % 2) * 1.6 + i * .3, sp:.018 + (i % 2) * .01};
+    return {g:g, a:i / BAL.length * 6.28, rad:(9 + (i % 3) * 2.2) * SPREAD, h:4.6 + (i % 2) * 1.6 + i * .3, sp:.018 + (i % 2) * .01};
   });
   // 蝴蝶：白天在公園、綠地附近飛
   var spots2 = GREENS.map(function(G){ return [G.at[0], G.at[1]]; }).concat(ZONES.filter(function(z){ return z.id === 'idea'; }).map(function(z){ return [z.cx, z.cy]; }));
@@ -1208,7 +1208,7 @@ function buildHarborScene(S, r){
   for (var li = 0; li < 34; li++){
     var sp = new T3.Sprite(new T3.SpriteMaterial({map:lantTex, transparent:true, depthWrite:false, fog:false}));
     sp.scale.set(.22, .28, 1); sp.raycast = noPick; scene.add(sp);
-    var la = r() * 6.28, ld = Math.sqrt(r()) * 12;
+    var la = r() * 6.28, ld = Math.sqrt(r()) * 12 * SPREAD;
     S.lanterns.push({s:sp, x:C[0] + Math.cos(la) * ld, z:C[1] + Math.sin(la) * ld, t:r() * 60, sp:.12 + r() * .1, w:r() * 6.28});
   }
   var lantHalo = glowTex('rgba(255,170,80,.7)', 'rgba(255,140,60,0)');
@@ -1608,7 +1608,7 @@ function camApply(dt){
 }
 function setOverview(on){
   cam.overview = on;
-  if (on){ cam.dist = Math.max(cam.dist, 24); cam.pitch = Math.max(cam.pitch, .78); }
+  if (on){ cam.dist = Math.max(cam.dist, 24 * SPREAD); cam.pitch = Math.max(cam.pitch, .78); }
   else if (cam.dist > 14){ cam.dist = 8.5; cam.pitch = .55; }
 }
 function keyMove(dt){
@@ -1671,7 +1671,7 @@ function bindInput(){
     var ids = Object.keys(ptr);
     if (ids.length === 2 && drag && drag.pinch){
       var a = ptr[ids[0]], b = ptr[ids[1]];
-      cam.dist = Math.max(1.6, Math.min(40, drag.dist * drag.pinch / Math.hypot(a.x - b.x, a.y - b.y))); return;
+      cam.dist = Math.max(1.6, Math.min(52, drag.dist * drag.pinch / Math.hypot(a.x - b.x, a.y - b.y))); return;
     }
     if (!drag || drag.pinch) return;
     var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
@@ -1692,7 +1692,7 @@ function bindInput(){
   }
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('pointerleave', function(){ $('tip').classList.remove('show'); });
-  canvas.addEventListener('wheel', function(e){ e.preventDefault(); cam.dist = Math.max(1.6, Math.min(40, cam.dist * Math.pow(1.0012, e.deltaY))); }, {passive:false});
+  canvas.addEventListener('wheel', function(e){ e.preventDefault(); cam.dist = Math.max(1.6, Math.min(52, cam.dist * Math.pow(1.0012, e.deltaY))); }, {passive:false});
   window.addEventListener('keydown', function(e){
     if (!active || /INPUT|TEXTAREA|SELECT/.test((e.target.tagName || ''))) return;
     var k = e.key.toLowerCase();
@@ -1813,7 +1813,7 @@ function build(){
   hemi = new T3.HemisphereLight('#dff3ff', '#8a9a6a', 1); scene.add(hemi);
   sun = new T3.DirectionalLight('#fff4e0', 2.6); sun.castShadow = true;
   sun.shadow.mapSize.set(small ? 1024 : 2048, small ? 1024 : 2048);
-  var sc = sun.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 70; sun.shadow.bias = -.0004; sun.shadow.normalBias = .02;
+  var sc = sun.shadow.camera; sc.left = sc.bottom = -16 * SPREAD; sc.right = sc.top = 16 * SPREAD; sc.near = 1; sc.far = 70; sun.shadow.bias = -.0004; sun.shadow.normalBias = .02;
   scene.add(sun); scene.add(sun.target);
   raycaster = new T3.Raycaster(); ndc = new T3.Vector2(); V = new T3.Vector3();
   buildTerrain(); buildWater(); buildRoads(); TOOLS.forEach(buildBuilding); buildDecor(); buildZoneMarks(); buildTrees(); buildFlowers(); buildSkyStuff(); buildScenery(); buildMerlin(); buildLabels(); buildFar();
@@ -1876,7 +1876,7 @@ var mini = {cv:$('miniCv'), on:prefs.mini !== false, pip:false, base:null, k:1, 
 function miniP(gx, gy){ var p = iso(gx, gy); return [mini.ox + p[0] * mini.k, mini.oy + p[1] * mini.k]; }
 function miniSetup(){
   var W = mini.cv.width, H = mini.cv.height, xs = [], ys = [];
-  for (var a = 0; a < Math.PI * 2; a += .1){ var p = iso(C[0] + Math.cos(a) * 13.3, C[1] + Math.sin(a) * 13.3); xs.push(p[0]); ys.push(p[1]); }
+  for (var a = 0; a < Math.PI * 2; a += .1){ var p = iso(C[0] + Math.cos(a) * 13.3 * SPREAD, C[1] + Math.sin(a) * 13.3 * SPREAD); xs.push(p[0]); ys.push(p[1]); }
   var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
   mini.k = Math.min(W / (x1 - x0), H / (y1 - y0)) * .96;
   mini.ox = W / 2 - (x0 + x1) / 2 * mini.k; mini.oy = H / 2 - (y0 + y1) / 2 * mini.k;

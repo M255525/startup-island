@@ -989,6 +989,27 @@ var POS = {
   'jetski-cam':[18.6,10.8], 'Rummikub':[20.1,11.6], 'nostalgia-memory-game':[18.6,12.4]
 };
 var FREE = {'traffic-rank-estimator':true};                          // 不併入場地地塊（河口燈塔）
+// 2026-11-08 使用者要求「空間大一點、不要擠」：所有地理座標以島中心 C 等比例拉開 SPREAD 倍；
+// 建築、樹、人物、名牌本身大小不變，所以彼此之間多出空地。上面的座標都是放大前的數字，這裡統一換算（平面、立體共用）。
+var SPREAD = 1.3;
+function spr(p){ p[0] = C[0] + (p[0] - C[0]) * SPREAD; p[1] = C[1] + (p[1] - C[1]) * SPREAD; return p; }
+function sprMove(list, c){ var d = spr(c.slice()); d = [d[0] - c[0], d[1] - c[1]]; return list.map(function(q){ return [q[0] + d[0], q[1] + d[1]]; }); }   // 整塊平移（大小不變）
+(function(){
+  for (var k in POS) spr(POS[k]);
+  RIVER.forEach(spr);
+  HILLS.forEach(function(H){ spr(H.at); H.layers.forEach(function(Ly){ Ly[0] *= SPREAD; }); if (H.label) spr(H.label); });
+  GREENS.forEach(function(G){ spr(G.at); G.r *= SPREAD; if (G.label) spr(G.label); });
+  WATERS.forEach(function(W){ spr(W.at); W.r *= 1.15; });
+  ZONES.forEach(function(z){
+    if (z.label) spr(z.label);
+    if (z.extra){ var a = spr([z.extra[0], z.extra[1]]), b = spr([z.extra[2], z.extra[3]]); z.extra = [a[0], a[1], b[0], b[1]]; }
+  });
+  [BOARD_AT, PLAY_WHEEL, MERLIN_AT].forEach(spr);
+  merlin.gx = MERLIN_AT[0]; merlin.gy = MERLIN_AT[1];
+  FAR.bridge.forEach(spr);
+})();
+var SCHOOL_TRACK = spr([11.0, 1.3]);                                     // 創業學校操場中心
+var DOCK_PIER = sprMove([[13.3, 16.2], [14.85, 16.2], [14.85, 16.85], [13.3, 16.85]], [14.07, 16.52]);   // 河口碼頭木棧橋
 var STYLE = {idea:'pavilion', strategy:'office', school:'school', calc:'tower', fund:'civic', brand:'shop', ecom:'warehouse', ops:'house', hub:'office', play:'tent'};
 var SPECIAL = {'mentors-panel':'observatory', 'traffic-rank-estimator':'lighthouse', 'content-workflow-studio-cf':'spire', 'node-pack-designer-cf':'warehouse'};
 var SHAPE = {   // s 足跡半寬、h 牆高、roof 屋頂高（px）
@@ -1051,7 +1072,7 @@ function savePrefs(){ lsSet(KEY_PREF, {rels:state.rels, tags:state.tags}); }
 
 /* ---------- 繪製地圖 ---------- */
 var svg = $('map'), L = {};
-function islandR(a){ return 12.4 + .35 * Math.sin(3*a + .6) + .25 * Math.cos(5*a + 1.3) + .12 * Math.sin(9*a); }
+function islandR(a){ return (12.4 + .35 * Math.sin(3*a + .6) + .25 * Math.cos(5*a + 1.3) + .12 * Math.sin(9*a)) * SPREAD; }
 function circlePts(cx, cy, r, n, elev){
   var o = [];
   for (var i = 0; i < n; i++){ var a = i / n * Math.PI * 2; o.push(up(iso(cx + Math.cos(a)*r, cy + Math.sin(a)*r), elev || 0)); }
@@ -1109,7 +1130,7 @@ var FARB = (function(){
   var style = FAR.self === 'startup' ? 'harbor' : 'tropic';
   function R(ang){                                                // 對岸輪廓：創作者小鎮是圓角方形，創業島是略帶起伏的圓
     if (style === 'harbor'){ var c = Math.cos(ang), s = Math.sin(ang); return 11.6 / Math.pow(Math.pow(Math.abs(c), 8) + Math.pow(Math.abs(s), 8), 1 / 8); }
-    return 12.4 + .35 * Math.sin(3 * ang + .6) + .25 * Math.cos(5 * ang + 1.3) + .12 * Math.sin(9 * ang);
+    return (12.4 + .35 * Math.sin(3 * ang + .6) + .25 * Math.cos(5 * ang + 1.3) + .12 * Math.sin(9 * ang)) * 1.3;   // 創業島 2026-11-08 放大 1.3 倍
   }
   var back = Math.atan2(-u[1], -u[0]), t = R(back) - .05;
   var o = {style:style, R:R, u:u, c:[b[0] + u[0] * t, b[1] + u[1] * t]};
@@ -1329,7 +1350,7 @@ function buildMap(){
   GREENS.forEach(function(G){ for (var k = 0; k < 40; k++){ var a = tr()*Math.PI*2, r = Math.sqrt(tr())*G.r; tryTree(G.at[0] + Math.cos(a)*r, G.at[1] + Math.sin(a)*r); } });
   HILLS.forEach(function(H){ for (var k = 0; k < 40; k++){ var a = tr()*Math.PI*2, r = Math.sqrt(tr())*H.layers[0][0]; tryTree(H.at[0] + Math.cos(a)*r, H.at[1] + Math.sin(a)*r); } });
   for (var k2 = 0; k2 < 40; k2++){ var a2 = tr()*Math.PI*2, r2 = 1 + tr()*2.6; tryTree(1.0 + Math.cos(a2)*r2, 9.6 + Math.sin(a2)*r2); }   // 公園裡的樹
-  for (var k3 = 0; k3 < 2500 && trees.length < 150; k3++){ var a3 = tr()*Math.PI*2, r3 = Math.sqrt(tr())*12.4; tryTree(C[0] + Math.cos(a3)*r3, C[1] + Math.sin(a3)*r3); }
+  for (var k3 = 0; k3 < 4000 && trees.length < 230; k3++){ var a3 = tr()*Math.PI*2, r3 = Math.sqrt(tr())*12.4*SPREAD; tryTree(C[0] + Math.cos(a3)*r3, C[1] + Math.sin(a3)*r3); }
 
   L.trees = trees;
   var things = [];
@@ -1513,7 +1534,7 @@ function decorate(z, g){
     el('ellipse', {cx:lp[0], cy:lp[1], rx:6, ry:3, fill:'#7cc36a'}, g);   // 荷葉
   }
   if (z.id === 'school'){
-    var tc = [11.0, 1.3];
+    var tc = SCHOOL_TRACK;
     el('polygon', {points:pts(circlePts(tc[0], tc[1], .85, 40)), fill:'#d0745a'}, g);
     el('polygon', {points:pts(circlePts(tc[0], tc[1], .72, 40)), fill:'none', stroke:'#fff', 'stroke-width':1, opacity:.8}, g);
     el('polygon', {points:pts(circlePts(tc[0], tc[1], .56, 40)), fill:'#7fc46b'}, g);
@@ -1526,12 +1547,12 @@ function decorate(z, g){
     el('ellipse', {class:'pulse', cx:fp[0], cy:fp[1] - 6, rx:3, ry:7, fill:'#fff', opacity:.85}, g);
   }
   if (z.id === 'brand'){
-    var st = [[7.0, z.box[1] + .1], [7.6, z.box[1] + .1], [7.6, z.box[3] - .1], [7.0, z.box[3] - .1]].map(function(q){ return iso(q[0], q[1]); });
+    var sx = z.cx, st = [[sx - .4, z.box[1] + .1], [sx + .4, z.box[1] + .1], [sx + .4, z.box[3] - .1], [sx - .4, z.box[3] - .1]].map(function(q){ return iso(q[0], q[1]); });
     el('polygon', {points:pts(st), fill:'var(--road)'}, g);
-    el('line', {x1:iso(7.3, z.box[1] + .2)[0], y1:iso(7.3, z.box[1] + .2)[1], x2:iso(7.3, z.box[3] - .2)[0], y2:iso(7.3, z.box[3] - .2)[1], stroke:'#f4b942', 'stroke-width':1.5, 'stroke-dasharray':'6 6'}, g);
+    el('line', {x1:iso(sx, z.box[1] + .2)[0], y1:iso(sx, z.box[1] + .2)[1], x2:iso(sx, z.box[3] - .2)[0], y2:iso(sx, z.box[3] - .2)[1], stroke:'#f4b942', 'stroke-width':1.5, 'stroke-dasharray':'6 6'}, g);
   }
   if (z.id === 'ecom'){
-    var pier = [[13.3, 16.2], [14.85, 16.2], [14.85, 16.85], [13.3, 16.85]].map(function(q){ return iso(q[0], q[1]); });
+    var pier = DOCK_PIER.map(function(q){ return iso(q[0], q[1]); });
     el('polygon', {points:pts(pier.map(function(p){ return [p[0], p[1] + 5]; })), fill:'#8a5f37'}, g);
     el('polygon', {points:pts(pier), fill:'#d9b07a', stroke:'#8a5f37', 'stroke-width':1}, g);
   }
@@ -1666,7 +1687,7 @@ function drawLinks(){
 }
 
 /* ---------- 船、雲 ---------- */
-var boats = [{a:0, r:14.4, s:.03}, {a:2.3, r:15.2, s:-.022}, {a:4.4, r:14.8, s:.026}];
+var boats = [{a:0, r:14.4 * SPREAD, s:.024}, {a:2.3, r:15.2 * SPREAD, s:-.018}, {a:4.4, r:14.8 * SPREAD, s:.02}];
 function buildBoats(){
   L.boats.innerHTML = '';
   boats.forEach(function(b){
@@ -1707,14 +1728,14 @@ function slimeTarget(s){
 function spawnCreatures(){
   var tries = 0, n = SLIME_COLORS.length * 2 + 2;
   while (SLIMES.length < n && tries++ < 4000){
-    var a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * 11.5, x = C[0] + Math.cos(a) * r, y = C[1] + Math.sin(a) * r;
+    var a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * 11.5 * SPREAD, x = C[0] + Math.cos(a) * r, y = C[1] + Math.sin(a) * r;
     if (!slimeOK(x, y) || SLIMES.some(function(o){ return Math.hypot(o.gx - x, o.gy - y) < 1.7; })) continue;
     var i = SLIMES.length;
     SLIMES.push({gx:x, gy:y, hx:x, hy:y, tx:x, ty:y, sx:x, sy:y, ex:x, ey:y, c:SLIME_COLORS[i % SLIME_COLORS.length],
       size:.8 + (i % 3) * .14, k:0, hopping:false, rest:Math.random() * 3, dur:.75 + Math.random() * .3, ang:Math.random() * 6.283, h:0, sq:1, ph:Math.random() * 9});
   }
   DRAGON_LOOKS.forEach(function(lk, i){
-    DRAGONS.push({lk:lk, a:i * 2.1, sp:(i % 2 ? -1 : 1) * (.075 + i * .012), rx:7.5 + i * 1.6, ry:6 + (i % 2) * 2.2, alt:5.2 + i * .8, ph:i * 1.9,
+    DRAGONS.push({lk:lk, a:i * 2.1, sp:(i % 2 ? -1 : 1) * (.075 + i * .012), rx:(7.5 + i * 1.6) * SPREAD, ry:(6 + (i % 2) * 2.2) * SPREAD, alt:5.2 + i * .8, ph:i * 1.9,
       gx:C[0], gy:C[1], y:0, hd:0, flap:0, fire:0, fireIn:6 + i * 5, face:1, tilt:0});
   });
   buildCreatures2D();
@@ -1998,8 +2019,8 @@ if (!animalById[me.animal]){ me.animal = pick(ANIMALS).id; saveMe(); }   // 舊�
 })();
 
 // 可走格子：0.5 格一格；海、河（橋除外）、建築、池塘與噴水池不能走
-var WG = {x0:-4, y0:-4, step:.25, n:136}, walkCells = null;          // 尋路格子：0.25 格一格
-var FG = {x0:-4, y0:-4, step:.08, n:426}, fineCells = null;            // 碰撞格子：0.08 格一格，檢查「走直線會不會撞到」用
+var WG = {x0:-10, y0:-10, step:.25, n:200}, walkCells = null;          // 尋路格子：0.25 格一格
+var FG = {x0:-10, y0:-10, step:.08, n:626}, fineCells = null;            // 碰撞格子：0.08 格一格，檢查「走直線會不會撞到」用
 var BODY = .2;                                                          // 角色身體半徑＋屋簷外伸，離牆至少這麼遠
 function cellOf(gx, gy){ return [Math.round((gx - WG.x0) / WG.step), Math.round((gy - WG.y0) / WG.step)]; }
 function cellPos(i, j){ return [WG.x0 + i * WG.step, WG.y0 + j * WG.step]; }
@@ -2085,7 +2106,7 @@ function straighten(pos, path){                // 能直走就直走，不要一
   while (i < list.length - 1){ var j = list.length - 1; while (j > i + 1 && !los(list[i], list[j])) j--; out.push(list[j]); i = j; }
   return out;
 }
-var walker = {gx:11.7, gy:9.1, elev:0, path:[], phase:0, face:1, goal:null, pending:null, lastPlan:0, zone:null, follow:true};
+var walker = {gx:C[0] + 2.7 * SPREAD, gy:C[1] + .1 * SPREAD, elev:0, path:[], phase:0, face:1, goal:null, pending:null, lastPlan:0, zone:null, follow:true};
 // 從另一座島走橋過來的人：從這邊橋頭出發
 (function(){
   var q = /[?&]from=(creator|startup)\b/.exec(location.search); if (!q || q[1] === FAR.self) return;
@@ -2769,7 +2790,7 @@ var vb = {x:0, y:0, w:100, h:100}, home = null, anim = null;
 function setVB(){ svg.setAttribute('viewBox', vb.x.toFixed(1)+' '+vb.y.toFixed(1)+' '+vb.w.toFixed(1)+' '+vb.h.toFixed(1)); }
 function islandBox(){
   var xs = [], ys = [];
-  for (var a = 0; a < Math.PI*2; a += .2){ var p = iso(C[0] + Math.cos(a)*13.2, C[1] + Math.sin(a)*13.2); xs.push(p[0]); ys.push(p[1]); }
+  for (var a = 0; a < Math.PI*2; a += .2){ var p = iso(C[0] + Math.cos(a)*13.2*SPREAD, C[1] + Math.sin(a)*13.2*SPREAD); xs.push(p[0]); ys.push(p[1]); }
   [[FAR.at[0] + FAR.r + .8, FAR.at[1]], [FAR.at[0], FAR.at[1] - FAR.r - .8], [FAR.at[0], FAR.at[1] + FAR.r + .8]].forEach(function(q){ var p = iso(q[0], q[1]); xs.push(p[0]); ys.push(p[1]); });
   return {x:Math.min.apply(null, xs), y:Math.min.apply(null, ys) - 40, w:Math.max.apply(null, xs) - Math.min.apply(null, xs), h:Math.max.apply(null, ys) - Math.min.apply(null, ys) + 50};
 }
