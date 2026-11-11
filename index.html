@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>創業島 · 從一個點子出發，走完整座島</title>
-<meta name="description" content="把 49 個線上創業工具與遊戲放進一座可以探索的島：公園、山丘、學校、河口碼頭、遊樂園等十個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
+<meta name="description" content="把 50 個線上創業工具與遊戲放進一座可以探索的島：公園、山丘、學校、河口碼頭、遊樂園等十個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
 <meta name="theme-color" content="#1c6e8c">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -670,7 +670,7 @@ var ZONES = [
   {id:'brand',    name:'品牌商店街', en:'BRAND STREET',    color:'#ef6b8a', ground:'var(--paving)', desc:'社群、檔期、素材：讓人看見你。'},
   {id:'ecom',     name:'河口碼頭',   en:'RIVER DOCK',      color:'#4f9dff', ground:'var(--wood)',   desc:'貨從這裡出海：關鍵字、商品頁、廣告；燈塔替你看市場流量。'},
   {id:'ops',      name:'營運社區',   en:'OPS TOWN',        color:'#6bbf59', ground:'var(--lawn)',   desc:'顧客回饋、會員經營、流程與記帳。'},
-  {id:'play',     name:'歡樂遊樂園', en:'FUN PARK',        color:'#e84fc7', ground:'var(--lawn)',   desc:'忙完了來玩一下：體感遊戲、桌遊、懷舊遊戲和台灣自然圖鑑，不用序號直接玩。'},
+  {id:'play',     name:'歡樂遊樂園', en:'FUN PARK',        color:'#e84fc7', ground:'var(--lawn)',   desc:'忙完了來玩一下：體感遊戲、桌遊、懷舊遊戲、台灣自然圖鑑和日本櫻花季，不用序號直接玩。'},
   {id:'hub',      name:'指揮塔',     en:'CONTROL TOWER',   color:'#e05a47', ground:'var(--paving)', desc:'河邊的高塔與工作坊：把一路上的工具串成會自己跑的流程。'}
 ];
 
@@ -783,7 +783,9 @@ var TOOLS = [
   {id:'taiwan-fish-atlas', zone:'play', short:'魚汛圖鑑', name:'台灣漁港魚汛圖鑑', hour:[6,8], month:[0,24],
    role:'3D 台灣海圖：看各漁港每個月抓到什麼魚，附產季月曆和食譜。', input:'月份、漁港', output:'當季漁獲與食譜'},
   {id:'taiwan-bird-atlas', zone:'play', short:'賞鳥地圖', name:'台灣賞鳥地圖', hour:[6,8], month:[0,24],
-   role:'依月份和棲地看台灣各賞鳥熱點有哪些鳥，附實景照片圖鑑與賞鳥須知。', input:'月份、熱點', output:'當月鳥種與賞鳥須知'}
+   role:'依月份和棲地看台灣各賞鳥熱點有哪些鳥，附實景照片圖鑑與賞鳥須知。', input:'月份、熱點', output:'當月鳥種與賞鳥須知'},
+  {id:'japan-sakura-season', zone:'play', short:'櫻花季', name:'日本櫻花季地圖', hour:[21,23], month:[0,24],
+   role:'3D 日本列島：拖日期看櫻前線北上，48 個賞櫻名所的花況與 15 種櫻花圖鑑。', input:'日期、名所', output:'當日花況與賞櫻須知'}
 ];
 
 // 接力線：chain 依序相連；star 由第一個連到其餘每一個
@@ -986,7 +988,7 @@ var POS = {
   'amazon-review-reply-generator':[1.9,13.4], 'company-digital-transformation-analyzer':[3.4,13.4], 'expense-tracker-pwa':[1.9,14.8],
   'private-domain-rfm-studio':[3.4,14.8], 'IPA_Kano':[2.65,16.2],
   'taiwan-fish-atlas':[18.6,7.6], 'taiwan-bird-atlas':[20.15,8.4], 'fruit-ninja-cam':[18.6,9.2], 'ball-throw-cam':[20.15,10.0],
-  'jetski-cam':[18.6,10.8], 'Rummikub':[20.1,11.6], 'nostalgia-memory-game':[18.6,12.4]
+  'jetski-cam':[18.6,10.8], 'Rummikub':[20.1,11.6], 'nostalgia-memory-game':[18.6,12.4], 'japan-sakura-season':[18.7,13.95]
 };
 var FREE = {'traffic-rank-estimator':true};                          // 不併入場地地塊（河口燈塔）
 // 2026-11-08 使用者要求「空間大一點、不要擠」：所有地理座標以島中心 C 等比例拉開 SPREAD 倍；
@@ -3218,7 +3220,7 @@ var M_ALIAS = {
   'expense-tracker-pwa':['記帳'], 'private-domain-rfm-studio':['rfm', '私域'], 'IPA_Kano':['ipa', 'kano', '滿意度'],
   'content-workflow-studio-cf':['工作流'], 'node-pack-designer-cf':['補充包'], 'animal-ecommerce-adventure':['大冒險', '動物朋友'],
   'fruit-ninja-cam':['切水果'], 'ball-throw-cam':['丟球'], 'jetski-cam':['摩托車', '水上摩托'], 'Rummikub':['rummikub', '拉密桌遊'],
-  'nostalgia-memory-game':['懷舊', '戳戳樂', '長輩遊戲'], 'taiwan-fish-atlas':['魚汛', '漁港', '海鮮'], 'taiwan-bird-atlas':['賞鳥', '鳥類']
+  'nostalgia-memory-game':['懷舊', '戳戳樂', '長輩遊戲'], 'taiwan-fish-atlas':['魚汛', '漁港', '海鮮'], 'taiwan-bird-atlas':['賞鳥', '鳥類'], 'japan-sakura-season':['櫻花', '賞櫻', '日本']
 };
 var M_ZONE_ALIAS = {idea:['點子公園', '公園'], strategy:['策略山丘', '山丘', '山頂'], school:['創業學校', '學校'], calc:['試算商辦區', '商辦', '試算區'],
   fund:['資金廣場', '廣場'], brand:['品牌商店街', '商店街', '品牌街'], ecom:['河口碼頭', '碼頭'], ops:['營運社區', '社區'], hub:['指揮塔'], play:['歡樂遊樂園', '遊樂園', '娛樂區', '娛樂']};
