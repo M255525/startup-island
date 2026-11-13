@@ -666,7 +666,7 @@ var ZONES = [
   {id:'strategy', name:'策略山丘',   en:'STRATEGY HILL',   color:'#9d8cf2', ground:null, label:[6.4,4.3,13],            desc:'爬上山頂看清楚：賣給誰、靠什麼贏、怎麼落地。'},
   {id:'school',   name:'創業學校',   en:'STARTUP SCHOOL',  color:'#6672e0', ground:'var(--yard)',   extra:[10.15,.45,11.85,2.15], desc:'用遊戲練功，也替團隊開課申請訓練補助。'},
   {id:'calc',     name:'試算商辦區', en:'NUMBERS OFFICES', color:'#2ec4b6', ground:'var(--paving)', desc:'開店、上架前，先把成本和損益算清楚。'},
-  {id:'fund',     name:'資金廣場',   en:'FUNDING PLAZA',   color:'#f08a4b', ground:'var(--paving)', label:[15.3,12.9,0], extra:[15.4,10.7,16.6,11.9], desc:'銀行與公所前的廣場：確認貸款資格，送出申請書。'},
+  {id:'fund',     name:'資金廣場',   en:'FUNDING PLAZA',   color:'#f08a4b', ground:'var(--paving)', label:[15.3,12.9,0], extra:[15.4,10.7,16.6,11.9], desc:'銀行與公所前的廣場：跑完開業手續、確認貸款資格，送出申請書。'},
   {id:'brand',    name:'品牌商店街', en:'BRAND STREET',    color:'#ef6b8a', ground:'var(--paving)', desc:'社群、檔期、素材：讓人看見你。'},
   {id:'ecom',     name:'河口碼頭',   en:'RIVER DOCK',      color:'#4f9dff', ground:'var(--wood)',   desc:'貨從這裡出海：關鍵字、商品頁、廣告；燈塔替你看市場流量。'},
   {id:'ops',      name:'營運社區',   en:'OPS TOWN',        color:'#6bbf59', ground:'var(--lawn)',   desc:'顧客回饋、會員經營、流程與記帳。'},
@@ -715,6 +715,8 @@ var TOOLS = [
    role:'先確認自己符不符合鳳凰貸款或創業貸款的條件。', input:'個人與事業狀況', output:'資格比對結果'},
   {id:'phoenix-loan-generator', zone:'fund', short:'鳳凰貸款', name:'微型創業鳳凰貸款申請書產生器', hour:[14,16], month:[4,6],
    role:'照官方格式填好微型創業鳳凰貸款的申請書。', input:'營運計畫、試算數字', output:'申請書文件'},
+  {id:'shop-opening-checklist', zone:'fund', short:'開店清單', name:'開店前置清單', hour:[13,15], month:[4,6],
+   role:'依店型、營業額與員工數，排出登記、稅籍、勞健保、食安到開幕的倒數清單。', input:'店型、開幕日、員工數', output:'開業手續倒數清單'},
   {id:'industry-talent-generator', zone:'school', short:'人才投資', name:'產業人才投資方案開課申請書產生器', hour:[15,16], month:[15,20],
    role:'替員工訓練課程寫開課申請書，申請政府訓練補助。', input:'課程規劃', output:'附表二申請書'},
 
@@ -825,6 +827,7 @@ var LINKS = [
   {id:'l23', name:'內容工作流一條龍',  star:['content-workflow-studio-cf','business-idea-generator','where-what-how-strategy-studio','SocialPost','social-post-grader'], desc:'工作流把商業創意、商業策略、貼文產生與健診四個節點串成一條線。'},
   {id:'l25', name:'自製節點 → 工作流', chain:['node-pack-designer-cf','content-workflow-studio-cf'], desc:'設計好的節點補充包，裝進內容工作流就能用。'},
   {id:'l26', name:'點子 → 商業模式組合 → 策略', chain:['business-idea-generator','business-model-pattern-studio','where-what-how-strategy-studio'], desc:'點子先套經典商業模式組合並評價，再決定戰場與致勝方式。'},
+  {id:'l27', name:'試算 → 開業手續 → 記帳', chain:['restaurant-feasibility-calculator','shop-opening-checklist','expense-tracker-pwa'], desc:'數字算過了，照清單跑完登記與勞健保，開幕後每天記帳。'},
   {id:'l24', name:'跨境電商冒險路線',  star:['animal-ecommerce-adventure','traffic-rank-estimator','amazon-logistics-game','product-title-generator','amazon-cost-calculator'], desc:'動物朋友帶你依序走過這些關卡。'}
 ];
 
@@ -990,7 +993,7 @@ var POS = {
   'restaurant-feasibility-calculator':[13.2,2.5], 'restaurant-menu-mix-calculator':[14.9,2.5], 'tourism-hotel-feasibility-calculator':[16.4,2.5],
   'amazon-cost-calculator':[13.2,4.4], 'amazon-listing-mix-calculator':[14.9,4.4], 'ecommerce-health-dashboard':[16.4,4.4],
   'content-workflow-studio-cf':[10.9,7.6], 'node-pack-designer-cf':[12.3,7.4],
-  'loan-eligibility-checker':[15.2,9.6], 'phoenix-loan-generator':[16.9,9.6],
+  'loan-eligibility-checker':[15.2,9.6], 'phoenix-loan-generator':[16.9,9.6], 'shop-opening-checklist':[14.5,10.9],
   'coffee-ig-planner':[6.1,12.4], 'annual-marketing-calendar':[8.5,12.4], 'SocialPost':[6.1,13.9], 'social-post-grader':[8.5,13.9],
   'ai-image-prompt-studio':[6.1,15.4], 'ai-video-prompt-studio':[8.5,15.4], 'ai-video-studio-play':[6.1,16.9], 'line-sticker-studio':[8.5,16.9],
   'product-keyword-cloud':[11.0,16.0], 'product-title-generator':[12.6,16.0], 'amazon-listing-generator':[11.0,17.7], 'amazon-ppc-advisor':[12.6,17.7],
@@ -3219,7 +3222,7 @@ var M_ALIAS = {
   'swot-game':['swot'], 'mentors-panel':['顧問團', '人物顧問'],
   'restaurant-feasibility-calculator':['餐飲店', '開餐廳'], 'restaurant-menu-mix-calculator':['菜單'],
   'tourism-hotel-feasibility-calculator':['飯店', '民宿', '旅館'], 'amazon-cost-calculator':['亞馬遜成本', 'fba', 'fbm'],
-  'amazon-listing-mix-calculator':['商品組合'], 'loan-eligibility-checker':['貸款資格'], 'phoenix-loan-generator':['鳳凰'],
+  'amazon-listing-mix-calculator':['商品組合'], 'loan-eligibility-checker':['貸款資格'], 'shop-opening-checklist':['開店', '開業', '登記', '稅籍', '勞健保', '手續'], 'phoenix-loan-generator':['鳳凰'],
   'industry-talent-generator':['產業人才', '開課申請'], 'coffee-ig-planner':['instagram', 'ig規劃'],
   'social-post-grader':['貼文評分', '貼文打分'], 'ai-image-prompt-studio':['繪圖', '生圖'],
   'ai-video-prompt-studio':['sora', 'veo'], 'ai-video-studio-play':['影音工坊', '配音'], 'line-sticker-studio':['貼圖'],

@@ -1,5 +1,5 @@
 // 僅供「加入主畫面」安裝需求使用：network-first + 同源快取備援。
-const CACHE_NAME = 'startup-island-shell-v24';
+const CACHE_NAME = 'startup-island-shell-v25';
 const SHELL_FILES = [
   './',
   './index.html',
