@@ -48,6 +48,17 @@ function cleanColor(v, fallback) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/lobby') {
+      const origin = request.headers.get('Origin') || 'null';
+      const okO = ALLOWED_ORIGINS.some((re) => re.test(origin));
+      const h = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
+      if (okO) { h['Access-Control-Allow-Origin'] = origin; h['Vary'] = 'Origin'; }
+      if (request.method === 'OPTIONS') return new Response(null, { headers: h });
+      if (!okO) return new Response('{"rooms":[]}', { status: 403, headers: h });
+      const stub = env.ISLAND.get(env.ISLAND.idFromName(LOBBY));
+      const res = await stub.fetch('https://lobby/lobby/list');
+      return new Response(await res.text(), { headers: h });
+    }
     if (url.pathname !== '/ws') {
       return new Response('startup-island presence: ok', { headers: { 'content-type': 'text/plain; charset=utf-8' } });
     }
@@ -68,9 +79,17 @@ export default {
 // - 帶 tkey 的是老師：房間第一個老師金鑰會記在這個房間的 storage，之後金鑰不同就不能當老師（關閉碼 4001）。
 // - 其他人是學生：學生只看得到老師（snapshot、join、look、move、leave、聊天都不轉給其他學生），老師看得到所有人。
 // - 老師可以設教室密碼 pw；學生密碼不對就關閉連線（關閉碼 4003）。房間最後一個人離開就把金鑰與密碼刪掉。
+// - 教室大廳（/lobby）：老師幫教室命名並公開，就會列在大廳（見下方 LOBBY）。
 // - 學生只能進「老師正開著」的教室，否則 4004；老師送 {t:'close'}（關閉教室）會把全部人 4004 並刪掉金鑰，舊連結從此失效。
 // 沒帶 cls=1 的連線（創業島、創作者小鎮）行為完全不變。
 const KEY_RE = /^[A-Za-z0-9]{12,32}$/;
+// 教室大廳：一個獨立的 DO（idFromName(LOBBY)）存「公開」的教室 r:<房間> → {code, name, pw, n, since, t}
+// 教室有變動就回報；老師每 5 分鐘（ping）再回報一次，超過 15 分鐘沒回報就從清單拿掉（老師直接關網頁也會消失）
+const LOBBY = '__lobby__';
+const LOBBY_TTL = 15 * 60 * 1000;
+const LOBBY_MAX = 100;
+const VOTE_ROOM = /^VOTE[A-Z0-9]{6}$/;
+const cleanRoomName = (v) => { const n = Array.from(String(v || '').replace(/[\u0000-\u001f<>|]/g, '').replace(/\s+/g, ' ').trim()).slice(0, 20).join(''); return n && !hasBadWord(n) ? n : ''; };
 const PW_RE = /^[A-Za-z0-9]{1,12}$/;
 const pub = (a) => ({ id: a.id, name: a.name, shirt: a.shirt, hair: a.hair, animal: a.animal, gx: a.gx, gy: a.gy });
 // viewer 看不看得到 subject：學生只讓老師看到
@@ -84,6 +103,8 @@ export class Island extends DurableObject {
   }
 
   async fetch(request) {
+    const u0 = new URL(request.url);
+    if (u0.pathname.startsWith('/lobby/')) return this.lobby(request, u0); // 只有本 Worker 內部會打到這裡
     if (this.ctx.getWebSockets().length >= MAX_SOCKETS) {
       return new Response('Island is full', { status: 503 });
     }
@@ -97,8 +118,10 @@ export class Island extends DurableObject {
       if (KEY_RE.test(tkey)) {
         if (!room || room.tkey === tkey) {
           role = 't';
-          if (!room || room.pw !== pw) {
-            await this.ctx.storage.put('cls', { tkey, pw });
+          const code = String(url.searchParams.get('room') || '').toUpperCase();
+          if (!room || room.pw !== pw || (VOTE_ROOM.test(code) && room.code !== code)) {
+            await this.ctx.storage.put('cls', Object.assign({}, room || {}, { tkey, pw, code: VOTE_ROOM.test(code) ? code : (room && room.code) || '' }));
+            this.regSoon = true;
             // 密碼改了：已在房間但密碼不符的學生請他重新輸入
             if (pw) for (const o of this.ctx.getWebSockets()) { const oa = o.deserializeAttachment(); if (oa && oa.role === 's' && oa.pw !== pw) { this.leave(o); try { o.close(4003, 'password'); } catch (e) {} } }
           }
@@ -153,7 +176,14 @@ export class Island extends DurableObject {
     const a = ws.deserializeAttachment() || { id: null };
     if (a.deny) { try { ws.close(a.deny, a.deny === 4001 ? 'teacher key' : a.deny === 4004 ? 'closed' : 'password'); } catch (e) {} return; }
     // 老師「關閉教室」：所有人關閉碼 4004、刪掉金鑰與密碼，之後舊連結都進不來
+    if (m.t === 'room' && a.role === 't') {
+      const room = await this.ctx.storage.get('cls');
+      if (room) { room.name = cleanRoomName(m.name); room.pub = !!m.pub && !!room.name; await this.ctx.storage.put('cls', room); await this.regRoom(); }
+      ws.send(JSON.stringify({ t: 'room', name: room ? room.name : '', pub: room ? room.pub : false }));
+      return;
+    }
     if (m.t === 'close' && a.role === 't') {
+      await this.regRoom(true);
       try { await this.ctx.storage.delete('cls'); } catch (e) {}
       for (const o of this.ctx.getWebSockets()) { if (o === ws) continue; const oa = o.deserializeAttachment(); if (oa && (oa.role === 's' || oa.role === 't')) { o.serializeAttachment({ id: null }); try { o.close(4004, 'closed'); } catch (e) {} } }
       ws.serializeAttachment({ id: null }); try { ws.close(4004, 'closed'); } catch (e) {}
@@ -186,6 +216,7 @@ export class Island extends DurableObject {
       ws.serializeAttachment(peer);
       ws.send(JSON.stringify({ t: 'snapshot', peers: this.peers(ws), chat: this.history.filter((h) => canSee(peer, { role: h.role })).map((h) => h.msg) }));
       this.broadcast({ t: 'join', peer: pub(peer) }, ws, peer);
+      if (peer.role === 's' || this.regSoon) { this.regSoon = false; await this.regRoom(); }
       return;
     }
     if (!a.id) return;
@@ -223,6 +254,7 @@ export class Island extends DurableObject {
       if (a.role === 's') try { ws.send(JSON.stringify(msg)); } catch (e) {}
       this.broadcast(msg, a.role === 's' ? ws : null, a);
     }
+    if (m.t === 'ping' && a.role === 't' && Date.now() - (this.lastReg || 0) > 5 * 60 * 1000) await this.regRoom();
     // 'ping' 只為了保持連線，不需回應
   }
 
@@ -232,11 +264,48 @@ export class Island extends DurableObject {
   async closeRoom(ws) {
     const a = ws.deserializeAttachment();
     const cls = a && (a.role === 't' || a.role === 's');
+    const wasId = a && a.id;
     this.leave(ws);
     // 教室裡最後一個人離開：刪掉老師金鑰與密碼，下次同一個代碼重新開始
     if (cls && !this.ctx.getWebSockets().some((o) => o !== ws && o.readyState === 1)) {
+      await this.regRoom(true);
       try { await this.ctx.storage.delete('cls'); } catch (e) {}
+    } else if (cls && wasId && a.role === 's') await this.regRoom();
+  }
+
+  // 把這間教室的狀態回報給大廳（沒命名或沒公開＝從大廳移除）
+  async regRoom(remove) {
+    let room = null;
+    try { room = await this.ctx.storage.get('cls'); } catch (e) {}
+    if (!room || !VOTE_ROOM.test(room.code || '')) return;
+    this.lastReg = Date.now();
+    let n = 0;
+    for (const o of this.ctx.getWebSockets()) { if (o.readyState !== 1) continue; const oa = o.deserializeAttachment(); if (oa && oa.id && oa.role === 's') n++; }
+    const body = remove || !room.pub || !room.name ? { code: room.code, remove: true } : { code: room.code, name: room.name, pw: !!room.pw, n };
+    try { await this.env.ISLAND.get(this.env.ISLAND.idFromName(LOBBY)).fetch('https://lobby/lobby/set', { method: 'POST', body: JSON.stringify(body) }); } catch (e) {}
+  }
+
+  // 大廳 DO 自己的處理
+  async lobby(request, url) {
+    const now = Date.now(), json = (o) => new Response(JSON.stringify(o), { headers: { 'content-type': 'application/json; charset=utf-8' } });
+    if (url.pathname === '/lobby/list') {
+      const all = await this.ctx.storage.list({ prefix: 'r:' }), rooms = [];
+      for (const [k, v] of all) { if (now - v.t > LOBBY_TTL) { await this.ctx.storage.delete(k); continue; } rooms.push({ code: v.code.slice(4), name: v.name, pw: v.pw, n: v.n, since: v.since }); }
+      rooms.sort((x, y) => x.since - y.since);
+      return json({ rooms, count: rooms.length, at: now });
     }
+    if (url.pathname === '/lobby/set' && request.method === 'POST') {
+      let b; try { b = await request.json(); } catch (e) { return json({ ok: false }); }
+      const code = String(b.code || '');
+      if (!VOTE_ROOM.test(code)) return json({ ok: false });
+      if (b.remove) { await this.ctx.storage.delete('r:' + code); return json({ ok: true }); }
+      const old = await this.ctx.storage.get('r:' + code);
+      if (!old && (await this.ctx.storage.list({ prefix: 'r:' })).size >= LOBBY_MAX) return json({ ok: false, full: true });
+      const name = cleanRoomName(b.name); if (!name) { await this.ctx.storage.delete('r:' + code); return json({ ok: true }); }
+      await this.ctx.storage.put('r:' + code, { code, name, pw: !!b.pw, n: Math.max(0, Math.min(999, +b.n || 0)), since: old ? old.since : now, t: now });
+      return json({ ok: true });
+    }
+    return json({ ok: false });
   }
 
   leave(ws) {

@@ -268,3 +268,4 @@
 - 房間最後一人離開就 `storage.delete('cls')`（這是轉播站唯一寫 storage 的地方）。
 - 學生只能進「有老師金鑰紀錄」（老師正開著）的教室，否則 4004；老師送 `{t:'close'}`（關閉教室）→ 全部人 4004＋刪紀錄，舊網址／QR code 從此失效（2026-11-13 使用者要求）。
 - 測試：scratchpad 的假 DO 環境（`FakeWS`＋假 `ctx.storage`）跑 20 項（隔離、密碼、冒充、重連、清除、舊用法不變）全過。部署需使用者執行 `npx -y wrangler@4 deploy`（auto mode 會擋 Claude 自己部署）。
+- **教室大廳**（2026-11-13，講師課堂小幫手）：`GET /lobby`（Origin 白名單＋CORS）→ 獨立 DO `idFromName('__lobby__')`（同一個 `Island` 類別，`fetch` 看到 `/lobby/` 路徑就走 `lobby()`；外部請求只會進 `/ws` 與 `/lobby`，碰不到內部的 `/lobby/set`）。storage `r:VOTExxxxxx → {code,name,pw(布林),n(學生數),since,t}`；回傳 `{rooms:[{code(去掉VOTE),name,pw,n,since}],count}`，不含金鑰與密碼。教室 DO 在老師 `{t:'room', name, pub}`、老師登記／改密碼後第一個 hello、學生加入／離開、老師每 5 分鐘的 ping、關閉時呼叫 `regRoom()` 回報；沒命名／沒公開＝移除。`cleanRoomName()` 20 字、含禁用字詞就不公開。超過 15 分鐘沒回報自動從清單拿掉、上限 100 間。教室 `cls` 紀錄多了 `code/name/pub`（`code` 取自連線網址的 `room`）。
