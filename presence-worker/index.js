@@ -1,6 +1,6 @@
 // 創業島「多人同島」轉播站：一個 Durable Object 房間，用 WebSocket 轉播每位訪客的
-// 隨機名字、選的動物、衣服／毛色與位置，以及聊天訊息。不寫入任何儲存，訪客離線就消失。
-// 房間：/ws?room=代碼 → 每個代碼一個獨立的 Durable Object（同班同學才看得到彼此）；沒帶代碼＝公開島 'main'。
+// 隨機名字、選的動物、衣服／毛色與位置，以及聊天訊息。訪客資料不寫入儲存，離線就消失（唯一例外：教室模式的老師金鑰與密碼，最後一人離開就刪除）。
+// 房間：/ws?room=代碼 → 每個代碼一個獨立的 Durable Object（同班同學才看得到彼此）；沒帶代碼＝公開島 'main'。另有「教室模式」（cls=1），見 Island 類別上方說明。
 import { DurableObject } from 'cloudflare:workers';
 import { hasBadWord, maskBadWords } from './badwords.js';
 
@@ -64,40 +64,76 @@ export default {
   },
 };
 
+// 教室模式（講師課堂小幫手用，網址帶 cls=1）：
+// - 帶 tkey 的是老師：房間第一個老師金鑰會記在這個房間的 storage，之後金鑰不同就不能當老師（關閉碼 4001）。
+// - 其他人是學生：學生只看得到老師（snapshot、join、look、move、leave、聊天都不轉給其他學生），老師看得到所有人。
+// - 老師可以設教室密碼 pw；學生密碼不對就關閉連線（關閉碼 4003）。房間最後一個人離開就把金鑰與密碼刪掉。
+// 沒帶 cls=1 的連線（創業島、創作者小鎮）行為完全不變。
+const KEY_RE = /^[A-Za-z0-9]{12,32}$/;
+const PW_RE = /^[A-Za-z0-9]{1,12}$/;
+const pub = (a) => ({ id: a.id, name: a.name, shirt: a.shirt, hair: a.hair, animal: a.animal, gx: a.gx, gy: a.gy });
+// viewer 看不看得到 subject：學生只讓老師看到
+const canSee = (viewer, subject) => !subject || subject.role !== 's' || (viewer && viewer.role === 't');
+
 export class Island extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
     this.rate = new Map(); // ws -> {sec, n, chatAt}；休眠後重建無妨
-    this.history = [];     // 最近的聊天訊息（只在記憶體）
+    this.history = [];     // 最近的聊天訊息（只在記憶體）：{msg, role}
   }
 
-  async fetch() {
+  async fetch(request) {
     if (this.ctx.getWebSockets().length >= MAX_SOCKETS) {
       return new Response('Island is full', { status: 503 });
+    }
+    const url = new URL(request.url);
+    let role = '', closeCode = 0, pw = '';
+    if (url.searchParams.get('cls') === '1') {
+      const tkey = String(url.searchParams.get('tkey') || '');
+      pw = String(url.searchParams.get('pw') || '').toUpperCase();
+      if (!PW_RE.test(pw)) pw = '';
+      const room = (await this.ctx.storage.get('cls')) || null;
+      if (KEY_RE.test(tkey)) {
+        if (!room || room.tkey === tkey) {
+          role = 't';
+          if (!room || room.pw !== pw) {
+            await this.ctx.storage.put('cls', { tkey, pw });
+            // 密碼改了：已在房間但密碼不符的學生請他重新輸入
+            if (pw) for (const o of this.ctx.getWebSockets()) { const oa = o.deserializeAttachment(); if (oa && oa.role === 's' && oa.pw !== pw) { this.leave(o); try { o.close(4003, 'password'); } catch (e) {} } }
+          }
+        } else closeCode = 4001;
+      } else {
+        role = 's';
+        if (room && room.pw && room.pw !== pw) closeCode = 4003;
+      }
     }
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ id: null });
+    server.serializeAttachment({ id: null, role, pw });
+    if (closeCode) server.close(closeCode, closeCode === 4001 ? 'teacher key' : 'password');
     return new Response(null, { status: 101, webSocket: client });
   }
 
   peers(except) {
+    const me = except ? except.deserializeAttachment() : null;
     const out = [];
     for (const ws of this.ctx.getWebSockets()) {
       if (ws === except) continue;
       const a = ws.deserializeAttachment();
-      if (a && a.id) out.push(a);
+      if (a && a.id && canSee(me, a)) out.push(pub(a));
     }
     return out;
   }
 
-  broadcast(msg, except) {
+  // from：發送者的 attachment（決定誰看得到）
+  broadcast(msg, except, from) {
     const data = JSON.stringify(msg);
     for (const ws of this.ctx.getWebSockets()) {
       if (ws === except) continue;
       const a = ws.deserializeAttachment();
       if (!a || !a.id) continue;
+      if (from && !canSee(a, from)) continue;
       try { ws.send(data); } catch (e) { /* 對方已斷線 */ }
     }
   }
@@ -125,16 +161,21 @@ export class Island extends DurableObject {
         animal: cleanAnimal(m.animal, ''),
         gx: clampNum(m.gx, -15, 45) ?? 11,
         gy: clampNum(m.gy, -15, 45) ?? 9,
+        role: a.role || '',
+        pw: a.pw || '',
       };
-      // 同一個分頁重新連線：把舊連線踢掉，避免出現兩個自己
+      // 同一個分頁重新連線：把舊連線踢掉，避免出現兩個自己（教室模式只踢同身分的，學生拿老師的 id 也踢不掉老師）
       for (const other of this.ctx.getWebSockets()) {
         if (other === ws) continue;
         const oa = other.deserializeAttachment();
-        if (oa && oa.id === id) { other.serializeAttachment({ id: null }); try { other.close(4000, 'replaced'); } catch (e) {} }
+        if (oa && oa.id === id) {
+          if ((oa.role || '') !== peer.role) { try { ws.close(4002, 'id in use'); } catch (e) {} return; }
+          other.serializeAttachment({ id: null }); try { other.close(4000, 'replaced'); } catch (e) {}
+        }
       }
       ws.serializeAttachment(peer);
-      ws.send(JSON.stringify({ t: 'snapshot', peers: this.peers(ws), chat: this.history }));
-      this.broadcast({ t: 'join', peer }, ws);
+      ws.send(JSON.stringify({ t: 'snapshot', peers: this.peers(ws), chat: this.history.filter((h) => canSee(peer, { role: h.role })).map((h) => h.msg) }));
+      this.broadcast({ t: 'join', peer: pub(peer) }, ws, peer);
       return;
     }
     if (!a.id) return;
@@ -144,14 +185,14 @@ export class Island extends DurableObject {
       if (gx === null || gy === null) return;
       a.gx = gx; a.gy = gy;
       ws.serializeAttachment(a);
-      this.broadcast({ t: 'move', id: a.id, gx, gy }, ws);
+      this.broadcast({ t: 'move', id: a.id, gx, gy }, ws, a);
     } else if (m.t === 'look') {
       a.name = cleanName(m.name);
       a.shirt = cleanColor(m.shirt, a.shirt);
       a.hair = cleanColor(m.hair, a.hair);
       a.animal = cleanAnimal(m.animal, a.animal || '');
       ws.serializeAttachment(a);
-      this.broadcast({ t: 'look', id: a.id, name: a.name, shirt: a.shirt, hair: a.hair, animal: a.animal }, ws);
+      this.broadcast({ t: 'look', id: a.id, name: a.name, shirt: a.shirt, hair: a.hair, animal: a.animal }, ws, a);
     } else if (m.t === 'chat') {
       const now = Date.now();
       if (r.chatAt && now - r.chatAt < CHAT_GAP_MS) {
@@ -166,22 +207,34 @@ export class Island extends DurableObject {
       const to = String(m.to || '').replace(/[^a-z0-9]/gi, '').slice(0, 16);
       const target = to && to !== a.id ? this.peers(ws).find((p) => p.id === to) : null;
       if (target) { msg.to = target.id; msg.toName = target.name; }
-      this.history.push(msg);
+      this.history.push({ msg, role: a.role || '' });
       if (this.history.length > CHAT_HISTORY) this.history.shift();
-      this.broadcast(msg); // 連自己也送：發話的人看到的就是過濾後的版本
+      // 連自己也送：發話的人看到的就是過濾後的版本
+      if (a.role === 's') try { ws.send(JSON.stringify(msg)); } catch (e) {}
+      this.broadcast(msg, a.role === 's' ? ws : null, a);
     }
     // 'ping' 只為了保持連線，不需回應
   }
 
-  async webSocketClose(ws) { this.leave(ws); }
-  async webSocketError(ws) { this.leave(ws); }
+  async webSocketClose(ws) { await this.closeRoom(ws); }
+  async webSocketError(ws) { await this.closeRoom(ws); }
+
+  async closeRoom(ws) {
+    const a = ws.deserializeAttachment();
+    const cls = a && (a.role === 't' || a.role === 's');
+    this.leave(ws);
+    // 教室裡最後一個人離開：刪掉老師金鑰與密碼，下次同一個代碼重新開始
+    if (cls && !this.ctx.getWebSockets().some((o) => o !== ws && o.readyState === 1)) {
+      try { await this.ctx.storage.delete('cls'); } catch (e) {}
+    }
+  }
 
   leave(ws) {
     this.rate.delete(ws);
     const a = ws.deserializeAttachment();
     if (a && a.id) {
       ws.serializeAttachment({ id: null });
-      this.broadcast({ t: 'leave', id: a.id }, ws);
+      this.broadcast({ t: 'leave', id: a.id }, ws, a);
     }
   }
 }
