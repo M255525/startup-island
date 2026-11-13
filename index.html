@@ -665,7 +665,7 @@ var ZONES = [
   {id:'idea',     name:'點子公園',   en:'IDEA PARK',       color:'#f4b942', ground:'var(--park)', label:[-1.6,12.9,0],   desc:'在公園散步想點子：把模糊的念頭變成可以比較的點子。'},
   {id:'strategy', name:'策略山丘',   en:'STRATEGY HILL',   color:'#9d8cf2', ground:null, label:[6.4,4.3,13],            desc:'爬上山頂看清楚：賣給誰、靠什麼贏、怎麼落地。'},
   {id:'school',   name:'創業學校',   en:'STARTUP SCHOOL',  color:'#6672e0', ground:'var(--yard)',   extra:[10.15,.45,11.85,2.15], desc:'用遊戲練功、替團隊開課申請訓練補助，上課有抽籤、投票、測驗的小幫手。'},
-  {id:'calc',     name:'試算商辦區', en:'NUMBERS OFFICES', color:'#2ec4b6', ground:'var(--paving)', desc:'開店、上架前，先把成本和損益算清楚。'},
+  {id:'calc',     name:'試算商辦區', en:'NUMBERS OFFICES', color:'#2ec4b6', ground:'var(--paving)', label:[18.4,3.0,0], desc:'開店、上架、請人前，先把成本和損益算清楚。'},
   {id:'fund',     name:'資金廣場',   en:'FUNDING PLAZA',   color:'#f08a4b', ground:'var(--paving)', label:[15.3,12.9,0], extra:[15.4,10.7,16.6,11.9], desc:'銀行與公所前的廣場：跑完開業手續、確認貸款資格，送出申請書。'},
   {id:'brand',    name:'品牌商店街', en:'BRAND STREET',    color:'#ef6b8a', ground:'var(--paving)', desc:'社群、檔期、素材：讓人看見你。'},
   {id:'ecom',     name:'河口碼頭',   en:'RIVER DOCK',      color:'#4f9dff', ground:'var(--wood)',   desc:'貨從這裡出海：關鍵字、商品頁、廣告；燈塔替你看市場流量。'},
@@ -751,6 +751,8 @@ var TOOLS = [
    role:'寫出中英對照的 Amazon 五點式產品說明。', input:'商品特色', output:'五點說明'},
   {id:'amazon-ppc-advisor', zone:'ecom', short:'PPC 廣告', name:'Amazon PPC 關鍵字廣告建議工具', lic:true, hour:[20,22], month:[9,18],
    role:'依關鍵字和預算算出廣告出價建議。', input:'關鍵字、預算', output:'廣告活動建議'},
+  {id:'employer-payroll-cost-calculator', zone:'calc', short:'人事成本', name:'雇主人事成本試算', hour:[12,14], month:[4,7],
+   role:'算出請一個人的真實成本：薪水之外的勞健保、職災、勞退、補充保費、年終與特休。', input:'月薪、加班、年終、年資', output:'每人與全公司人事成本'},
   {id:'ecommerce-health-dashboard', zone:'calc', short:'電商健檢', name:'跨境電商健檢總覽儀表板', hour:[21,22], month:[12,24],
    role:'讀取商品組合資料，逐項檢查店鋪健康度。', input:'商品組合資料', output:'健檢清單'},
 
@@ -831,6 +833,7 @@ var LINKS = [
   {id:'l26', name:'點子 → 商業模式組合 → 策略', chain:['business-idea-generator','business-model-pattern-studio','where-what-how-strategy-studio'], desc:'點子先套經典商業模式組合並評價，再決定戰場與致勝方式。'},
   {id:'l27', name:'試算 → 開業手續 → 記帳', chain:['restaurant-feasibility-calculator','shop-opening-checklist','expense-tracker-pwa'], desc:'數字算過了，照清單跑完登記與勞健保，開幕後每天記帳。'},
   {id:'l28', name:'開課 → 上課互動', chain:['industry-talent-generator','teacher-classroom-helper'], desc:'開課申請通過後，上課用抽籤、分組、投票與測驗帶動學員，成績可以下載。'},
+  {id:'l29', name:'損益試算 → 人事成本 → 勞健保手續', chain:['restaurant-feasibility-calculator','employer-payroll-cost-calculator','shop-opening-checklist'], desc:'店的損益算過後，把每位員工的真實成本算清楚，再照清單辦勞健保。'},
   {id:'l24', name:'跨境電商冒險路線',  star:['animal-ecommerce-adventure','traffic-rank-estimator','amazon-logistics-game','product-title-generator','amazon-cost-calculator'], desc:'動物朋友帶你依序走過這些關卡。'}
 ];
 
@@ -994,7 +997,7 @@ var POS = {
   'mentors-panel':[3.0,3.0], 'business-model-canvas-generator':[4.6,3.0], 'where-what-how-strategy-studio':[3.0,4.6], 'new-product-strategy-studio':[4.6,4.6], 'business-model-pattern-studio':[1.9,3.8],
   'animal-ecommerce-adventure':[7.9,.4], 'swot-game':[9.4,.4], 'amazon-logistics-game':[7.9,2.2], 'industry-talent-generator':[9.4,2.2], 'teacher-classroom-helper':[8.65,3.9],
   'restaurant-feasibility-calculator':[13.2,2.5], 'restaurant-menu-mix-calculator':[14.9,2.5], 'tourism-hotel-feasibility-calculator':[16.4,2.5],
-  'amazon-cost-calculator':[13.2,4.4], 'amazon-listing-mix-calculator':[14.9,4.4], 'ecommerce-health-dashboard':[16.4,4.4],
+  'amazon-cost-calculator':[13.2,4.4], 'amazon-listing-mix-calculator':[14.9,4.4], 'ecommerce-health-dashboard':[16.4,4.4], 'employer-payroll-cost-calculator':[17.9,1.1],
   'content-workflow-studio-cf':[10.9,7.6], 'node-pack-designer-cf':[12.3,7.4],
   'loan-eligibility-checker':[15.2,9.6], 'phoenix-loan-generator':[16.9,9.6], 'shop-opening-checklist':[14.5,10.9],
   'coffee-ig-planner':[6.1,12.4], 'annual-marketing-calendar':[8.5,12.4], 'SocialPost':[6.1,13.9], 'social-post-grader':[8.5,13.9],
@@ -3225,7 +3228,7 @@ var M_ALIAS = {
   'swot-game':['swot'], 'mentors-panel':['顧問團', '人物顧問'],
   'restaurant-feasibility-calculator':['餐飲店', '開餐廳'], 'restaurant-menu-mix-calculator':['菜單'],
   'tourism-hotel-feasibility-calculator':['飯店', '民宿', '旅館'], 'amazon-cost-calculator':['亞馬遜成本', 'fba', 'fbm'],
-  'amazon-listing-mix-calculator':['商品組合'], 'loan-eligibility-checker':['貸款資格'], 'shop-opening-checklist':['開店', '開業', '登記', '稅籍', '勞健保', '手續'], 'teacher-classroom-helper':['課堂', '上課', '講師', '抽籤', '點名', '分組', '搶答', '投票', '測驗', '考試', '計時'], 'phoenix-loan-generator':['鳳凰'],
+  'amazon-listing-mix-calculator':['商品組合'], 'employer-payroll-cost-calculator':['人事成本', '人事', '薪資', '薪水', '請人', '員工成本', '勞退', '健保費', '補充保費', '年終'], 'loan-eligibility-checker':['貸款資格'], 'shop-opening-checklist':['開店', '開業', '登記', '稅籍', '勞健保', '手續'], 'teacher-classroom-helper':['課堂', '上課', '講師', '抽籤', '點名', '分組', '搶答', '投票', '測驗', '考試', '計時'], 'phoenix-loan-generator':['鳳凰'],
   'industry-talent-generator':['產業人才', '開課申請'], 'coffee-ig-planner':['instagram', 'ig規劃'],
   'social-post-grader':['貼文評分', '貼文打分'], 'ai-image-prompt-studio':['繪圖', '生圖'],
   'ai-video-prompt-studio':['sora', 'veo'], 'ai-video-studio-play':['影音工坊', '配音'], 'line-sticker-studio':['貼圖'],
