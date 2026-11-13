@@ -80,6 +80,7 @@ export default {
 // - 其他人是學生：學生只看得到老師（snapshot、join、look、move、leave、聊天都不轉給其他學生），老師看得到所有人。
 // - 老師可以設教室密碼 pw；學生密碼不對就關閉連線（關閉碼 4003）。房間最後一個人離開就把金鑰與密碼刪掉。
 // - 教室大廳（/lobby）：老師幫教室命名並公開，就會列在大廳（見下方 LOBBY）。
+// - 老師可以把學生請出教室（{t:'kick', id}，關閉碼 4005，記在 cls.ban，同 id 再連也擋；{t:'unkick'} 解除）。
 // - 學生只能進「老師正開著」的教室，否則 4004；老師送 {t:'close'}（關閉教室）會把全部人 4004 並刪掉金鑰，舊連結從此失效。
 // 沒帶 cls=1 的連線（創業島、創作者小鎮）行為完全不變。
 const KEY_RE = /^[A-Za-z0-9]{12,32}$/;
@@ -176,6 +177,22 @@ export class Island extends DurableObject {
     const a = ws.deserializeAttachment() || { id: null };
     if (a.deny) { try { ws.close(a.deny, a.deny === 4001 ? 'teacher key' : a.deny === 4004 ? 'closed' : 'password'); } catch (e) {} return; }
     // 老師「關閉教室」：所有人關閉碼 4004、刪掉金鑰與密碼，之後舊連結都進不來
+    // 老師把學生請出教室：關閉碼 4005，並記進這間教室的黑名單（同一個 id 再連會被擋；unkick 解除）
+    if ((m.t === 'kick' || m.t === 'unkick') && a.role === 't') {
+      const id = String(m.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 16);
+      const room = await this.ctx.storage.get('cls');
+      if (!id || !room) return;
+      const ban = new Set(room.ban || []);
+      if (m.t === 'kick') {
+        ban.add(id);
+        for (const o of this.ctx.getWebSockets()) { const oa = o.deserializeAttachment(); if (oa && oa.id === id && oa.role === 's') { this.leave(o); try { o.close(4005, 'kicked'); } catch (e) {} } }
+      } else ban.delete(id);
+      room.ban = Array.from(ban).slice(-300);
+      await this.ctx.storage.put('cls', room);
+      ws.send(JSON.stringify({ t: m.t === 'kick' ? 'kicked' : 'unkicked', id }));
+      await this.regRoom();
+      return;
+    }
     if (m.t === 'room' && a.role === 't') {
       const room = await this.ctx.storage.get('cls');
       if (room) { room.name = cleanRoomName(m.name); room.pub = !!m.pub && !!room.name; await this.ctx.storage.put('cls', room); await this.regRoom(); }
@@ -204,6 +221,7 @@ export class Island extends DurableObject {
         role: a.role || '',
         pw: a.pw || '',
       };
+      if (peer.role === 's') { const room = await this.ctx.storage.get('cls'); if (room && (room.ban || []).includes(id)) { try { ws.close(4005, 'kicked'); } catch (e) {} return; } }
       // 同一個分頁重新連線：把舊連線踢掉，避免出現兩個自己（教室模式只踢同身分的，學生拿老師的 id 也踢不掉老師）
       for (const other of this.ctx.getWebSockets()) {
         if (other === ws) continue;
