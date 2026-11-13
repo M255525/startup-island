@@ -266,4 +266,5 @@
 - 帶 `tkey`（12～32 英數）＝老師：房間第一把老師金鑰存進該 DO 的 `storage`（`cls:{tkey,pw}`），之後金鑰不同 → 關閉碼 4001。其他人＝學生；有密碼時 `pw` 不符 → 4003。老師改密碼會把密碼不符的學生請出。學生用老師的 id 連線 → 4002（踢不掉老師）。
 - **學生只看得到老師**：snapshot、join／look／move／leave、聊天（含歷史）都依 `canSee()` 過濾；老師看得到所有人。送出的 peer 一律經 `pub()`，不含 role／pw。
 - 房間最後一人離開就 `storage.delete('cls')`（這是轉播站唯一寫 storage 的地方）。
+- 學生只能進「有老師金鑰紀錄」（老師正開著）的教室，否則 4004；老師送 `{t:'close'}`（關閉教室）→ 全部人 4004＋刪紀錄，舊網址／QR code 從此失效（2026-11-13 使用者要求）。
 - 測試：scratchpad 的假 DO 環境（`FakeWS`＋假 `ctx.storage`）跑 20 項（隔離、密碼、冒充、重連、清除、舊用法不變）全過。部署需使用者執行 `npx -y wrangler@4 deploy`（auto mode 會擋 Claude 自己部署）。

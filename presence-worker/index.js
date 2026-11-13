@@ -68,6 +68,7 @@ export default {
 // - 帶 tkey 的是老師：房間第一個老師金鑰會記在這個房間的 storage，之後金鑰不同就不能當老師（關閉碼 4001）。
 // - 其他人是學生：學生只看得到老師（snapshot、join、look、move、leave、聊天都不轉給其他學生），老師看得到所有人。
 // - 老師可以設教室密碼 pw；學生密碼不對就關閉連線（關閉碼 4003）。房間最後一個人離開就把金鑰與密碼刪掉。
+// - 學生只能進「老師正開著」的教室，否則 4004；老師送 {t:'close'}（關閉教室）會把全部人 4004 並刪掉金鑰，舊連結從此失效。
 // 沒帶 cls=1 的連線（創業島、創作者小鎮）行為完全不變。
 const KEY_RE = /^[A-Za-z0-9]{12,32}$/;
 const PW_RE = /^[A-Za-z0-9]{1,12}$/;
@@ -104,7 +105,8 @@ export class Island extends DurableObject {
         } else closeCode = 4001;
       } else {
         role = 's';
-        if (room && room.pw && room.pw !== pw) closeCode = 4003;
+        if (!room) closeCode = 4004;                          // 老師沒開（或已關閉）的教室不能進
+        else if (room.pw && room.pw !== pw) closeCode = 4003;
       }
     }
     const pair = new WebSocketPair();
@@ -149,7 +151,14 @@ export class Island extends DurableObject {
     let m;
     try { m = JSON.parse(raw); } catch (e) { return; }
     const a = ws.deserializeAttachment() || { id: null };
-    if (a.deny) { try { ws.close(a.deny, a.deny === 4001 ? 'teacher key' : 'password'); } catch (e) {} return; }
+    if (a.deny) { try { ws.close(a.deny, a.deny === 4001 ? 'teacher key' : a.deny === 4004 ? 'closed' : 'password'); } catch (e) {} return; }
+    // 老師「關閉教室」：所有人關閉碼 4004、刪掉金鑰與密碼，之後舊連結都進不來
+    if (m.t === 'close' && a.role === 't') {
+      try { await this.ctx.storage.delete('cls'); } catch (e) {}
+      for (const o of this.ctx.getWebSockets()) { if (o === ws) continue; const oa = o.deserializeAttachment(); if (oa && (oa.role === 's' || oa.role === 't')) { o.serializeAttachment({ id: null }); try { o.close(4004, 'closed'); } catch (e) {} } }
+      ws.serializeAttachment({ id: null }); try { ws.close(4004, 'closed'); } catch (e) {}
+      return;
+    }
 
     if (m.t === 'hello' && !a.id) {
       const id = String(m.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 16);
