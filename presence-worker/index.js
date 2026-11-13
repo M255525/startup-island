@@ -110,8 +110,8 @@ export class Island extends DurableObject {
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ id: null, role, pw });
-    if (closeCode) server.close(closeCode, closeCode === 4001 ? 'teacher key' : 'password');
+    // 拒絕的連線先接受、等第一則訊息再用關閉碼關掉（在回應 101 之前就 close，關閉碼送不到瀏覽器，踩過）
+    server.serializeAttachment({ id: null, role, pw, deny: closeCode });
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -149,6 +149,7 @@ export class Island extends DurableObject {
     let m;
     try { m = JSON.parse(raw); } catch (e) { return; }
     const a = ws.deserializeAttachment() || { id: null };
+    if (a.deny) { try { ws.close(a.deny, a.deny === 4001 ? 'teacher key' : 'password'); } catch (e) {} return; }
 
     if (m.t === 'hello' && !a.id) {
       const id = String(m.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 16);
