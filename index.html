@@ -3422,7 +3422,7 @@ function openMerlin(){
     if (svg.getBoundingClientRect().width > 820) box.x += (200 * box.w / svg.getBoundingClientRect().width);
     animateTo(box);
   }
-  if (innerWidth > 820) setTimeout(function(){ $('mInput').focus(); }, 380);
+  if (innerWidth > 820) setTimeout(function(){ $('mInput').focus({preventScroll:true}); $('app').scrollLeft = 0; }, 380);   // 抽屜還在滑入時聚焦會讓 #app 被捲動、整個畫面往左偏（立體檢視第一次開最容易，踩過）
 }
 function merlinTick(ts){                       // 每 0.3 秒：你走近時名牌改成「點我發問」；說話泡泡到時間就收回
   if (ts - merlin.lastCheck < 300) return;
