@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>創業島 · 從一個點子出發，走完整座島</title>
-<meta name="description" content="把 61 個線上創業工具與遊戲放進一座可以探索的島：公園、山丘、學校、河口碼頭、遊樂園等十個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
+<meta name="description" content="把 62 個線上創業工具與遊戲放進一座可以探索的島：公園、山丘、學校、河口碼頭、遊樂園等十個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
 <meta name="theme-color" content="#1c6e8c">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -664,7 +664,7 @@ body.view-time .talk-card{bottom:216px}
 var ZONES = [
   {id:'idea',     name:'點子公園',   en:'IDEA PARK',       color:'#f4b942', ground:'var(--park)', label:[-1.6,12.9,0],   desc:'在公園散步想點子：把模糊的念頭變成可以比較的點子。'},
   {id:'strategy', name:'策略山丘',   en:'STRATEGY HILL',   color:'#9d8cf2', ground:null, label:[6.4,4.3,13],            desc:'爬上山頂看清楚：賣給誰、靠什麼贏、怎麼落地。'},
-  {id:'school',   name:'創業學校',   en:'STARTUP SCHOOL',  color:'#6672e0', ground:'var(--yard)',   extra:[10.15,.45,11.85,2.15], desc:'用遊戲練功、替團隊開課申請訓練補助，上課有抽籤、投票、測驗的小幫手，全班還能一起競標創業資源、上台報告時用手機互相評分，或先在模擬遊戲裡開一次店。'},
+  {id:'school',   name:'創業學校',   en:'STARTUP SCHOOL',  color:'#6672e0', ground:'var(--yard)',   extra:[10.15,.45,11.85,2.15], desc:'用遊戲練功、替團隊開課申請訓練補助，上課有抽籤、投票、測驗的小幫手，全班還能一起競標創業資源、上台報告時用手機互相評分、不敢舉手的問題貼上提問牆，或先在模擬遊戲裡開一次店。'},
   {id:'calc',     name:'試算商辦區', en:'NUMBERS OFFICES', color:'#2ec4b6', ground:'var(--paving)', label:[18.4,3.0,0], desc:'開店、上架、請人前，先把成本和損益算清楚。'},
   {id:'fund',     name:'資金廣場',   en:'FUNDING PLAZA',   color:'#f08a4b', ground:'var(--paving)', label:[15.3,12.9,0], extra:[15.4,10.7,16.6,11.9], desc:'銀行與公所前的廣場：跑完開業手續、確認貸款資格，送出申請書。'},
   {id:'brand',    name:'品牌商店街', en:'BRAND STREET',    color:'#ef6b8a', ground:'var(--paving)', desc:'社群、檔期、素材：讓人看見你。'},
@@ -725,6 +725,8 @@ var TOOLS = [
    role:'先在遊戲裡開一次店：選店型地點、算損益兩平、辦手續、借錢，再經營 12 個月應付颱風、負評、漲租，每一關都連到島上的真實工具。', input:'你的開店想法', output:'評等、全年損益，以及帶進開店清單的店家設定'},
   {id:'peer-review-board', zone:'school', short:'同儕互評', name:'同儕互評（小組／個人報告即時評分）', hour:[14,16], month:[2,4],
    role:'小組或個人上台報告，台下同學掃 QR code 用手機依評分量表打分、寫一句優點與建議；自評另外比較、可加老師分數比重，自動產出排名、雷達圖與各組回饋單。好幾班可以各開一間教室同時進行，報告時間可自訂，全班到齊可關閉加入，教室可設管理密碼防誤刪。', input:'一間教室、評分量表（創業提案、簡報等 6 組預設）、分組或名單', output:'排名、各組（每人）回饋單、評分者寬嚴分析、CSV'},
+  {id:'classroom-qa-wall', zone:'school', short:'提問牆', name:'課堂提問牆（匿名提問＋文字雲）', hour:[10,12], month:[0,24],
+   role:'上課時學生用手機匿名提問、幫想知道的問題按讚，最多人想問的排最前面；老師可先審核再上牆、聚焦回答、擋下洗版的人。也能出一題讓全班用一個詞回答，即時長成文字雲。', input:'一間教室（學生掃 QR code 加入）', output:'問答紀錄、文字雲圖片、CSV'},
   {id:'classroom-auction-game', zone:'school', short:'全班競標', name:'創業資源大競標（全班即時拍賣）', hour:[10,12], month:[0,2],
    role:'全班分組用手機競標店面、主廚、網紅、中央廚房等創業資源，只知道估值區間，真實價值最後才公布，體會稀缺、機會成本與贏家詛咒。', input:'一間教室、分好的組（手機可有可無）', output:'各組企業價值排名、每項資源付了多少與其實值多少、檢討與討論題'},
 
@@ -844,6 +846,7 @@ var LINKS = [
   {id:'l30', name:'模擬開店 → 開店清單 → 鳳凰貸款', chain:['my-first-shop-sim','shop-opening-checklist','phoenix-loan-generator'], desc:'先在遊戲裡把店開一次，結算時把店家設定帶進開店清單，再接著寫鳳凰貸款申請書。'},
   {id:'l31', name:'課堂暖身 → 全班競標 → 自己開一次店', chain:['teacher-classroom-helper','classroom-auction-game','my-first-shop-sim'], desc:'先用課堂小幫手分組，全班一起搶創業資源、體會估價與稀缺，再各自在模擬遊戲裡把店開一次。'},
   {id:'l32', name:'畫商業模式 → 提案發表互評', chain:['business-model-canvas-generator','peer-review-board'], desc:'各組把商業模式畫清楚後上台提案，台下用「創業提案」量表互評，每組拿到一張回饋單。'},
+  {id:'l33', name:'上課暖身 → 匿名提問 → 上台互評', chain:['teacher-classroom-helper','classroom-qa-wall','peer-review-board'], desc:'先抽籤分組暖身，講完重點讓學生匿名把卡住的地方貼上提問牆，最後上台報告用手機互評。'},
   {id:'l29', name:'損益試算 → 人事成本 → 勞健保手續', chain:['restaurant-feasibility-calculator','employer-payroll-cost-calculator','shop-opening-checklist'], desc:'店的損益算過後，把每位員工的真實成本算清楚，再照清單辦勞健保。'},
   {id:'l24', name:'跨境電商冒險路線',  star:['animal-ecommerce-adventure','traffic-rank-estimator','amazon-logistics-game','product-title-generator','amazon-cost-calculator'], desc:'動物朋友帶你依序走過這些關卡。'}
 ];
@@ -1006,7 +1009,7 @@ var WATERS = [{at:[.9,9.9], r:.75}, {at:[16.0,11.3], r:.5}];          // 公園�
 var POS = {
   'business-idea-generator':[-.6,8.0], 'mandala-thinking':[1.1,7.9], 'scamper-thinking-generator':[2.6,8.6], 'six-thinking-hats-generator':[2.5,10.6], 'innovation-matrix-studio':[-.7,11.2],
   'mentors-panel':[3.0,3.0], 'business-model-canvas-generator':[4.6,3.0], 'where-what-how-strategy-studio':[3.0,4.6], 'new-product-strategy-studio':[4.6,4.6], 'business-model-pattern-studio':[1.9,3.8],
-  'animal-ecommerce-adventure':[7.9,.4], 'swot-game':[9.4,.4], 'amazon-logistics-game':[7.9,2.2], 'industry-talent-generator':[9.4,2.2], 'teacher-classroom-helper':[8.65,3.9], 'my-first-shop-sim':[9.77,5.15], 'classroom-auction-game':[11.23,4.77], 'peer-review-board':[10.18,3.48],
+  'animal-ecommerce-adventure':[7.9,.4], 'swot-game':[9.4,.4], 'amazon-logistics-game':[7.9,2.2], 'industry-talent-generator':[9.4,2.2], 'teacher-classroom-helper':[8.65,3.9], 'my-first-shop-sim':[9.77,5.15], 'classroom-auction-game':[11.23,4.77], 'peer-review-board':[10.18,3.48], 'classroom-qa-wall':[6.88,3.81],
   'restaurant-feasibility-calculator':[13.2,2.5], 'restaurant-menu-mix-calculator':[14.9,2.5], 'tourism-hotel-feasibility-calculator':[16.4,2.5],
   'amazon-cost-calculator':[13.2,4.4], 'amazon-listing-mix-calculator':[14.9,4.4], 'ecommerce-health-dashboard':[16.4,4.4], 'employer-payroll-cost-calculator':[17.9,1.1],
   'content-workflow-studio-cf':[10.9,7.6], 'node-pack-designer-cf':[12.3,7.4],
@@ -3239,7 +3242,7 @@ var M_ALIAS = {
   'swot-game':['swot'], 'mentors-panel':['顧問團', '人物顧問'],
   'restaurant-feasibility-calculator':['餐飲店', '開餐廳'], 'restaurant-menu-mix-calculator':['菜單'],
   'tourism-hotel-feasibility-calculator':['飯店', '民宿', '旅館'], 'amazon-cost-calculator':['亞馬遜成本', 'fba', 'fbm'],
-  'amazon-listing-mix-calculator':['商品組合'], 'employer-payroll-cost-calculator':['人事成本', '人事', '薪資', '薪水', '請人', '員工成本', '勞退', '健保費', '補充保費', '年終'], 'loan-eligibility-checker':['貸款資格'], 'shop-opening-checklist':['開店', '開業', '登記', '稅籍', '勞健保', '手續'], 'my-first-shop-sim':['開店模擬', '經營模擬', '模擬遊戲', '第一家店', '開店遊戲'], 'peer-review-board':['互評', '同儕', '同學評分', '報告評分', '上台報告', '發表會', '評分量表', '回饋單', '自評'], 'classroom-auction-game':['拍賣', '競標', '出價', '喊價', '標售', '贏家詛咒', '機會成本'], 'teacher-classroom-helper':['課堂', '上課', '講師', '抽籤', '點名', '分組', '搶答', '投票', '測驗', '考試', '計時'], 'phoenix-loan-generator':['鳳凰'],
+  'amazon-listing-mix-calculator':['商品組合'], 'employer-payroll-cost-calculator':['人事成本', '人事', '薪資', '薪水', '請人', '員工成本', '勞退', '健保費', '補充保費', '年終'], 'loan-eligibility-checker':['貸款資格'], 'shop-opening-checklist':['開店', '開業', '登記', '稅籍', '勞健保', '手續'], 'classroom-qa-wall':['提問牆', '匿名提問', '提問', '發問', '舉手', '不敢問', '問老師', 'q&a', 'qa', '文字雲', '詞雲', '一個詞'], 'my-first-shop-sim':['開店模擬', '經營模擬', '模擬遊戲', '第一家店', '開店遊戲'], 'peer-review-board':['互評', '同儕', '同學評分', '報告評分', '上台報告', '發表會', '評分量表', '回饋單', '自評'], 'classroom-auction-game':['拍賣', '競標', '出價', '喊價', '標售', '贏家詛咒', '機會成本'], 'teacher-classroom-helper':['課堂', '上課', '講師', '抽籤', '點名', '分組', '搶答', '投票', '測驗', '考試', '計時'], 'phoenix-loan-generator':['鳳凰'],
   'industry-talent-generator':['產業人才', '開課申請'], 'coffee-ig-planner':['instagram', 'ig規劃'],
   'social-post-grader':['貼文評分', '貼文打分'], 'ai-image-prompt-studio':['繪圖', '生圖'],
   'ai-video-prompt-studio':['sora', 'veo'], 'ai-video-studio-play':['影音工坊', '配音'], 'line-sticker-studio':['貼圖'],
