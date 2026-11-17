@@ -55,8 +55,9 @@ export default {
       if (okO) { h['Access-Control-Allow-Origin'] = origin; h['Vary'] = 'Origin'; }
       if (request.method === 'OPTIONS') return new Response(null, { headers: h });
       if (!okO) return new Response('{"rooms":[]}', { status: 403, headers: h });
+      const kind = LOBBY_KINDS.includes(String(url.searchParams.get('k') || '').toUpperCase()) ? String(url.searchParams.get('k')).toUpperCase() : 'VOTE';
       const stub = env.ISLAND.get(env.ISLAND.idFromName(LOBBY));
-      const res = await stub.fetch('https://lobby/lobby/list');
+      const res = await stub.fetch('https://lobby/lobby/list?k=' + kind);
       return new Response(await res.text(), { headers: h });
     }
     if (url.pathname !== '/ws') {
@@ -89,7 +90,9 @@ const KEY_RE = /^[A-Za-z0-9]{12,32}$/;
 const LOBBY = '__lobby__';
 const LOBBY_TTL = 15 * 60 * 1000;
 const LOBBY_MAX = 100;
-const VOTE_ROOM = /^VOTE[A-Z0-9]{6}$/;
+// 會登記到大廳的教室：VOTE＝講師課堂小幫手、SIGN＝出席簽到 QR（2026-11-18 加）。/lobby?k=SIGN 只列簽到教室；沒帶 k 仍只列 VOTE，舊的小幫手不受影響
+const VOTE_ROOM = /^(VOTE|SIGN)[A-Z0-9]{6}$/;
+const LOBBY_KINDS = ['VOTE', 'SIGN'];
 const cleanRoomName = (v) => { const n = Array.from(String(v || '').replace(/[\u0000-\u001f<>|]/g, '').replace(/\s+/g, ' ').trim()).slice(0, 20).join(''); return n && !hasBadWord(n) ? n : ''; };
 const PW_RE = /^[A-Za-z0-9]{1,12}$/;
 const pub = (a) => ({ id: a.id, name: a.name, shirt: a.shirt, hair: a.hair, animal: a.animal, gx: a.gx, gy: a.gy });
@@ -307,8 +310,9 @@ export class Island extends DurableObject {
   async lobby(request, url) {
     const now = Date.now(), json = (o) => new Response(JSON.stringify(o), { headers: { 'content-type': 'application/json; charset=utf-8' } });
     if (url.pathname === '/lobby/list') {
+      const kind = url.searchParams.get('k') || 'VOTE';
       const all = await this.ctx.storage.list({ prefix: 'r:' }), rooms = [];
-      for (const [k, v] of all) { if (now - v.t > LOBBY_TTL) { await this.ctx.storage.delete(k); continue; } rooms.push({ code: v.code.slice(4), name: v.name, pw: v.pw, n: v.n, since: v.since }); }
+      for (const [k, v] of all) { if (now - v.t > LOBBY_TTL) { await this.ctx.storage.delete(k); continue; } if (v.code.slice(0, 4) !== kind) continue; rooms.push({ code: v.code.slice(4), name: v.name, pw: v.pw, n: v.n, since: v.since }); }
       rooms.sort((x, y) => x.since - y.since);
       return json({ rooms, count: rooms.length, at: now });
     }
