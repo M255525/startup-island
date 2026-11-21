@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>創業島 · 從一個點子出發，走完整座島</title>
-<meta name="description" content="把 66 個線上創業工具與遊戲放進一座可以探索的島：公園、山丘、學校、河口碼頭、遊樂園等十個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
+<meta name="description" content="把 67 個線上創業工具與遊戲放進一座可以探索的島：公園、山丘、學校、河口碼頭、遊樂園等十個地點、工具接力線、創業者的一天與兩年創業旅程時間軸。">
 <meta name="theme-color" content="#1c6e8c">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -748,6 +748,8 @@ var TOOLS = [
    role:'用文字稿和影庫素材合成有配音的短片。', input:'腳本', output:'配音短影片'},
   {id:'line-sticker-studio', zone:'brand', short:'LINE 貼圖', name:'LINE 貼圖自動化助手', hour:[19,20], month:[8,12],
    role:'把品牌角色做成一組符合 LINE 規格的貼圖。', input:'主題、角色圖', output:'LINE 貼圖 ZIP'},
+  {id:'brand-name-checker', zone:'brand', short:'品牌命名', name:'品牌命名與商標初篩', hour:[10,11], month:[2,4],
+   role:'幫店名、品牌名想候選名，依商標法初篩撞名與識別性，再整理智慧局、商工登記、社群帳號的查證清單。', input:'產業、品牌個性、想好的名字', output:'候選名燈號、招牌預覽、查證清單'},
 
   {id:'traffic-rank-estimator', zone:'ecom', short:'流量排名', name:'網站流量排名比較工具', lic:true, hour:[9,10], month:[6,9],
    role:'比較競爭網站的流量排名，估市場有多大。', input:'競爭者網址', output:'流量比較'},
@@ -856,6 +858,8 @@ var LINKS = [
   {id:'l35', name:'選地點 → 算損益 → 開業手續', chain:['shop-site-selector','restaurant-feasibility-calculator','shop-opening-checklist'], desc:'先挑出適合的區域與街區、比較候選店面，把月租帶進損益試算，再照清單辦登記。'},
   {id:'l36', name:'模擬開店 → 真的找店面', chain:['my-first-shop-sim','shop-site-selector'], desc:'在遊戲裡選過一次地點後，到真實的台北、新北、桃園、新竹地圖上比區域、街區與候選店面。'},
   {id:'l37', name:'人事成本 → 排一週的班 → 勞健保手續', chain:['employer-payroll-cost-calculator','staff-shift-planner','shop-opening-checklist'], desc:'先算清楚每個人的真實成本，再排出不違反工時規定的班表，最後照開店清單辦好勞健保。'},
+  {id:'l38', name:'選好地點 → 取店名 → 辦開業登記', chain:['shop-site-selector','brand-name-checker','shop-opening-checklist'], desc:'地點定了就取店名，先篩過商標與撞名，再用同一個名字去辦商業登記。'},
+  {id:'l39', name:'取好名字 → 規劃社群 → 開始發文', chain:['brand-name-checker','coffee-ig-planner','SocialPost'], desc:'名字和社群帳號先確認沒被用走，再規劃 IG 內容、寫第一批貼文。'},
   {id:'l34', name:'不知道用哪個 → 問導航 → 開店清單', chain:['ai-tool-navigator','shop-opening-checklist','phoenix-loan-generator'], desc:'先在 AI 工具導航說出想做的事，照它排的路線走，例如開店就接開店清單與鳳凰貸款。'},
   {id:'l29', name:'損益試算 → 人事成本 → 勞健保手續', chain:['restaurant-feasibility-calculator','employer-payroll-cost-calculator','shop-opening-checklist'], desc:'店的損益算過後，把每位員工的真實成本算清楚，再照清單辦勞健保。'},
   {id:'l24', name:'跨境電商冒險路線',  star:['animal-ecommerce-adventure','traffic-rank-estimator','amazon-logistics-game','product-title-generator','amazon-cost-calculator'], desc:'動物朋友帶你依序走過這些關卡。'}
@@ -1026,7 +1030,7 @@ var POS = {
   'content-workflow-studio-cf':[10.9,7.6], 'node-pack-designer-cf':[12.3,7.4],
   'loan-eligibility-checker':[15.2,9.6], 'phoenix-loan-generator':[16.9,9.6], 'shop-opening-checklist':[14.5,10.9], 'shop-site-selector':[16.0,11.0],
   'coffee-ig-planner':[6.1,12.4], 'annual-marketing-calendar':[8.5,12.4], 'SocialPost':[6.1,13.9], 'social-post-grader':[8.5,13.9],
-  'ai-image-prompt-studio':[6.1,15.4], 'ai-video-prompt-studio':[8.5,15.4], 'ai-video-studio-play':[6.1,16.9], 'line-sticker-studio':[8.5,16.9],
+  'ai-image-prompt-studio':[6.1,15.4], 'ai-video-prompt-studio':[8.5,15.4], 'ai-video-studio-play':[6.1,16.9], 'brand-name-checker':[7.22,11.3], 'line-sticker-studio':[8.5,16.9],
   'product-keyword-cloud':[11.0,16.0], 'product-title-generator':[12.6,16.0], 'amazon-listing-generator':[11.0,17.7], 'amazon-ppc-advisor':[12.6,17.7],
   'traffic-rank-estimator':[17.3,14.6],
   'amazon-review-reply-generator':[1.9,13.4], 'company-digital-transformation-analyzer':[3.4,13.4], 'expense-tracker-pwa':[1.9,14.8],
@@ -3256,7 +3260,7 @@ var M_ALIAS = {
   'restaurant-feasibility-calculator':['餐飲店', '開餐廳'], 'restaurant-menu-mix-calculator':['菜單'],
   'tourism-hotel-feasibility-calculator':['飯店', '民宿', '旅館'], 'amazon-cost-calculator':['亞馬遜成本', 'fba', 'fbm'],
   'amazon-listing-mix-calculator':['商品組合'], 'employer-payroll-cost-calculator':['人事成本', '人事', '薪資', '薪水', '請人', '員工成本', '勞退', '健保費', '補充保費', '年終'], 'staff-shift-planner':['排班', '班表', '輪班', '排休', '工時', '加班', '例假', '休息日', '大夜', '兼職排班'], 'loan-eligibility-checker':['貸款資格'], 'shop-opening-checklist':['開店', '開業', '登記', '稅籍', '勞健保', '手續'], 'classroom-qa-wall':['提問牆', '匿名提問', '提問', '發問', '舉手', '不敢問', '問老師', 'q&a', 'qa', '文字雲', '詞雲', '一個詞'], 'my-first-shop-sim':['開店模擬', '經營模擬', '模擬遊戲', '第一家店', '開店遊戲'], 'peer-review-board':['互評', '同儕', '同學評分', '報告評分', '上台報告', '發表會', '評分量表', '回饋單', '自評'], 'classroom-auction-game':['拍賣', '競標', '出價', '喊價', '標售', '贏家詛咒', '機會成本'], 'teacher-classroom-helper':['課堂', '上課', '講師', '抽籤', '點名', '分組', '搶答', '投票', '測驗', '考試', '計時'], 'phoenix-loan-generator':['鳳凰'],
-  'industry-talent-generator':['產業人才', '開課申請'], 'coffee-ig-planner':['instagram', 'ig規劃'],
+  'industry-talent-generator':['產業人才', '開課申請'], 'coffee-ig-planner':['instagram', 'ig規劃'], 'brand-name-checker':['取名', '命名', '店名', '品牌名', '商標', '撞名', '註冊商標', '智慧局', '取名字'],
   'social-post-grader':['貼文評分', '貼文打分'], 'ai-image-prompt-studio':['繪圖', '生圖'],
   'ai-video-prompt-studio':['sora', 'veo'], 'ai-video-studio-play':['影音工坊', '配音'], 'line-sticker-studio':['貼圖'],
   'traffic-rank-estimator':['流量', '燈塔'], 'amazon-logistics-game':['物流'], 'product-keyword-cloud':['文字雲'],
