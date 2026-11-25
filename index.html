@@ -697,8 +697,8 @@ var TOOLS = [
    role:'產品五層次、SWOT、定價和競品比較一次做完。', input:'產品構想', output:'定位與定價建議'},
   {id:'swot-game', zone:'school', short:'SWOT 卡牌', name:'SWOT 卡牌配對', hour:[10,11], month:[1,3],
    role:'卡牌配對練習，熟悉優勢、劣勢、機會、威脅怎麼分。', input:'不需準備', output:'SWOT 判讀手感'},
-  {id:'mentors-panel', zone:'strategy', short:'AI 顧問團', name:'AI 人物顧問團', hour:[22,24], month:[0,24],
-   role:'請多位人物思維顧問同時給意見，替計畫做壓力測試。', input:'問題或計畫', output:'多角度建議'},
+  {id:'mentors-panel', zone:'strategy', short:'AI 顧問團', name:'AI 思維顧問團', hour:[22,24], month:[0,24],
+   role:'請多位虛構思考角色同時給意見，替計畫做壓力測試。', input:'問題或計畫', output:'多角度建議'},
 
   {id:'restaurant-feasibility-calculator', zone:'calc', short:'餐飲店評估', name:'餐飲店經營評估試算工具', hour:[11,13], month:[3,5],
    role:'開店前試算租金、人事、坪效與損益兩平。', input:'店面與營運假設', output:'月損益與回本期'},
@@ -798,8 +798,8 @@ var TOOLS = [
    role:'甩手把球丟向左右移動的角色，三關 3D 情境背景，還能換上自己的臉。', input:'攝影機（可改用滑鼠）', output:'過關與排行榜'},
   {id:'jetski-cam', zone:'play', short:'水上摩托車', name:'體感水上摩托車', hour:[20,22], month:[0,24],
    role:'雙手當把手騎水上摩托車，穿過港灣、紅樹林和外海的浮標門。', input:'攝影機（可改用鍵盤、滑鼠）', output:'完賽時間'},
-  {id:'Rummikub', zone:'play', short:'拉密', name:'拉密 Rummikub', hour:[21,23], month:[0,24],
-   role:'經典數字牌桌遊單機版，練習組合與算牌。', input:'不需準備', output:'對局與排行榜'},
+  {id:'number-tile-game', zone:'play', short:'數字牌', name:'數字牌接龍', hour:[21,23], month:[0,24],
+   role:'數字牌組合單機桌遊，練習組合與算牌。', input:'不需準備', output:'對局與排行榜'},
   {id:'nostalgia-memory-game', zone:'play', short:'懷舊回憶', name:'懷舊回憶遊戲', hour:[14,16], month:[0,24],
    role:'柑仔店戳戳樂：戳一個洞猜老東西、老照片和老歌，適合帶長輩一起玩。', input:'不需準備', output:'回憶話題'},
   {id:'taiwan-fish-atlas', zone:'play', short:'魚汛圖鑑', name:'台灣漁港魚汛圖鑑', hour:[6,8], month:[0,24],
@@ -1036,7 +1036,7 @@ var POS = {
   'amazon-review-reply-generator':[1.9,13.4], 'company-digital-transformation-analyzer':[3.4,13.4], 'expense-tracker-pwa':[1.9,14.8],
   'private-domain-rfm-studio':[3.4,14.8], 'IPA_Kano':[2.65,16.2],
   'taiwan-fish-atlas':[18.6,7.6], 'taiwan-bird-atlas':[20.15,8.4], 'slice-fruit-cam':[18.6,9.2], 'ball-throw-cam':[20.15,10.0],
-  'jetski-cam':[18.6,10.8], 'Rummikub':[20.1,11.6], 'nostalgia-memory-game':[18.6,12.4], 'japan-sakura-season':[18.7,13.95], 'taiwan-flower-map':[17.0,12.4], 'taiwan-camping-map':[17.0,7.5], 'taiwan-trail-map':[16.6,6.0], 'taiwan-stargazing-map':[15.5,12.5], 'whack-a-mole-cam':[15.0,7.25], 'voice-control-game':[19.85,13.0]
+  'jetski-cam':[18.6,10.8], 'number-tile-game':[20.1,11.6], 'nostalgia-memory-game':[18.6,12.4], 'japan-sakura-season':[18.7,13.95], 'taiwan-flower-map':[17.0,12.4], 'taiwan-camping-map':[17.0,7.5], 'taiwan-trail-map':[16.6,6.0], 'taiwan-stargazing-map':[15.5,12.5], 'whack-a-mole-cam':[15.0,7.25], 'voice-control-game':[19.85,13.0]
 };
 var FREE = {'traffic-rank-estimator':true, 'ai-tool-navigator':true};                          // 不併入場地地塊（河口燈塔）
 // 2026-11-08 使用者要求「空間大一點、不要擠」：所有地理座標以島中心 C 等比例拉開 SPREAD 倍；
@@ -3256,7 +3256,7 @@ var M_ALIAS = {
   'six-thinking-hats-generator':['思考帽', '六帽'], 'mandala-thinking':['曼陀羅思考'],
   'business-model-canvas-generator':['商業模式畫布', 'bmc'], 'business-model-pattern-studio':['商業模式大全'],
   'where-what-how-strategy-studio':['策略工作室'], 'new-product-strategy-studio':['新品', '新產品'],
-  'swot-game':['swot'], 'mentors-panel':['顧問團', '人物顧問'],
+  'swot-game':['swot'], 'mentors-panel':['顧問團', '思維顧問'],
   'restaurant-feasibility-calculator':['餐飲店', '開餐廳'], 'restaurant-menu-mix-calculator':['菜單'],
   'tourism-hotel-feasibility-calculator':['飯店', '民宿', '旅館'], 'amazon-cost-calculator':['亞馬遜成本', 'fba', 'fbm'],
   'amazon-listing-mix-calculator':['商品組合'], 'employer-payroll-cost-calculator':['人事成本', '人事', '薪資', '薪水', '請人', '員工成本', '勞退', '健保費', '補充保費', '年終'], 'staff-shift-planner':['排班', '班表', '輪班', '排休', '工時', '加班', '例假', '休息日', '大夜', '兼職排班'], 'loan-eligibility-checker':['貸款資格'], 'shop-opening-checklist':['開店', '開業', '登記', '稅籍', '勞健保', '手續'], 'classroom-qa-wall':['提問牆', '匿名提問', '提問', '發問', '舉手', '不敢問', '問老師', 'q&a', 'qa', '文字雲', '詞雲', '一個詞'], 'my-first-shop-sim':['開店模擬', '經營模擬', '模擬遊戲', '第一家店', '開店遊戲'], 'peer-review-board':['互評', '同儕', '同學評分', '報告評分', '上台報告', '發表會', '評分量表', '回饋單', '自評'], 'classroom-auction-game':['拍賣', '競標', '出價', '喊價', '標售', '贏家詛咒', '機會成本'], 'teacher-classroom-helper':['課堂', '上課', '講師', '抽籤', '點名', '分組', '搶答', '投票', '測驗', '考試', '計時'], 'phoenix-loan-generator':['鳳凰'],
@@ -3269,7 +3269,7 @@ var M_ALIAS = {
   'amazon-review-reply-generator':['客評', '客訴'], 'company-digital-transformation-analyzer':['數位轉型'],
   'expense-tracker-pwa':['記帳'], 'private-domain-rfm-studio':['rfm', '私域'], 'IPA_Kano':['ipa', 'kano', '滿意度'],
   'content-workflow-studio-cf':['工作流'], 'node-pack-designer-cf':['補充包'], 'animal-ecommerce-adventure':['大冒險', '動物朋友'],
-  'slice-fruit-cam':['切水果'], 'ball-throw-cam':['丟球'], 'whack-a-mole-cam':['打地鼠', '地鼠', '敲'], 'voice-control-game':['聲控', '聲音', '麥克風', '喊', '唱歌', '發聲', '熱氣球', '青蛙', '音階', '太鼓', '打鼓', '節奏', '拍手'], 'jetski-cam':['摩托車', '水上摩托'], 'Rummikub':['rummikub', '拉密桌遊'],
+  'slice-fruit-cam':['切水果'], 'ball-throw-cam':['丟球'], 'whack-a-mole-cam':['打地鼠', '地鼠', '敲'], 'voice-control-game':['聲控', '聲音', '麥克風', '喊', '唱歌', '發聲', '熱氣球', '青蛙', '音階', '太鼓', '打鼓', '節奏', '拍手'], 'jetski-cam':['摩托車', '水上摩托'], 'number-tile-game':['數字牌', '接龍'],
   'nostalgia-memory-game':['懷舊', '戳戳樂', '長輩遊戲'], 'taiwan-fish-atlas':['魚汛', '漁港', '海鮮'], 'taiwan-bird-atlas':['賞鳥', '鳥類'], 'japan-sakura-season':['櫻花', '賞櫻', '日本'], 'taiwan-flower-map':['賞花', '花季', '花海', '油桐', '金針'], 'taiwan-camping-map':['露營', '營地', '搭帳', '營火'], 'taiwan-trail-map':['步道', '健行', '爬山', '登山', '郊山'], 'taiwan-stargazing-map':['觀星', '星空', '銀河', '流星雨', '暗空', '月相']
 };
 var M_ZONE_ALIAS = {idea:['點子公園', '公園'], strategy:['策略山丘', '山丘', '山頂'], school:['創業學校', '學校'], calc:['試算商辦區', '商辦', '試算區'],
