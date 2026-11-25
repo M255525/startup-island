@@ -237,7 +237,7 @@
 
 ## 🎡 歡樂遊樂園（2026-11-08）
 使用者要求「在創業島新增一個娛樂區域，把目前線上的遊戲放上去」，並補充「創意島（創作者小鎮）上有的就不要放」。
-- **收錄 7 個**（2026-11-08 curl 確認 Pages 皆 200，皆無序號）：fruit-ninja-cam、ball-throw-cam、jetski-cam、Rummikub、nostalgia-memory-game、taiwan-fish-atlas、taiwan-bird-atlas。**刻意不放**：swot-game／amazon-logistics-game／animal-ecommerce-adventure（本島創業學校已有）、crispe-game／costar-game（創作者小鎮已有）、boxing-cam／bowling-game（沒上線，404）、startup-island／creator-town（自己與姊妹島）。日後新遊戲上線，照同樣規則判斷要不要加。
+- **收錄 7 個**（2026-11-08 curl 確認 Pages 皆 200，皆無序號）：slice-fruit-cam、ball-throw-cam、jetski-cam、Rummikub、nostalgia-memory-game、taiwan-fish-atlas、taiwan-bird-atlas。**刻意不放**：swot-game／amazon-logistics-game／animal-ecommerce-adventure（本島創業學校已有）、crispe-game／costar-game（創作者小鎮已有）、boxing-cam／bowling-game（沒上線，404）、startup-island／creator-town（自己與姊妹島）。日後新遊戲上線，照同樣規則判斷要不要加。
 - 場地 `play`（歡樂遊樂園／FUN PARK，`#e84fc7`，地面 `--lawn`）在島**東岸**：資金廣場與觀景小山的東邊、創業看板南邊。兩欄（x 18.6／20.1～20.15）錯開排，**欄距不能再縮**：第一版 18.7／20.0 時兩欄間碰撞外擴（`BODY`）重疊，體感切水果門口整個被包住走不到。現在 7 棟四面都走得到（地圖與立體載入後都測過）。
 - 造型 `tent`（`SHAPE` s .36、h 14、roof 20）：平面＝直條紋牆＋布簾門＋紅白尖頂＋小旗，不畫窗（`drawWindows` 跳過）；立體＝16 邊形條紋布牆（CanvasTexture）＋條紋圓錐頂＋金邊＋飄動小旗，門口小燈晚上亮（`t.emis`）。
 - 地標摩天輪 `PLAY_WHEEL=[20.3,6.95]`（場地東角）：平面 `drawWheel2D()` 當作 things 一起依 `gx+gy` 排序畫進 `L.blds`（放地面層會被帳篷蓋住），CSS `.fw-rot` 30 秒一圈（靜止／減少動態時停）；立體 `MARKS.play`（位置固定、不走 `freeSpot`，旋轉跟 calc／ops 一樣加 π/2 讓輪面朝島心），車廂保持水平，輪框與燈泡夜裡發光；`blockArea(.4)` 讓角色繞開。
